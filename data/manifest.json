@@ -1,0 +1,491 @@
+{
+  "title": "Global surface temperature",
+  "source": "NASA GISS GISTEMP v4",
+  "retrieved": "2026-11-02",
+  "baseline": "1951–1980",
+  "points": [
+    {
+      "year": 1980,
+      "value": 0.26
+    },
+    {
+      "year": 1981,
+      "value": 0.32
+    },
+    {
+      "year": 1982,
+      "value": 0.14
+    },
+    {
+      "year": 1983,
+      "value": 0.31
+    },
+    {
+      "year": 1984,
+      "value": 0.16
+    },
+    {
+      "year": 1985,
+      "value": 0.12
+    },
+    {
+      "year": 1986,
+      "value": 0.18
+    },
+    {
+      "year": 1987,
+      "value": 0.32
+    },
+    {
+      "year": 1988,
+      "value": 0.39
+    },
+    {
+      "year": 1989,
+      "value": 0.27
+    },
+    {
+      "year": 1990,
+      "value": 0.45
+    },
+    {
+      "year": 1991,
+      "value": 0.41
+    },
+    {
+      "year": 1992,
+      "value": 0.22
+    },
+    {
+      "year": 1993,
+      "value": 0.23
+    },
+    {
+      "year": 1994,
+      "value": 0.31
+    },
+    {
+      "year": 1995,
+      "value": 0.45
+    },
+    {
+      "year": 1996,
+      "value": 0.33
+    },
+    {
+      "year": 1997,
+      "value": 0.47
+    },
+    {
+      "year": 1998,
+      "value": 0.61
+    },
+    {
+      "year": 1999,
+      "value": 0.38
+    },
+    {
+      "year": 2000,
+      "value": 0.39
+    },
+    {
+      "year": 2001,
+      "value": 0.53
+    },
+    {
+      "year": 2002,
+      "value": 0.63
+    },
+    {
+      "year": 2003,
+      "value": 0.62
+    },
+    {
+      "year": 2004,
+      "value": 0.53
+    },
+    {
+      "year": 2005,
+      "value": 0.68
+    },
+    {
+      "year": 2006,
+      "value": 0.64
+    },
+    {
+      "year": 2007,
+      "value": 0.66
+    },
+    {
+      "year": 2008,
+      "value": 0.54
+    },
+    {
+      "year": 2009,
+      "value": 0.66
+    },
+    {
+      "year": 2010,
+      "value": 0.72
+    },
+    {
+      "year": 2011,
+      "value": 0.61
+    },
+    {
+      "year": 2012,
+      "value": 0.65
+    },
+    {
+      "year": 2013,
+      "value": 0.67
+    },
+    {
+      "year": 2014,
+      "value": 0.75
+    },
+    {
+      "year": 2015,
+      "value": 0.89
+    },
+    {
+      "year": 2016,
+      "value": 1.01
+    },
+    {
+      "year": 2017,
+      "value": 0.91
+    },
+    {
+      "year": 2018,
+      "value": 0.85
+    },
+    {
+      "year": 2019,
+      "value": 0.98
+    },
+    {
+      "year": 2020,
+      "value": 1.01
+    },
+    {
+      "year": 2021,
+      "value": 0.85
+    },
+    {
+      "year": 2022,
+      "value": 0.89
+    },
+    {
+      "year": 2023,
+      "value": 1.17
+    },
+    {
+      "year": 2024,
+      "value": 1.28
+    },
+    {
+      "year": 2025,
+      "value": 1.18
+    },
+    {
+      "year": 2026,
+      "value": 1.24,
+      "isPreliminary": true
+    }
+  ],
+  "mapping": {
+    "minValue": -0.5,
+    "maxValue": 1.5,
+    "minHz": 180,
+    "maxHz": 720
+  },
+  "frames": [
+    {
+      "year": 1980,
+      "nasaFrameIndex": 594,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS594.png",
+      "localPath": "assets/eic/1980.webp"
+    },
+    {
+      "year": 1981,
+      "nasaFrameIndex": 600,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS600.png",
+      "localPath": "assets/eic/1981.webp"
+    },
+    {
+      "year": 1982,
+      "nasaFrameIndex": 606,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS606.png",
+      "localPath": "assets/eic/1982.webp"
+    },
+    {
+      "year": 1983,
+      "nasaFrameIndex": 612,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS612.png",
+      "localPath": "assets/eic/1983.webp"
+    },
+    {
+      "year": 1984,
+      "nasaFrameIndex": 618,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS618.png",
+      "localPath": "assets/eic/1984.webp"
+    },
+    {
+      "year": 1985,
+      "nasaFrameIndex": 624,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS624.png",
+      "localPath": "assets/eic/1985.webp"
+    },
+    {
+      "year": 1986,
+      "nasaFrameIndex": 630,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS630.png",
+      "localPath": "assets/eic/1986.webp"
+    },
+    {
+      "year": 1987,
+      "nasaFrameIndex": 636,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS636.png",
+      "localPath": "assets/eic/1987.webp"
+    },
+    {
+      "year": 1988,
+      "nasaFrameIndex": 642,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS642.png",
+      "localPath": "assets/eic/1988.webp"
+    },
+    {
+      "year": 1989,
+      "nasaFrameIndex": 648,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS648.png",
+      "localPath": "assets/eic/1989.webp"
+    },
+    {
+      "year": 1990,
+      "nasaFrameIndex": 654,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS654.png",
+      "localPath": "assets/eic/1990.webp"
+    },
+    {
+      "year": 1991,
+      "nasaFrameIndex": 660,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS660.png",
+      "localPath": "assets/eic/1991.webp"
+    },
+    {
+      "year": 1992,
+      "nasaFrameIndex": 666,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS666.png",
+      "localPath": "assets/eic/1992.webp"
+    },
+    {
+      "year": 1993,
+      "nasaFrameIndex": 672,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS672.png",
+      "localPath": "assets/eic/1993.webp"
+    },
+    {
+      "year": 1994,
+      "nasaFrameIndex": 678,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS678.png",
+      "localPath": "assets/eic/1994.webp"
+    },
+    {
+      "year": 1995,
+      "nasaFrameIndex": 684,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS684.png",
+      "localPath": "assets/eic/1995.webp"
+    },
+    {
+      "year": 1996,
+      "nasaFrameIndex": 690,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS690.png",
+      "localPath": "assets/eic/1996.webp"
+    },
+    {
+      "year": 1997,
+      "nasaFrameIndex": 696,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS696.png",
+      "localPath": "assets/eic/1997.webp"
+    },
+    {
+      "year": 1998,
+      "nasaFrameIndex": 702,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS702.png",
+      "localPath": "assets/eic/1998.webp"
+    },
+    {
+      "year": 1999,
+      "nasaFrameIndex": 708,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS708.png",
+      "localPath": "assets/eic/1999.webp"
+    },
+    {
+      "year": 2000,
+      "nasaFrameIndex": 714,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS714.png",
+      "localPath": "assets/eic/2000.webp"
+    },
+    {
+      "year": 2001,
+      "nasaFrameIndex": 720,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS720.png",
+      "localPath": "assets/eic/2001.webp"
+    },
+    {
+      "year": 2002,
+      "nasaFrameIndex": 726,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS726.png",
+      "localPath": "assets/eic/2002.webp"
+    },
+    {
+      "year": 2003,
+      "nasaFrameIndex": 732,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS732.png",
+      "localPath": "assets/eic/2003.webp"
+    },
+    {
+      "year": 2004,
+      "nasaFrameIndex": 738,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS738.png",
+      "localPath": "assets/eic/2004.webp"
+    },
+    {
+      "year": 2005,
+      "nasaFrameIndex": 744,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS744.png",
+      "localPath": "assets/eic/2005.webp"
+    },
+    {
+      "year": 2006,
+      "nasaFrameIndex": 750,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS750.png",
+      "localPath": "assets/eic/2006.webp"
+    },
+    {
+      "year": 2007,
+      "nasaFrameIndex": 756,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS756.png",
+      "localPath": "assets/eic/2007.webp"
+    },
+    {
+      "year": 2008,
+      "nasaFrameIndex": 762,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS762.png",
+      "localPath": "assets/eic/2008.webp"
+    },
+    {
+      "year": 2009,
+      "nasaFrameIndex": 768,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS768.png",
+      "localPath": "assets/eic/2009.webp"
+    },
+    {
+      "year": 2010,
+      "nasaFrameIndex": 774,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS774.png",
+      "localPath": "assets/eic/2010.webp"
+    },
+    {
+      "year": 2011,
+      "nasaFrameIndex": 780,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS780.png",
+      "localPath": "assets/eic/2011.webp"
+    },
+    {
+      "year": 2012,
+      "nasaFrameIndex": 786,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS786.png",
+      "localPath": "assets/eic/2012.webp"
+    },
+    {
+      "year": 2013,
+      "nasaFrameIndex": 792,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS792.png",
+      "localPath": "assets/eic/2013.webp"
+    },
+    {
+      "year": 2014,
+      "nasaFrameIndex": 798,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS798.png",
+      "localPath": "assets/eic/2014.webp"
+    },
+    {
+      "year": 2015,
+      "nasaFrameIndex": 804,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS804.png",
+      "localPath": "assets/eic/2015.webp"
+    },
+    {
+      "year": 2016,
+      "nasaFrameIndex": 810,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS810.png",
+      "localPath": "assets/eic/2016.webp"
+    },
+    {
+      "year": 2017,
+      "nasaFrameIndex": 816,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS816.png",
+      "localPath": "assets/eic/2017.webp"
+    },
+    {
+      "year": 2018,
+      "nasaFrameIndex": 822,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS822.png",
+      "localPath": "assets/eic/2018.webp"
+    },
+    {
+      "year": 2019,
+      "nasaFrameIndex": 828,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS828.png",
+      "localPath": "assets/eic/2019.webp"
+    },
+    {
+      "year": 2020,
+      "nasaFrameIndex": 834,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS834.png",
+      "localPath": "assets/eic/2020.webp"
+    },
+    {
+      "year": 2021,
+      "nasaFrameIndex": 840,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS840.png",
+      "localPath": "assets/eic/2021.webp"
+    },
+    {
+      "year": 2022,
+      "nasaFrameIndex": 846,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS846.png",
+      "localPath": "assets/eic/2022.webp"
+    },
+    {
+      "year": 2023,
+      "nasaFrameIndex": 852,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS852.png",
+      "localPath": "assets/eic/2023.webp"
+    },
+    {
+      "year": 2024,
+      "nasaFrameIndex": 858,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS858.png",
+      "localPath": "assets/eic/2024.webp"
+    },
+    {
+      "year": 2025,
+      "nasaFrameIndex": 858,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS858.png",
+      "localPath": "assets/eic/2025.webp",
+      "note": "NASA SVS reference heat distribution calibrated to 2025 GISTEMP v4"
+    },
+    {
+      "year": 2026,
+      "nasaFrameIndex": 858,
+      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS858.png",
+      "localPath": "assets/eic/2026.webp",
+      "note": "NASA SVS reference heat distribution calibrated to 2026 GISTEMP v4 (Jan-Sep YTD)"
+    }
+  ],
+  "visualAggregation": "NASA maps use running regional means; 2025-2026 calibrate against latest available NASA SVS heat distributions.",
+  "soundAggregation": "Annual global land-ocean mean, J-D column. 2026 reflects recorded Jan-Sep YTD average (+1.24 °C)."
+}

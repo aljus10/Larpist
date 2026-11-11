@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101c28">
+  <meta name="description" content="Earthtone Studio — Interactive 3D Listening Room for Exploring Earth Data Through Sound.">
+  <title>Earthtone Studio — Interactive 3D Room</title>
+  <link rel="stylesheet" href="css/studio.css">
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/GLTFLoader.min.js"></script>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <main id="studio" aria-label="Interactive three-dimensional Earthtone Studio">
+    <header class="studio-header" role="banner">
+      <a class="wordmark" href="#studio" data-focus-target="overview" aria-label="Earthtune Studio Home">
+        <span class="wordmark-title">Earthtune</span>
+        <span class="wordmark-sub">STUDIO</span>
+      </a>
+    </header>
+
+    <div id="scene" aria-hidden="true"></div>
+
+    <div class="focus-bar" hidden>
+      <button id="back-button" type="button"><span aria-hidden="true">←</span> Back to studio</button>
+    </div>
+
+    <!-- Series / YouTube-style Welcome Subtitle Overlay -->
+    <div id="welcome-subtitle" class="welcome-subtitle" aria-live="off" hidden>
+      <span id="welcome-subtitle-text" class="welcome-subtitle-text"></span>
+    </div>
+
+    <!-- Quick Focus Section Navigation (Extensible for future object targets) -->
+    <footer class="studio-footer" role="region" aria-label="Studio navigation">
+      <div class="studio-actions">
+        <nav class="object-nav" aria-label="Room focus targets">
+          <button type="button" data-focus-target="overview" aria-current="true">Overview</button>
+          <button type="button" data-focus-target="globe">Holographic Dais</button>
+          <button type="button" data-focus-target="desk">Telemetry Desk</button>
+        </nav>
+      </div>
+      <div class="interaction-hint">
+        <span>Click 3D objects or buttons to focus • Click outside to return</span>
+      </div>
+    </footer>
+  </main>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+  <noscript><p class="no-script">The 3D studio needs JavaScript. Enable it to explore the room.</p></noscript>
+
+  <!-- Background audio sonification engine -->
+  <iframe id="observatory" src="observatory.html?embedded=1" style="display:none;position:absolute;width:0;height:0;border:0;" title="Earthtone Sonification Engine" allow="autoplay"></iframe>
+
+  <script type="module" src="js/studio.js"></script>
+</body>
+</html>

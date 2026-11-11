@@ -1,0 +1,246 @@
+/* ==========================================================================
+   Earthtone Studio: Dedicated In-Room CRT Aerospace Telemetry Monitor
+   Transforms the embedded observatory iframe into a clean, cinematic display
+   ========================================================================== */
+
+html.studio-embedded {
+  overflow: hidden !important;
+  background: #04090d !important;
+  height: 100% !important;
+}
+
+html.studio-embedded body#earth-listening-room {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr 64px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  background: radial-gradient(circle at 50% 45%, #091a24 0%, #03070a 100%) !important;
+  position: relative !important;
+}
+
+/* Authentic CRT Phosphor Scanline & Vignette Effect */
+html.studio-embedded body#earth-listening-room::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0px, rgba(0, 0, 0, 0.18) 1px, transparent 1px, transparent 3px),
+    radial-gradient(circle at 50% 50%, transparent 65%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Hide website navigation, top bars, and bulky sidebars inside the 3D TV */
+.studio-embedded .er-top-bar,
+.studio-embedded .er-world-heading,
+.studio-embedded .er-right-console,
+.studio-embedded .er-assistant-3d-box,
+.studio-embedded .er-legend-note,
+.studio-embedded #embedded-lesson-entry,
+.studio-embedded .er-compare-hud {
+  display: none !important;
+}
+
+/* 3D Earth Globe fills the screen */
+.studio-embedded .er-world {
+  grid-row: 1 !important;
+  grid-column: 1 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.studio-embedded #fullscreen-earth-wrap {
+  inset: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* High-tech Aerospace Telemetry Header Bar */
+.studio-embedded .er-world::before {
+  content: 'EARTHTONE TELEMETRY · OBSERVATORY CHANNEL · 1980–2024';
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #5ec9d6;
+  background: #061118cc;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid #1c3540;
+  z-index: 20;
+  pointer-events: none;
+  text-shadow: 0 0 8px #5ec9d666;
+}
+
+/* Clean, Minimal Floating Legend Card */
+.studio-embedded .er-earth-info-hud {
+  bottom: 14px;
+  left: 20px;
+  width: 200px;
+  gap: 6px;
+  z-index: 20;
+  background: #08141cd0;
+  border: 1px solid #1d333e;
+  border-radius: 6px;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.studio-embedded .er-color-legend-card {
+  padding-top: 2px;
+  background: transparent;
+  border: 0;
+}
+
+.studio-embedded .er-color-legend-card::before {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #8da4b0;
+}
+
+.studio-embedded .er-color-legend-card img,
+.studio-embedded #temp-legend::before {
+  width: 176px;
+  max-width: 100%;
+}
+
+/* Top Tools Pod */
+.studio-embedded .er-top-tools-pod {
+  top: 14px;
+  right: 20px;
+  bottom: auto;
+  z-index: 20;
+  max-width: 240px;
+  gap: 8px;
+}
+
+.studio-embedded .er-top-tools-pod button {
+  background: #0b1a23cc;
+  border: 1px solid #243c48;
+  color: #c0d3da;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.studio-embedded .er-top-tools-pod button:hover {
+  background: #183342;
+  color: #4df3ff;
+}
+
+/* Sleek Aerospace Telemetry Deck at Screen Bottom (64px) */
+.studio-embedded .er-sound-transport-box {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  height: 64px !important;
+  background: #07121aee !important;
+  border: 0 !important;
+  border-top: 1px solid #203541 !important;
+  border-radius: 0 !important;
+  padding: 10px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  z-index: 20 !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Readout: Large glowing year & parameter value */
+.studio-embedded .er-transport-readout-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 140px;
+}
+
+.studio-embedded .er-year-num {
+  font-family: monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffd58a;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px #ffd58a55;
+  line-height: 1;
+}
+
+.studio-embedded .er-audio-mini-strip {
+  font-family: monospace;
+  font-size: 11px;
+  color: #7a9ba8;
+  letter-spacing: 0.1em;
+}
+
+/* Timeline scrubber track fills the center */
+.studio-embedded .er-slider-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  max-width: 650px;
+}
+
+.studio-embedded .er-slider-box input[type="range"] {
+  width: 100%;
+  accent-color: #4df3ff;
+  height: 6px;
+  background: #182a34;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Transport Controls */
+.studio-embedded .er-transport-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.studio-embedded .er-transport-controls-row button {
+  background: #11232e;
+  border: 1px solid #2b4554;
+  color: #d0e1e8;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.1s ease;
+}
+
+.studio-embedded .er-transport-controls-row button:hover {
+  background: #1b3545;
+  border-color: #4df3ff;
+  color: #fff;
+}
+
+.studio-embedded .er-chart-container {
+  display: none !important;
+}
+
+/* Responsive compact touch fallback */
+@media (max-width: 760px) {
+  html.studio-embedded body#earth-listening-room {
+    grid-template-rows: 1fr 80px !important;
+  }
+  .studio-embedded .er-sound-transport-box {
+    height: 80px !important;
+    padding: 8px 14px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .studio-embedded .er-slider-box {
+    order: 3;
+    width: 100%;
+    max-width: none;
+  }
+}

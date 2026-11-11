@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore NASA Earth Information Center temperature frames through historical sonification, geographic scanning, and accessible comparison.">
+  <title>Earth Jukebox — Monitor Workbench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#workbench">Skip to workbench</a>
+
+  <header class="site-header">
+    <a class="brand" href="#workbench" data-section-target="workbench" aria-label="Earth Jukebox Monitor Workbench">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text">
+        <strong>Earth Jukebox</strong>
+        <small>NASA SVS 5450</small>
+      </span>
+    </a>
+
+    <nav class="section-tabs" role="tablist" aria-label="Monitor views">
+      <button type="button" role="tab" class="section-tab" data-section-target="workbench" aria-selected="true">
+        <span>Atlas</span>
+      </button>
+      <button type="button" role="tab" class="section-tab" data-section-target="compare" aria-selected="false">
+        <span>Compare A/B</span>
+      </button>
+      <button type="button" role="tab" class="section-tab" data-section-target="method" aria-selected="false">
+        <span>About Challenge</span>
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="action-pill" id="mute-toggle" type="button" aria-pressed="false" aria-label="Mute audio">
+        <span class="sound-icon" aria-hidden="true"></span>
+        <span>Audio on</span>
+      </button>
+      <button class="action-pill exit-to-studio" id="exit-to-studio" type="button" aria-label="Return to 3D studio room">
+        <span aria-hidden="true">←</span>
+        <span>Studio</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top" class="monitor-main">
+    <!-- VIEW 1: PRIMARY ATLAS WORKBENCH (No timeline chart, full-height map + giant typography) -->
+    <section class="monitor-section workbench-view" id="workbench" data-section="workbench" aria-label="Temperature Atlas Workbench">
+      <div class="map-column">
+        <div class="map-toolbar">
+          <div class="view-switch" role="group" aria-label="Earth view">
+            <button id="flat-view" type="button" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17v13h-17zM8 5.5v13m8-13v13M3.5 10h17m-17 4h17"/></svg>
+              <span>Flat Map</span>
+            </button>
+          </div>
+
+          <div class="toolbar-meta">
+            <span class="frame-pill">
+              <strong id="frame-year">1980</strong> · #<span id="frame-index">594</span>
+            </span>
+            <span class="sr-only" id="frame-window">Running regional mean</span>
+          </div>
+        </div>
+        <p id="view-description" class="sr-only">Flat view shows the complete source frame and all five latitude bands at once.</p>
+
+        <figure class="map-stage" id="map-stage" data-view="flat" aria-label="NASA global temperature anomaly map">
+          <img class="map-base-earth" src="../assets/earth-blue-marble.jpg" alt="" aria-hidden="true">
+          <img id="frame-image" src="../assets/eic/1980.webp" alt="NASA global temperature anomaly visualization for 1980">
+          <img class="map-borders-overlay" src="../assets/world-borders-clean.svg" alt="" aria-hidden="true">
+          <div class="latitude-bands" id="latitude-bands" aria-label="Geographic latitude bands">
+            <button type="button" data-band="0"><span class="band-pill"><strong>Arctic</strong><small>60°–90°N</small></span></button>
+            <button type="button" data-band="1"><span class="band-pill"><strong>N. Mid</strong><small>30°–60°N</small></span></button>
+            <button type="button" data-band="2"><span class="band-pill"><strong>Tropics</strong><small>30°S–30°N</small></span></button>
+            <button type="button" data-band="3"><span class="band-pill"><strong>S. Mid</strong><small>30°–60°S</small></span></button>
+            <button type="button" data-band="4"><span class="band-pill"><strong>Antarctic</strong><small>60°–90°S</small></span></button>
+          </div>
+          <div class="scan-rule" id="scan-rule" aria-hidden="true"></div>
+        </figure>
+      </div>
+
+      <aside class="control-column" aria-label="Listening controls">
+        <div class="mode-tabs" role="tablist" aria-label="Listening mode">
+          <button type="button" role="tab" id="history-tab" aria-controls="history-panel" aria-selected="true">History</button>
+          <button type="button" role="tab" id="frame-tab" aria-controls="frame-panel" aria-selected="false">Frame Scan</button>
+          <button type="button" role="tab" id="learn-tab" aria-controls="learn-panel" aria-selected="false">Quiz</button>
+        </div>
+
+        <section class="mode-panel" id="history-panel" role="tabpanel" aria-labelledby="history-tab">
+          <div class="special-hero-card">
+            <div class="hero-kicker">Hear time change. <em>Then hear where.</em></div>
+            <div class="readout">
+              <div class="readout-year">
+                <span>SELECTED YEAR</span>
+                <strong id="history-year">1980</strong>
+              </div>
+              <div class="readout-metrics">
+                <div class="metric-pill">
+                  <span>ANOMALY</span>
+                  <strong id="history-value">+0.26 °C</strong>
+                </div>
+                <div class="metric-pill">
+                  <span>PITCH</span>
+                  <strong id="history-frequency">294 Hz</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slider-block">
+            <label class="range-label" for="year-slider">
+              <span>1980 — 2024 RECORD</span>
+              <output id="year-output" for="year-slider">1980</output>
+            </label>
+            <input id="year-slider" type="range" min="0" max="44" value="0" step="1" aria-valuetext="1980, plus 0.26 degrees Celsius">
+          </div>
+
+          <div class="transport">
+            <button class="secondary-button icon-button" id="previous-year" type="button" aria-label="Previous year">←</button>
+            <button class="primary-button" id="play-history" type="button"><span class="play-symbol" aria-hidden="true">▶</span><span>Play history</span></button>
+            <button class="secondary-button icon-button" id="play-selected" type="button" title="Play selected year tone" aria-label="Play selected year tone">♪</button>
+            <button class="secondary-button icon-button" id="next-year" type="button" aria-label="Next year">→</button>
+          </div>
+        </section>
+
+        <section class="mode-panel" id="frame-panel" role="tabpanel" aria-labelledby="frame-tab" hidden>
+          <div class="sound-legend" aria-label="Sound legend">
+            <button type="button" data-legend="cool">
+              <span class="legend-swatch cool"></span>
+              <strong>Cooler</strong>
+            </button>
+            <button type="button" data-legend="reference">
+              <span class="legend-swatch reference"></span>
+              <strong>Baseline</strong>
+            </button>
+            <button type="button" data-legend="warm">
+              <span class="legend-swatch warm"></span>
+              <strong>Warmer</strong>
+            </button>
+          </div>
+
+          <div class="selected-band" id="selected-band-summary">
+            <span>ACTIVE LATITUDE BAND</span>
+            <strong>Arctic · 60°–90°N</strong>
+            <p class="sr-only">Sampled image points classified.</p>
+          </div>
+
+          <div class="category-bars" id="category-bars" aria-label="Selected region category coverage"></div>
+
+          <div class="frame-actions">
+            <button class="primary-button" id="scan-frame" type="button">▶ Scan N → S</button>
+            <button class="secondary-button" id="play-band" type="button">Play Band</button>
+          </div>
+        </section>
+
+        <section class="mode-panel" id="learn-panel" role="tabpanel" aria-labelledby="learn-tab" hidden>
+          <div class="lesson-progress" aria-label="Lesson progress"><span class="active"></span><span></span><span></span></div>
+          <div id="lesson-content">
+            <h3>Which Arctic frame is warmer?</h3>
+            <button class="primary-button full-button" id="lesson-listen" type="button">▶ Listen: A (1980) vs B (2024)</button>
+            <fieldset id="lesson-answers" disabled>
+              <legend>Select the warmer frame:</legend>
+              <button type="button" data-answer="1980">A · 1980</button>
+              <button type="button" data-answer="2024">B · 2024</button>
+            </fieldset>
+            <div class="lesson-feedback" id="lesson-feedback" role="status">Listen first, then choose A or B.</div>
+          </div>
+          <button class="text-button" id="lesson-reset" type="button">Reset quiz</button>
+        </section>
+
+        <div class="live-status sr-only" id="live-status" role="status" aria-live="polite">Ready.</div>
+      </aside>
+    </section>
+
+    <!-- VIEW 2: COMPARE A/B -->
+    <section class="monitor-section compare-view" id="compare" data-section="compare" aria-labelledby="compare-title" hidden>
+      <div class="section-heading">
+        <h2 id="compare-title">A / B Latitude Comparison</h2>
+      </div>
+
+      <div class="compare-controls">
+        <label for="compare-year-a">Frame A<select id="compare-year-a"></select></label>
+        <label for="compare-band">Latitude Band<select id="compare-band"></select></label>
+        <label for="compare-year-b">Frame B<select id="compare-year-b"></select></label>
+        <button class="primary-button" id="compare-play" type="button">▶ Play A / B</button>
+      </div>
+
+      <div class="compare-output" id="compare-output">
+        <div><span>Frame A</span><strong>1980</strong><p>Loading…</p></div>
+        <div class="difference-mark" aria-hidden="true">vs</div>
+        <div><span>Frame B</span><strong>2024</strong><p>Loading…</p></div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ABOUT THE CHALLENGE -->
+    <section class="monitor-section method-view" id="method" data-section="method" aria-labelledby="method-title" hidden>
+      <div class="method-top">
+        <div class="challenge-header">
+          <div>
+            <span class="challenge-badge">CHALLENGE 1 · EARTHTUNE STUDIO</span>
+            <h2 id="method-title">Hear time change. <em>Then hear where.</em></h2>
+          </div>
+          <a class="source-pill-link" href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA SVS 5450 ↗</a>
+        </div>
+        <p class="challenge-lead">
+          This interactive sonification turns 45 years of NASA Earth Information Center temperature frames (1980–2024) into deterministic sound—mapping global warming to pitch and scanning five latitude bands by color share.
+        </p>
+        <ol class="method-flow">
+          <li><strong>1. Frame</strong><span>NASA SVS image</span></li>
+          <li><strong>2. Region</strong><span>5 latitude bands</span></li>
+          <li><strong>3. Vector</strong><span>3 color shares</span></li>
+          <li><strong>4. Sound</strong><span>Audible phrase</span></li>
+          <li><strong>5. Compare</strong><span>A/B verification</span></li>
+        </ol>
+      </div>
+
+      <div class="details-grid">
+        <article>
+          <h3>NASA GISTEMP v4</h3>
+          <p>Global annual anomaly (°C) mapped to 150–850 Hz pitch.</p>
+          <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noreferrer">GISTEMP Data ↗</a>
+        </article>
+        <article>
+          <h3>NASA SVS 5450</h3>
+          <p>512×256 RGB pixels classified into Cooler, Baseline, and Warmer tones.</p>
+          <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">SVS Archive ↗</a>
+        </article>
+        <article>
+          <h3>Live Frame Ledger</h3>
+          <p id="ledger-summary">1980 · Arctic: inspecting visual-category vector.</p>
+          <button class="secondary-button" id="copy-ledger" type="button">Copy Ledger</button>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <canvas id="analysis-canvas" width="1024" height="512" hidden></canvas>
+  <script src="app.js"></script>
+</body>
+</html>

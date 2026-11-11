@@ -1,0 +1,4046 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#060b0e">
+  <meta name="description" content="Earthtone Studio · Fullscreen Planetary Climate Observatory. Interactive 3D Earth, dual-track temperature & satellite precipitation, spatial area framing, acoustic sonification, and Dr. Jo 3D AI Assistant.">
+  <title>Earthtone Studio · Fullscreen Planetary Observatory</title>
+  <style>
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('assets/fonts/dm-sans.ttf') format('truetype');
+      font-weight: 400 500 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Instrument Serif';
+      src: url('assets/fonts/instrument-serif.ttf') format('truetype');
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      --er-bg: #060b0e;
+      --er-card: #0b1418;
+      --er-surface: #101c22;
+      --er-surface-glass: rgba(14, 24, 30, 0.85);
+      --er-surface-subtle: rgba(255, 255, 255, 0.04);
+      --er-border: rgba(169, 224, 210, 0.16);
+      --er-border-strong: rgba(169, 224, 210, 0.38);
+      --er-ink: #f0f4f2;
+      --er-muted: #9eb1b4;
+      --er-faint: #8ca2a6; /* Guaranteed > 4.5:1 WCAG AA contrast */
+      --er-accent: #a9e0d2;
+      --er-accent-hover: #c4ede3;
+      --er-cool: #64b5c9;
+      --er-mild: #7ed3b2;
+      --er-warm: #e5c158;
+      --er-hot: #f28e46;
+      --er-extreme: #ea4c46;
+      --er-rain-accent: #64d2ff;
+      --er-font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --er-font-serif: 'Instrument Serif', Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--er-bg);
+      color-scheme: dark;
+      font-family: var(--er-font-sans);
+      color: var(--er-ink);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--er-accent);
+      outline-offset: 3px;
+    }
+
+    /* Better-UI: Buttons, concentric curves, optical alignment & tactile press */
+    button {
+      font-family: inherit;
+      color: var(--er-ink);
+      background: #14232a;
+      border: 1px solid var(--er-border);
+      border-radius: 8px;
+      padding-block: 8px;
+      padding-inline-start: 13px;
+      padding-inline-end: 11px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      user-select: none;
+      transition-property: background-color, border-color, color, transform, box-shadow;
+      transition-duration: 150ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    button:hover {
+      background: #1b2f38;
+      border-color: var(--er-border-strong);
+    }
+
+    button:not(:disabled):active {
+      transform: scale(0.96);
+    }
+
+    button.primary {
+      background: var(--er-accent);
+      color: #060b0e;
+      border-color: var(--er-accent);
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    button.primary:hover {
+      background: var(--er-accent-hover);
+      border-color: var(--er-accent-hover);
+    }
+
+    button.quiet {
+      background: transparent;
+      border-color: transparent;
+      color: var(--er-muted);
+    }
+
+    button.quiet:hover {
+      background: var(--er-surface-subtle);
+      color: var(--er-ink);
+      border-color: var(--er-border);
+    }
+
+    button.icon-pill {
+      border-radius: 20px;
+      padding-block: 6px;
+      padding-inline: 12px;
+    }
+
+    button.active {
+      background: #1e3640;
+      border-color: var(--er-accent);
+      color: var(--er-accent);
+    }
+
+    .er-opt-play-icon,
+    button[data-action="play-start"] svg.lucide-play {
+      transform: translateX(1.5px);
+    }
+
+    button[data-action="play-start"] svg.lucide-pause {
+      transform: none;
+    }
+
+    /* -------------------------------------------------------------
+       1. FULLSCREEN 3D EARTH STAGE (BACKGROUND CANVAS)
+       ------------------------------------------------------------- */
+    #fullscreen-earth-wrap {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      overflow: hidden;
+      background: radial-gradient(circle at 45% 50%, rgba(79, 172, 186, 0.12) 0%, rgba(6, 11, 14, 0.98) 75%);
+      cursor: grab;
+    }
+
+    #fullscreen-earth-wrap:active {
+      cursor: grabbing;
+    }
+
+    #fullscreen-earth-wrap.selecting {
+      cursor: crosshair !important;
+    }
+
+    #fullscreen-earth-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .er-drag-box {
+      position: absolute;
+      border: 2px dashed var(--er-accent);
+      background: rgba(169, 224, 210, 0.18);
+      pointer-events: none;
+      border-radius: 4px;
+      z-index: 5;
+    }
+
+    .er-globe-status {
+      position: absolute;
+      top: 50%;
+      left: 35%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: var(--er-muted);
+      font-size: 13px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* -------------------------------------------------------------
+       2. TOP FLOATING COMMAND BAR
+       ------------------------------------------------------------- */
+    .er-top-bar {
+      position: fixed;
+      top: 14px;
+      left: 18px;
+      right: 18px;
+      height: 48px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .er-top-bar > * {
+      pointer-events: auto;
+    }
+
+    .er-top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .er-top-brand-pod {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(11, 20, 24, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--er-border);
+      border-radius: 12px;
+      padding: 6px 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .er-brand {
+      font-family: var(--er-font-serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--er-ink);
+      letter-spacing: -0.02em;
+    }
+
+    .er-status-badge {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(169, 224, 210, 0.10);
+      border: 1px solid rgba(169, 224, 210, 0.25);
+      color: var(--er-accent);
+    }
+
+    /* Track Switcher (Center Pod - Centered directly over Earth) */
+    .er-top-track-pod {
+      position: absolute;
+      top: 50%;
+      left: max(395px, calc((100% - 500px) / 2));
+      transform: translate(-50%, -50%);
+      display: inline-flex;
+      background: rgba(11, 20, 24, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--er-border);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 3px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      z-index: 35;
+    }
+
+    .er-track-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--er-muted);
+      padding: 6px 14px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .er-track-tab:hover {
+      color: var(--er-ink);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .er-track-tab.active {
+      background: #182e37;
+      color: var(--er-ink);
+      border-color: var(--er-accent);
+      font-weight: 600;
+    }
+
+    .er-track-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: auto 2px;
+    }
+
+    .er-hazard-pill-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--er-muted);
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .er-hazard-pill-btn:hover {
+      color: var(--er-ink);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .er-hazard-pill-btn.active {
+      background: rgba(255, 170, 0, 0.14);
+      border-color: rgba(255, 170, 0, 0.38);
+      color: #ffb74d;
+    }
+
+    .er-hazard-pill-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.8;
+      color: inherit;
+    }
+
+    /* Spatial Tools & Utilities (Right Strip - Aligned with Right Console) */
+    .er-top-tools-pod {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 500px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .er-top-tools-pod button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--er-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 6px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .er-top-tools-pod button svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.8;
+      color: inherit;
+      flex-shrink: 0;
+    }
+
+    .er-top-tools-pod button:hover {
+      color: var(--er-text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .er-top-tools-pod button:active {
+      transform: scale(0.96);
+    }
+
+    .er-top-tools-pod button.active {
+      color: var(--er-cyan);
+      background: rgba(100, 210, 255, 0.12);
+      border-color: rgba(100, 210, 255, 0.28);
+    }
+
+    /* Dedicated 28x28px tactile instrument hitboxes for icon buttons */
+    .er-top-tools-pod button.er-tool-icon-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      flex-shrink: 0;
+    }
+
+    .er-top-tools-pod button.er-tool-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: var(--er-ink);
+    }
+
+    .er-top-tools-pod button.er-tool-icon-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    /* Audio toggle state styling */
+    .er-top-tools-pod button[data-action="mute"] {
+      color: var(--er-mint);
+    }
+
+    .er-top-tools-pod button[data-action="mute"] svg {
+      color: var(--er-accent);
+      transition: color 0.15s ease;
+    }
+
+    .er-top-tools-pod button[data-action="mute"].muted {
+      color: var(--er-faint);
+    }
+
+    .er-top-tools-pod button[data-action="mute"].muted svg {
+      color: #e57373;
+    }
+
+    /* -------------------------------------------------------------
+       3. FLOATING HUD ON EARTH (LEFT / BOTTOM)
+       ------------------------------------------------------------- */
+    .er-earth-info-hud {
+      position: fixed;
+      bottom: 18px;
+      left: 18px;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .er-earth-info-hud > * {
+      pointer-events: auto;
+    }
+
+    .er-hud-proj-pod {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(11, 20, 24, 0.88);
+      border: 1px solid var(--er-border);
+      backdrop-filter: blur(12px);
+      padding: 3px;
+      border-radius: 9px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      width: fit-content;
+    }
+
+    .er-hud-proj-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--er-muted);
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .er-hud-proj-tab:hover {
+      color: var(--er-text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .er-hud-proj-tab:active {
+      transform: scale(0.96);
+    }
+
+    .er-hud-proj-tab.active {
+      background: rgba(100, 210, 255, 0.14);
+      border-color: rgba(100, 210, 255, 0.35);
+      color: var(--er-cyan);
+      font-weight: 600;
+    }
+
+    .er-hud-proj-tab svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .er-spatial-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(11, 20, 24, 0.88);
+      border: 1px solid var(--er-border);
+      backdrop-filter: blur(12px);
+      padding: 6px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      color: var(--er-accent);
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      width: fit-content;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .er-spatial-badge:hover {
+      background: rgba(16, 28, 34, 0.94);
+      border-color: rgba(100, 210, 255, 0.3);
+      color: var(--er-cyan);
+    }
+
+    .er-spatial-badge:active {
+      transform: scale(0.98);
+    }
+
+    .er-spatial-badge .er-badge-meta {
+      color: var(--er-faint);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .er-color-legend-card {
+      background: rgba(11, 20, 24, 0.88);
+      border: 1px solid var(--er-border);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 280px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .er-color-legend-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 3px;
+      display: block;
+    }
+
+    .er-rain-colorbar {
+      width: 100%;
+      height: 10px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #eaf8f5 0%, #68c7c9 25%, #2a7db8 50%, #4a348c 75%, #7a1f68 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .er-legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--er-faint);
+    }
+
+    /* -------------------------------------------------------------
+       4. RIGHT-SIDE FLOATING OBSERVATORY CONSOLE
+       ------------------------------------------------------------- */
+    .er-right-console {
+      position: fixed;
+      top: 72px;
+      right: 18px;
+      bottom: 18px;
+      width: 500px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .er-right-console > * {
+      pointer-events: auto;
+    }
+
+    /* BOX 1 (TOP): ZERO-SCROLL 3-SLIDE CAROUSEL (AI ASSISTANT, EVIDENCE, REPORT) */
+    .er-ai-evidence-box {
+      background: var(--er-surface-glass);
+      border: 1px solid var(--er-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(16px);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Top Mode Header with Title and Live Dot */
+    .er-console-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--er-border);
+      padding-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .er-console-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--er-ink);
+      letter-spacing: 0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .er-live-indicator {
+      font-size: 12px;
+      color: var(--er-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Carousel Structure */
+    .er-carousel-container {
+      position: relative;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+
+    .er-carousel-track {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .er-carousel-slide {
+      min-width: 100%;
+      max-width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      justify-content: space-between;
+    }
+
+    /* Slide 0: 3D Assistant Viewport, Speech & Chat */
+    .er-assistant-3d-box {
+      width: 100%;
+      height: clamp(90px, 13vh, 140px);
+      min-height: 85px;
+      position: relative;
+      background: radial-gradient(circle at 50% 60%, rgba(169, 224, 210, 0.08) 0%, rgba(11, 20, 24, 0) 75%);
+      border-radius: 9px;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: pan-y;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+
+    .er-assistant-3d-box:active {
+      cursor: grabbing;
+    }
+
+    .er-assistant-3d-box canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .er-model-slot-label {
+      position: absolute;
+      bottom: 5px;
+      right: 7px;
+      font-size: 12px;
+      color: var(--er-faint);
+      background: rgba(6, 11, 14, 0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .er-ai-speech-bubble {
+      background: rgba(14, 26, 31, 0.7);
+      border: 1px solid var(--er-border);
+      border-radius: 8px;
+      padding: 6px 9px;
+      font-size: 12px;
+      color: var(--er-ink);
+      line-height: 1.35;
+      max-height: 52px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      flex-shrink: 0;
+    }
+
+    .er-quick-chips {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      flex-shrink: 0;
+    }
+    .er-quick-chips::-webkit-scrollbar { display: none; }
+
+    .er-chip-btn {
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 6px;
+      color: var(--er-muted);
+      font-size: 12px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+
+    .er-chip-btn:hover {
+      background: #182e37;
+      color: var(--er-ink);
+      border-color: var(--er-accent);
+    }
+
+    .er-chip-btn:active,
+    .er-evidence-item:active,
+    .er-whitepaper-btn:active,
+    .er-chat-send-btn:active,
+    .er-chat-mic-btn:active {
+      transform: scale(0.96);
+    }
+
+    .er-ai-chat-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 18, 22, 0.9);
+      border: 1px solid var(--er-border);
+      border-radius: 8px;
+      padding: 2px 4px;
+      flex-shrink: 0;
+    }
+
+    .er-chat-input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--er-ink);
+      font-size: 12px;
+      padding: 3px 6px;
+    }
+
+    .er-chat-input::placeholder {
+      color: var(--er-faint);
+    }
+
+    .er-chat-mic-btn,
+    .er-chat-send-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      width: 25px;
+      height: 25px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--er-muted);
+      cursor: pointer;
+      transition: all 140ms ease;
+      padding: 0;
+    }
+
+    .er-chat-mic-btn:hover,
+    .er-chat-send-btn:hover {
+      background: #1c333c;
+      color: var(--er-ink);
+      border-color: var(--er-accent);
+    }
+
+    .er-chat-mic-btn.listening {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      color: #ef4444;
+      animation: pulse-mic 1s infinite alternate;
+    }
+
+    @keyframes pulse-mic {
+      from { transform: scale(1); opacity: 0.85; }
+      to { transform: scale(1.06); opacity: 1; }
+    }
+
+    .er-speech-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: 6px;
+    }
+
+    .er-speech-dot {
+      width: 4px;
+      height: 4px;
+      background: var(--er-accent);
+      border-radius: 50%;
+    }
+
+    /* Slide 1: Key Findings */
+    .er-findings-hero-card {
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .er-findings-stat-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .er-findings-jump-num {
+      font-family: var(--er-font-serif);
+      font-size: 24px;
+      color: var(--er-extreme);
+      line-height: 1;
+    }
+
+    .er-findings-jump-label {
+      font-size: 12px;
+      color: var(--er-muted);
+    }
+
+    .er-findings-summary {
+      font-size: 12px;
+      color: var(--er-ink);
+      line-height: 1.35;
+    }
+
+    .er-evidence-milestones-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--er-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .er-evidence-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .er-evidence-item {
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 7px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+      width: 100%;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .er-evidence-item:hover {
+      background: #182e37;
+      border-color: var(--er-accent);
+    }
+
+    .er-evidence-yr {
+      font-weight: 700;
+      color: var(--er-ink);
+    }
+
+    .er-evidence-tag {
+      color: var(--er-muted);
+      flex: 1;
+      padding-left: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .er-evidence-val {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Slide 2: Science Report */
+    .er-report-card {
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .er-report-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--er-accent);
+    }
+
+    .er-report-desc {
+      font-size: 12px;
+      color: var(--er-ink);
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .er-whitepaper-btn {
+      background: rgba(169, 224, 210, 0.12);
+      border: 1px solid var(--er-accent);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--er-ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 150ms ease;
+      flex-shrink: 0;
+    }
+
+    .er-whitepaper-btn:hover {
+      background: var(--er-accent);
+      color: #060b0e;
+    }
+
+    /* Bottom Indicator Lights / Pagination Dots */
+    .er-slide-indicators {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .er-indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0;
+      cursor: pointer;
+      transition: width 240ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms ease, box-shadow 200ms ease;
+    }
+
+    .er-indicator-dot:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .er-indicator-dot.active {
+      width: 20px;
+      background: var(--er-accent);
+      border-color: var(--er-accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    }
+
+    /* BOX 2 (BOTTOM): MASTER SOUND & PLAYBACK CONTROLLER DECK */
+    .er-sound-transport-box {
+      background: var(--er-surface-glass);
+      border: 1px solid var(--er-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(16px);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Telemetry Header */
+    .er-transport-readout-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .er-year-telemetry {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .er-year-num {
+      font-family: var(--er-font-serif);
+      font-size: 34px;
+      line-height: 1;
+      color: var(--er-ink);
+      font-weight: 400;
+    }
+
+    .er-val-pill {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--er-mild);
+      letter-spacing: -0.01em;
+    }
+
+    .er-hz-pill {
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--er-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Spark Chart */
+    .er-chart-container {
+      width: 100%;
+      height: 90px;
+      position: relative;
+    }
+
+    .er-chart {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    .er-chart text {
+      fill: var(--er-faint);
+      font-family: var(--er-font-sans);
+      font-size: 11px;
+    }
+
+    .er-chart-tooltip {
+      position: absolute;
+      background: #060b0e;
+      border: 1px solid var(--er-accent);
+      color: var(--er-ink);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      transform: translate(-50%, -120%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+      white-space: nowrap;
+    }
+
+    /* Scrubber Slider */
+    .er-slider-box {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .er-hazard-ticks {
+      position: absolute;
+      top: 1px;
+      left: 8px;
+      right: 8px;
+      height: 6px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .er-hazard-tick-dot {
+      position: absolute;
+      top: 1px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #ffb74d;
+      box-shadow: 0 0 4px rgba(255, 183, 77, 0.9);
+      transform: translateX(-50%);
+      opacity: 0.75;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+    }
+
+    .er-hazard-tick-dot.active {
+      transform: translateX(-50%) scale(2.4);
+      background: #fff;
+      box-shadow: 0 0 6px #ffb74d, 0 0 12px #ff9800;
+      opacity: 1;
+    }
+
+    .er-scrubber {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #15262c;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.25s ease;
+    }
+
+    .er-scrubber.playing {
+      background: linear-gradient(90deg, rgba(169, 224, 210, 0.45) 0%, rgba(100, 210, 255, 0.25) var(--scrubber-progress, 0%), #15262c var(--scrubber-progress, 0%));
+    }
+
+    .er-scrubber::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--er-accent);
+      border: 2px solid #060b0e;
+      cursor: grab;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.2s ease;
+    }
+
+    .er-scrubber.playing::-webkit-slider-thumb {
+      box-shadow: 0 0 0 4px rgba(169, 224, 210, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6);
+      transform: scale(1.15);
+      background: var(--er-cyan);
+    }
+
+    .er-scrubber::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.2);
+    }
+
+    .er-scrubber::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--er-accent);
+      border: 2px solid #060b0e;
+      cursor: grab;
+      transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.2s ease;
+    }
+
+    .er-scrubber.playing::-moz-range-thumb {
+      box-shadow: 0 0 0 4px rgba(169, 224, 210, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6);
+      transform: scale(1.15);
+      background: var(--er-cyan);
+    }
+
+    .er-milestones {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--er-faint);
+      padding: 0 2px;
+    }
+
+    /* Primary Transport Buttons Row */
+    .er-transport-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .er-play-btn-large {
+      flex: 1.4;
+      justify-content: center;
+      padding-block: 10px;
+      padding-inline: 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .er-tempo-picker {
+      display: inline-flex;
+      background: #0d171b;
+      border: 1px solid var(--er-border);
+      border-radius: 7px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .er-tempo-picker button {
+      border: none;
+      background: transparent;
+      padding: 4px 7px;
+      font-size: 12px;
+      border-radius: 5px;
+      color: var(--er-muted);
+      box-shadow: none;
+    }
+
+    .er-tempo-picker button.active {
+      background: #21353c;
+      color: var(--er-ink);
+      font-weight: 600;
+    }
+
+    /* Audio Equalizer Mini Bar */
+    .er-audio-mini-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--er-border);
+      padding-top: 8px;
+      font-size: 12px;
+      color: var(--er-muted);
+    }
+
+    .er-visualizer-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 18px;
+      width: 26px;
+    }
+
+    .er-v-bar {
+      width: 3px;
+      background: var(--er-accent);
+      border-radius: 1px;
+      height: 4px;
+      transition: height 0.08s ease;
+    }
+
+    .er-v-bar.active {
+      height: 16px;
+    }
+
+    /* Comparison Dropdown HUD */
+    .er-compare-hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: rgba(22, 38, 46, 0.7);
+      border: 1px solid var(--er-accent);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--er-ink);
+    }
+
+    /* -------------------------------------------------------------
+       5. MODAL DIALOGS
+       ------------------------------------------------------------- */
+    .er-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 11, 14, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .er-modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .er-modal-card {
+      background: #0d181d;
+      border: 1px solid var(--er-border);
+      border-radius: 16px;
+      max-width: 540px;
+      width: 100%;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    .er-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .er-modal-header h2 {
+      font-family: var(--er-font-serif);
+      font-size: 24px;
+      font-weight: 400;
+    }
+
+    .er-modal-body {
+      font-size: 13px;
+      color: var(--er-muted);
+      line-height: 1.55;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .er-modal-body h3 {
+      color: var(--er-ink);
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .er-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .er-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .er-input-group label {
+      font-size: 12px;
+      color: var(--er-faint);
+    }
+
+    .er-input-group input {
+      background: #14232a;
+      border: 1px solid var(--er-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--er-ink);
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .er-input-group input:focus {
+      border-color: var(--er-accent);
+      outline: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      button:not(:disabled):active {
+        transform: none !important;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/observatory.css">
+  <script>if(new URLSearchParams(location.search).has('embedded'))document.documentElement.classList.add('studio-embedded');</script>
+  <link rel="stylesheet" href="css/studio-embed.css">
+</head>
+<body id="earth-listening-room" data-mode="learn">
+
+  <!-- 1. FULLSCREEN 3D EARTH STAGE -->
+
+
+  <!-- 2. TOP FLOATING COMMAND BAR -->
+  <header class="er-top-bar">
+    <!-- Brand Pod (Left) -->
+    <div class="er-top-brand-pod">
+      <div class="er-brand">Earthtone Studio</div>
+      <span class="er-status-badge" title="NASA Earth Information Center Challenge">Observatory</span>
+    </div>
+
+    <!-- Primary Track Switcher (Centered directly over Earth) -->
+    <div class="er-top-track-pod" role="tablist" aria-label="Scientific Observation Track">
+      <button type="button" class="er-track-tab active" data-track="temperature" role="tab" aria-selected="true" id="tab-temp">
+        <i data-lucide="thermometer" aria-hidden="true"></i> Temperature
+      </button>
+      <button type="button" class="er-track-tab" data-track="rain" role="tab" aria-selected="false" id="tab-rain">
+        <i data-lucide="cloud-rain" aria-hidden="true"></i> Rain
+      </button>
+      <div class="er-track-divider" aria-hidden="true"></div>
+
+    </div>
+
+    <!-- Spatial Tools & Controls (Right Strip - Aligned with Right Console) -->
+
+    <div class="er-mode-switch" role="group" aria-label="Experience mode">
+      <button type="button" data-mode="explore" aria-pressed="false">Explore</button>
+      <button type="button" data-mode="learn" aria-pressed="true">Learn</button>
+    </div>
+  </header>
+
+  <!-- 3. FLOATING HUD ON EARTH (BOTTOM LEFT) -->
+
+
+  <main class="er-world" aria-label="Interactive Earth observatory">
+    <div class="er-world-heading"><h1>Hear how our planet changes.</h1><p>Compare two years. Listen for the difference.</p></div>
+  <div id="fullscreen-earth-wrap" role="img" aria-label="Fullscreen Interactive 3D Earth Globe. Drag to rotate, scroll to zoom, or use Frame Area to select a region.">
+    <div class="er-drag-box" id="drag-box" hidden></div>
+    <span class="er-globe-status" id="globe-status">Loading Blue Marble planetary globe…</span>
+  </div>
+  <div class="er-earth-info-hud">
+    <!-- Projection Switcher: 3D Globe vs 2D Flat Map (Above Whole Earth) -->
+    <div class="er-hud-proj-pod" role="tablist" aria-label="Earth Projection Mode">
+      <button type="button" class="er-hud-proj-tab active er-proj-tab" data-proj="globe" role="tab" aria-selected="true" id="proj-globe" title="3D Spherical Earth Globe">
+        <i data-lucide="globe" aria-hidden="true"></i> 3D Globe
+      </button>
+      <button type="button" class="er-hud-proj-tab er-proj-tab" data-proj="flat" role="tab" aria-selected="false" id="proj-flat" title="2D Equirectangular Flat Map">
+        <i data-lucide="map" aria-hidden="true"></i> Flat Map
+      </button>
+    </div>
+
+    <!-- Spatial Badge (Whole Earth / Framed Region) -->
+    <button type="button" class="er-spatial-badge" id="focus-badge" title="Click to reset back to Whole Earth view">
+      <i data-lucide="crosshair" aria-hidden="true"></i>
+      <span id="focus-name">Whole Earth</span>
+      <span class="er-badge-meta" id="focus-meta">· Global · 16200 cells</span>
+    </button>
+
+    <!-- Color Legend Card -->
+    <div class="er-color-legend-card">
+      <div id="temp-legend">
+        <img src="assets/nasa-temperature-colorbar-cropped.png" alt="NASA color scale: -2 to +2 °C" width="510" height="147">
+        <div class="er-legend-labels">
+          <span>-2 °C</span>
+          <span>Reference (0 °C)</span>
+          <span>+2 °C</span>
+        </div>
+      </div>
+      <div id="rain-legend" hidden>
+        <div class="er-rain-colorbar" aria-hidden="true"></div>
+        <div class="er-legend-labels">
+          <span>0 mm/d</span>
+          <span>3 mm/d</span>
+          <span>6 mm/d</span>
+          <span>12+ mm/d</span>
+        </div>
+      </div>
+      <p class="er-legend-note">Temperature reference: 1951–1980</p>
+    </div>
+  </div>
+    <div class="er-top-tools-pod">
+      <button type="button" class="quiet icon-pill" id="btn-frame-toggle" aria-pressed="false" title="Draw bounding box across Earth to frame any region">
+        <i data-lucide="scan" aria-hidden="true"></i> Frame area
+      </button>
+      <button type="button" class="quiet icon-pill" id="btn-custom-bounds" title="Enter custom geographic coordinates">
+        <i data-lucide="map-pin" aria-hidden="true"></i> Bounds…
+      </button>
+      <button type="button" class="quiet icon-pill" id="hud-layer-toggle" title="Toggle between natural satellite Earth and data layer">
+        <i data-lucide="layers" aria-hidden="true"></i> <span id="layer-toggle-text">Satellite</span>
+      </button>
+      <button type="button" class="quiet icon-pill er-tool-icon-btn" id="hud-zoom-in" aria-label="Zoom in" title="Zoom in">
+        <i data-lucide="plus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="quiet icon-pill er-tool-icon-btn" id="hud-zoom-out" aria-label="Zoom out" title="Zoom out">
+        <i data-lucide="minus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="quiet icon-pill er-tool-icon-btn" id="hud-reset-view" aria-label="Reset perspective" title="Reset view">
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+      </button>
+
+      <button class="quiet icon-pill er-tool-icon-btn" type="button" data-action="data" aria-expanded="false" aria-controls="er-modal" title="Scientific Data & Acoustic Specs">
+        <i data-lucide="info" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="er-hazard-pill-btn active" id="btn-hazards-toggle" title="Toggle 3D planetary shock beacons (Volcanoes, Megafires, Cyclones, Meteors)">
+        <i data-lucide="zap" aria-hidden="true"></i> <span id="hazard-btn-label">Hazards</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- 4. RIGHT-SIDE FLOATING OBSERVATORY CONSOLE -->
+  <aside class="er-right-console" aria-label="Observatory Intelligence and Playback Console">
+    <!-- TOP BOX: ZERO-SCROLL 3-SLIDE CAROUSEL (3D ASSISTANT, KEY EVIDENCE, SCIENCE REPORT) -->
+    <section class="er-ai-evidence-box">
+      <!-- Carousel Header -->
+      <div class="er-console-header">
+        <span class="er-console-title" id="er-slide-title">
+          <i data-lucide="bot" aria-hidden="true"></i> Dr. Jo <span class="er-guide-note">Climate guide</span>
+        </span>
+        <div class="er-live-indicator">
+          <span class="er-speech-dot"></span> Scripted guide
+        </div>
+      </div>
+
+      <!-- Zero-Scroll Carousel Viewport -->
+      <div class="er-carousel-container">
+        <div class="er-carousel-track" id="er-carousel-track">
+          <!-- SLIDE 0: 3D ASSISTANT, LIVE SPEECH & CONVERSATIONAL CHAT -->
+          <div class="er-carousel-slide active" id="slide-ai" role="tabpanel" aria-labelledby="guide-tab-0" aria-label="Scripted climate guide">
+            <!-- 3D AI Viewport -->
+            <div class="er-assistant-3d-box" id="ai-assistant-stage" role="img" aria-label="Interactive 3D Dr. Jo AI Assistant">
+              <span class="er-model-slot-label">Dr. Jo · 3D Viewport · Drag to rotate</span>
+            </div>
+
+            <p class="er-view-context" id="er-view-context"></p>
+            <h2 class="er-view-title">What you’re seeing</h2>
+            <!-- Dialogue Speech Bubble -->
+            <div class="er-ai-speech-bubble" id="er-guide-answer">
+              <!-- Dynamically populated -->
+            </div>
+
+            <section class="er-lesson" aria-labelledby="er-lesson-title">
+              <div class="er-lesson-progress" id="er-lesson-progress">STEP 1 OF 3 · PREDICT</div>
+              <h3 id="er-lesson-title">Which year will sound higher?</h3>
+              <div class="er-predictions" role="group" aria-label="Your prediction">
+                <button type="button" data-predict="first" aria-pressed="false">1980</button>
+                <button type="button" data-predict="last" aria-pressed="false">2024</button>
+              </div>
+              <button type="button" class="er-lesson-primary" id="er-lesson-listen"><i data-lucide="play" aria-hidden="true"></i> Listen &amp; compare</button>
+              <p id="er-lesson-feedback" role="status">Choose a year, then listen to both. Sound is generated from data.</p>
+              <div class="er-lesson-controls"><button type="button" id="er-lesson-repeat">Start again</button><button type="button" id="er-lesson-next">Next step <i data-lucide="arrow-right" aria-hidden="true"></i></button></div>
+            </section>
+            <h3 class="er-chat-heading">Ask about this view</h3>
+            <!-- Quick Inquiry Chips -->
+            <div class="er-quick-chips" role="toolbar" aria-label="Suggested questions">
+              <button type="button" class="er-chip-btn" id="btn-teach-tour" title="Start automated guided audio-visual walkthrough">
+                <i data-lucide="sparkles" aria-hidden="true"></i> Teach Me / Tour
+              </button>
+              <button type="button" class="er-chip-btn" data-query="Explain the colors">
+                <i data-lucide="thermometer" aria-hidden="true"></i> Explain the colors
+              </button>
+              <button type="button" class="er-chip-btn" data-query="How does the acoustic sonification work?">
+                <i data-lucide="audio-lines" aria-hidden="true"></i> How does sound work?
+              </button>
+            </div>
+
+            <div class="er-chat-log" id="er-chat-log" role="log" aria-label="Your conversation with Dr. Jo" aria-live="polite"><p class="er-guide-note">Ask about the map, selected year, region, or sound. Answers use local explanations.</p></div>
+            <!-- Sleek Single-Line Chat Input Bar -->
+            <form class="er-ai-chat-bar" id="er-ai-chat-form">
+              <input type="text" id="er-chat-input" class="er-chat-input" placeholder="Ask Dr. Jo about Earth's climate..." autocomplete="off" aria-label="Ask Dr. Jo">
+              <button type="button" class="er-chat-mic-btn" id="btn-chat-mic" title="Voice Input (Speech-to-Text)" aria-label="Voice Input">
+                <i data-lucide="mic" aria-hidden="true"></i>
+              </button>
+              <button type="submit" class="er-chat-send-btn" id="btn-chat-send" title="Send question" aria-label="Send">
+                <i data-lucide="arrow-up" aria-hidden="true"></i>
+              </button>
+            </form>
+            <p class="er-guide-note">Fictional guide inspired by <a href="https://science.nasa.gov/earth/earth-observatory/joanne-simpson-1923-2010/" target="_blank" rel="noreferrer">Joanne Simpson’s work</a>. Responses are not her words.</p>
+          </div>
+
+          <!-- SLIDE 1: KEY FINDINGS & FAST EVIDENCE PITCH -->
+          <div class="er-carousel-slide" id="slide-findings" role="tabpanel" aria-labelledby="guide-tab-1" aria-label="Key Climate Evidence">
+            <div class="er-findings-hero-card">
+              <div class="er-findings-stat-row">
+                <span class="er-findings-jump-num" id="evidence-jump-val">+1.02 °C</span>
+                <span class="er-findings-jump-label">Selected-track change (1980 → 2024)</span>
+              </div>
+              <p class="er-findings-summary" id="evidence-summary-text">
+                Calculating the selected series…
+              </p>
+            </div>
+
+            <div class="er-evidence-milestones-title">Fast Evidence Jump:</div>
+            <div class="er-evidence-list">
+              <button type="button" class="er-evidence-item" data-jump="0">
+                <span class="er-evidence-yr">1980</span>
+                <span class="er-evidence-tag">First playable year</span>
+                <span class="er-evidence-val" style="color:var(--er-cool)">+0.26 °C</span>
+              </button>
+              <button type="button" class="er-evidence-item" data-jump="11">
+                <span class="er-evidence-yr">1991</span>
+                <span class="er-evidence-tag">Pinatubo eruption year</span>
+                <span class="er-evidence-val" style="color:var(--er-mild)">-0.50 °C drop</span>
+              </button>
+              <button type="button" class="er-evidence-item" data-jump="18">
+                <span class="er-evidence-yr">1998</span>
+                <span class="er-evidence-tag">El Niño year</span>
+                <span class="er-evidence-val" style="color:var(--er-warm)">+0.61 °C</span>
+              </button>
+              <button type="button" class="er-evidence-item" data-jump="36">
+                <span class="er-evidence-yr">2016</span>
+                <span class="er-evidence-tag">Historical observation</span>
+                <span class="er-evidence-val" style="color:var(--er-hot)">+1.01 °C</span>
+              </button>
+              <button type="button" class="er-evidence-item" data-jump="44">
+                <span class="er-evidence-yr">2024</span>
+                <span class="er-evidence-tag">Latest playable year</span>
+                <span class="er-evidence-val" style="color:var(--er-extreme)">+1.28 °C</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SLIDE 2: NASA EARTH JUKEBOX & SCIENCE REPORT -->
+          <div class="er-carousel-slide" id="slide-report" role="tabpanel" aria-labelledby="guide-tab-2" aria-label="NASA Earth Jukebox Science Report">
+            <div class="er-report-card">
+              <div class="er-report-header">
+                <i data-lucide="radio" aria-hidden="true"></i>
+                <span>Temperature maps &amp; measurements</span>
+              </div>
+              <p class="er-report-desc">
+                Temperature visuals come from NASA SVS 5450. Selected-area values are calculated from the bundled regional grids. The playable archive ends in 2024.
+              </p>
+            </div>
+
+            <div class="er-report-card">
+              <div class="er-report-header">
+                <i data-lucide="audio-lines" aria-hidden="true"></i>
+                <span>How the tracks make sound</span>
+              </div>
+              <p class="er-report-desc">
+                Temperature changes the pitch. Rainfall changes a synthesized rain texture. These sounds translate data; they are not recordings of weather.
+              </p>
+            </div>
+
+            <button type="button" class="er-whitepaper-btn" data-action="data">
+              <i data-lucide="file-text" aria-hidden="true"></i>
+              <span>Data sources &amp; sound mapping</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Indicator Lights / Pagination Dots -->
+      <div class="er-slide-indicators" role="tablist" aria-label="Console slide navigation">
+        <button type="button" class="er-indicator-dot active" role="tab" aria-selected="true" data-slide="0" aria-label="Guide" id="guide-tab-0" aria-controls="slide-ai">Guide</button>
+        <button type="button" class="er-indicator-dot" role="tab" aria-selected="false" data-slide="1" aria-label="Evidence" id="guide-tab-1" aria-controls="slide-findings">Evidence</button>
+        <button type="button" class="er-indicator-dot" role="tab" aria-selected="false" data-slide="2" aria-label="Sources" id="guide-tab-2" aria-controls="slide-report">Sources</button>
+      </div>
+    </section>
+
+    <!-- BOTTOM BOX: MASTER SOUND & PLAYBACK CONTROLLER DECK -->
+
+  </aside>
+
+    <section class="er-sound-transport-box" aria-label="Sound Synthesis & Timeline Controller">
+      <!-- Telemetry Readout -->
+      <div class="er-transport-readout-row">
+        <div class="er-year-telemetry">
+          <span class="er-year-num" id="readout-year">1980</span>
+          <span class="er-val-pill" id="readout-value">+0.26 °C</span>
+        </div>
+        <div class="er-hz-pill" id="readout-hz-pill" title="Acoustic modulation frequency">
+          <i data-lucide="audio-lines" aria-hidden="true"></i>
+          <span id="readout-freq">305 Hz</span>
+        </div>
+      </div>
+
+      <!-- Spark Chart -->
+      <div class="er-chart-container">
+        <svg class="er-chart" role="img" aria-label="Interactive annual observations from 1980 to 2024. Click any bar to hear."></svg>
+        <div class="er-chart-tooltip" hidden></div>
+      </div>
+
+      <!-- Scrubber Slider -->
+      <div class="er-slider-box">
+        <input id="er-year-slider" class="er-scrubber" type="range" min="0" max="44" value="0" aria-label="Timeline scrubber 1980 to 2024">
+        <div class="er-hazard-ticks" id="er-hazard-ticks" aria-hidden="true"></div>
+        <div class="er-milestones" aria-hidden="true">
+          <span>1980</span>
+          <span>1990</span>
+          <span>2000</span>
+          <span>2010</span>
+          <span>2020</span>
+          <span>2024</span>
+        </div>
+      </div>
+
+      <!-- Comparison HUD (when active) -->
+      <div class="er-compare-hud" id="er-compare-hud" hidden>
+        <div id="compare-step-1"><strong>1980:</strong> +0.26 °C</div>
+        <i data-lucide="arrow-right" aria-hidden="true"></i>
+        <div id="compare-step-2">Preparing comparison…</div>
+        <div id="compare-delta"><strong>Change:</strong> +1.02 °C</div>
+      </div>
+
+      <!-- Primary Transport Buttons -->
+      <div class="er-transport-controls-row">
+      <button class="quiet icon-pill" type="button" data-action="mute" aria-label="Toggle audio mute" title="Mute/Unmute sound">
+        <i data-lucide="volume-2" aria-hidden="true"></i>
+        <span class="mute-status-text">Audio On</span>
+      </button>
+        <button class="primary er-play-btn-large" type="button" data-action="play-start" aria-label="Play timeline sequence from 1980 to 2024">
+          <i data-lucide="play" class="er-opt-play-icon" aria-hidden="true"></i>
+          <span class="play-btn-text">Play (1980–2024)</span>
+        </button>
+
+        <button type="button" data-action="restart" aria-label="Reset timeline to 1980" title="Reset timeline to 1980">
+          <i data-lucide="rotate-ccw" aria-hidden="true"></i> 1980
+        </button>
+
+        <button type="button" data-action="compare" aria-label="Compare 1980 vs 2024">
+          <i data-lucide="git-compare" aria-hidden="true"></i> Compare
+        </button>
+
+        <div class="er-tempo-picker" role="group" aria-label="Playback speed">
+          <button type="button" data-speed="600" aria-label="0.5x speed">0.5x</button>
+          <button type="button" class="active" data-speed="400" aria-label="1.0x speed">1.0x</button>
+          <button type="button" data-speed="250" aria-label="1.5x speed">1.5x</button>
+        </div>
+      </div>
+
+      <!-- Mini Audio Status Strip -->
+      <div class="er-audio-mini-strip">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="er-visualizer-bars" aria-hidden="true">
+            <div class="er-v-bar"></div>
+            <div class="er-v-bar"></div>
+            <div class="er-v-bar"></div>
+            <div class="er-v-bar"></div>
+            <div class="er-v-bar"></div>
+          </div>
+          <span id="telemetry-headline">Higher anomaly → higher pitch</span>
+        </div>
+        <button type="button" class="quiet" data-action="single" aria-label="Play tone for current year" style="padding:2px 6px;">
+          <i data-lucide="volume-2" aria-hidden="true"></i> Hear year
+        </button>
+      </div>
+    </section>
+
+  <!-- Geographic Coordinates Modal -->
+  <div class="er-modal-backdrop" id="bounds-modal" hidden>
+    <div class="er-modal-card" role="dialog" aria-labelledby="bounds-modal-title">
+      <div class="er-modal-header">
+        <h2 id="bounds-modal-title">Custom Geographic Bounds</h2>
+        <button type="button" class="quiet" data-action="close-bounds" aria-label="Close dialog">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="er-modal-body">
+        <p>Set precise latitude and longitude boundaries for regional area-weighted integration.</p>
+        <div class="er-input-group">
+          <label for="input-area-name">Area Name</label>
+          <input type="text" id="input-area-name" value="Custom Region" maxlength="40">
+        </div>
+        <div class="er-form-row">
+          <div class="er-input-group">
+            <label for="input-south">South Latitude (-90° to 90°)</label>
+            <input type="number" id="input-south" min="-90" max="90" step="0.5" value="-10">
+          </div>
+          <div class="er-input-group">
+            <label for="input-north">North Latitude (-90° to 90°)</label>
+            <input type="number" id="input-north" min="-90" max="90" step="0.5" value="35">
+          </div>
+        </div>
+        <div class="er-form-row">
+          <div class="er-input-group">
+            <label for="input-west">West Longitude (-180° to 180°)</label>
+            <input type="number" id="input-west" min="-180" max="180" step="0.5" value="100">
+          </div>
+          <div class="er-input-group">
+            <label for="input-east">East Longitude (-180° to 180°)</label>
+            <input type="number" id="input-east" min="-180" max="180" step="0.5" value="150">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="quiet" data-action="close-bounds">Cancel</button>
+          <button type="button" class="primary" id="btn-apply-bounds">Apply & Focus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technical Data & Sound Modal -->
+  <div class="er-modal-backdrop" id="er-modal" hidden>
+    <div class="er-modal-card" role="dialog" aria-labelledby="er-modal-title">
+      <div class="er-modal-header">
+        <h2 id="er-modal-title">Scientific Data & Acoustic Sonification</h2>
+        <button type="button" class="quiet" data-action="close-modal" aria-label="Close dialog">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="er-modal-body">
+        <h3>Temperature: maps and values</h3>
+        <p>The bundled <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA SVS temperature maps</a> show regional running means. The project also includes a <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noreferrer">GISTEMP v4</a> global snapshot and source metadata. The interactive series is calculated from bundled regional grids; it must not be confused with an individual map pixel or automatically equated to the global annual table.</p>
+        <p>Temperature sets a synthesized note's frequency: <code>f = clamp(180 × 4^((anomaly + 0.8) / 3), 150, 850) Hz</code>. Higher values produce higher notes.</p>
+        <h3>Rainfall: a designed rain texture</h3>
+        <p>The inherited rainfall grid is labelled GPCP in this project. Its provenance and processing still need a scientific audit. The selected value and its range shape filtered noise and scheduled droplets. Relative scaling can make small differences subtle. This is synthesized sound, not a weather recording.</p>
+        <h3>Regions and years</h3>
+        <p>Geographic bounds select a rectangle. Grid cells are weighted by their overlap and latitude area. The playable period is 1980–2024 (45 years). Later bundled regional grids and images repeat 2024 and are excluded. This is a historical archive, not a live feed or a forecast.</p>
+        <h3>The guide</h3>
+        <p>Dr. Jo is fictional and scripted. Responses are not Joanne Simpson's words. No live LLM or future-climate model is connected.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Scripts & Regional Datasets -->
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/meshopt_decoder.js"></script>
+  <script src="vendor/GLTFLoader.min.js"></script>
+  <script src="vendor/lucide.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/regional-data.js"></script>
+  <script src="js/planetary-hazards.js"></script>
+  <!-- Agentation Visual Feedback Toolbar -->
+
+
+  <!-- Core Application Logic -->
+  <script>
+  (() => {
+    'use strict';
+    const root = document.getElementById('earth-listening-room');
+    const qs = selector => root.querySelector(selector);
+    const qsa = selector => root.querySelectorAll(selector);
+
+    // Decode Regional Data
+    const rawRegional = window.EARTH_REGIONAL_DATA;
+    const years = rawRegional.years.filter(year => year <= 2024); // Later bundled maps/grids repeat 2024; do not play them as new observations.
+    const lastYearIndex = years.length - 1;
+
+    function decodeBinary(encoded) {
+      const bytes = atob(encoded);
+      const values = new Uint16Array(bytes.length / 2);
+      for (let i = 0; i < values.length; i++) values[i] = bytes.charCodeAt(i * 2) | (bytes.charCodeAt(i * 2 + 1) << 8);
+      return values;
+    }
+
+    const grids = {
+      temperature: { ...rawRegional.temperature, data: decodeBinary(rawRegional.temperature.values) },
+      rain: { ...rawRegional.rain, data: decodeBinary(rawRegional.rain.values) }
+    };
+    delete grids.temperature.values;
+    delete grids.rain.values;
+
+    const radians = Math.PI / 180;
+    const longitude = value => ((value + 180) % 360 + 360) % 360 - 180;
+    const finite = value => Number.isFinite(value);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    // Area Definitions
+    const presetWorld = { name: 'Whole Earth', south: -90, north: 90, west: -180, east: 180, global: true };
+
+    function validateArea(area) {
+      const { south, north, west, east } = area;
+      return [south, north, west, east].every(finite) &&
+             south >= -90 && north <= 90 && south < north &&
+             west >= -180 && west <= 180 && east >= -180 && east <= 180 &&
+             west !== east;
+    }
+
+    function lonSegments(area) {
+      if (area.global) return [[-180, 180]];
+      return area.west < area.east ? [[area.west, area.east]] : [[area.west, 180], [-180, area.east]];
+    }
+
+    function intersection(a, b, c, d) {
+      return Math.max(0, Math.min(b, d) - Math.max(a, c));
+    }
+
+    function cellWeights(grid, area) {
+      const cells = [];
+      const segments = lonSegments(area);
+      const latHalf = grid.latStep / 2, lonHalf = grid.lonStep / 2;
+      for (let row = 0; row < grid.height; row++) {
+        const lat = grid.lat0 + row * grid.latStep;
+        const low = Math.max(area.south, lat - latHalf);
+        const high = Math.min(area.north, lat + latHalf);
+        if (low >= high) continue;
+        const latWeight = Math.sin(high * radians) - Math.sin(low * radians);
+        for (let col = 0; col < grid.width; col++) {
+          const center = longitude(grid.lon0 + col * grid.lonStep);
+          const left = center - lonHalf, right = center + lonHalf;
+          let lonWidth = 0;
+          for (const [west, east] of segments) {
+            for (const shift of [-360, 0, 360]) lonWidth += intersection(left + shift, right + shift, west, east);
+          }
+          if (lonWidth > 0) cells.push({ index: row * grid.width + col, weight: latWeight * lonWidth * radians });
+        }
+      }
+      return cells;
+    }
+
+    function seriesFor(grid, area) {
+      const cells = cellWeights(grid, area), size = grid.width * grid.height;
+      const series = years.map((_, yearIndex) => {
+        let sum = 0, weight = 0;
+        const offset = yearIndex * size;
+        for (const cell of cells) {
+          const q = grid.data[offset + cell.index];
+          if (q === 65535) continue;
+          sum += ((q - grid.offset) / grid.scale) * cell.weight;
+          weight += cell.weight;
+        }
+        return weight ? sum / weight : null;
+      });
+      return { series, cells: cells.length };
+    }
+
+    // State
+    const state = {
+      track: 'temperature',
+      area: { ...presetWorld },
+      index: 0,
+      playing: false,
+      comparing: false,
+      timer: null,
+      framing: false,
+      showData: true,
+      showHazards: true,
+      tempo: 400,
+      isMuted: false,
+      consoleMode: 'ai' // 'ai' or 'evidence'
+    };
+
+    let currentSeries = seriesFor(grids[state.track], state.area);
+
+    const signed = value => (value >= 0 ? '+' : '') + value.toFixed(2);
+    const formatValue = val => {
+      if (!finite(val)) return 'No data';
+      return state.track === 'temperature' ? `${signed(val)} °C` : `${val.toFixed(2)} mm/day`;
+    };
+
+    function getTempColor(val) {
+      if (val < 0.20) return '#68b5c9';
+      if (val < 0.45) return '#7ed3b2';
+      if (val < 0.75) return '#e5c158';
+      if (val < 1.05) return '#f28e46';
+      return '#ea4c46';
+    }
+
+    function getRainColor(val) {
+      if (val < 2.0) return '#64d2ff';
+      if (val < 3.5) return '#48a8d8';
+      if (val < 5.0) return '#2a7db8';
+      if (val < 6.5) return '#4a348c';
+      return '#7a1f68';
+    }
+
+    function getValueColor(val) {
+      return state.track === 'temperature' ? getTempColor(val) : getRainColor(val);
+    }
+
+    // Audio Engine
+    let audioCtx = null;
+    let masterGain = null;
+    let pinkNoiseBuffer = null;
+
+    function getPinkNoiseBuffer(ctx) {
+      if (pinkNoiseBuffer) return pinkNoiseBuffer;
+      const bufferSize = Math.max(44100 * 2, ctx.sampleRate * 2);
+      pinkNoiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = pinkNoiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+        b6 = white * 0.115926;
+      }
+      return pinkNoiseBuffer;
+    }
+
+    async function initAudio() {
+      if (audioCtx) {
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        return true;
+      }
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return false;
+      audioCtx = new AudioContext();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(state.isMuted ? 0 : 0.85, audioCtx.currentTime);
+      masterGain.connect(audioCtx.destination);
+      return true;
+    }
+
+    let pulseAssistant = () => {};
+
+    // Temperature Sonification
+    function playTempSound(value, duration = 0.36) {
+      if (!audioCtx || state.isMuted || !finite(value)) return;
+      const t = audioCtx.currentTime;
+      const freq = clamp(180 * Math.pow(4, (value + 0.8) / 3), 150, 850);
+
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(freq, t);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(freq * 2, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.07, t + duration * 0.6);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2600, t);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(filter);
+      filter.connect(masterGain);
+
+      osc1.start(t);
+      osc2.start(t);
+      osc1.stop(t + duration + 0.03);
+      osc2.stop(t + duration + 0.03);
+
+      pulseVisualizer(duration);
+    }
+
+    // Enhanced Multi-Layer Granular Raindrop Sonification
+    function playRainSound(value, duration = 0.42) {
+      if (!audioCtx || state.isMuted || !finite(value)) return;
+      const t = audioCtx.currentTime;
+
+      // Dynamic series statistics for regional/global adaptation
+      const valid = currentSeries.series.filter(finite);
+      const sMin = Math.min(...valid);
+      const sMax = Math.max(...valid);
+      const sRange = Math.max(0.01, sMax - sMin);
+      const mean = valid.reduce((a, b) => a + b, 0) / valid.length;
+      const std = Math.sqrt(valid.reduce((a, v) => a + Math.pow(v - mean, 2), 0) / valid.length) || 0.05;
+
+      const relNorm = clamp((value - sMin) / sRange, 0, 1);
+      const absNorm = clamp(value / 6.0, 0.1, 1.0);
+      const wetness = relNorm * 0.65 + absNorm * 0.35;
+      const zScore = (value - mean) / std;
+
+      // Tier 1: Ambient Rain Bed (Filtered Organic Pink Noise)
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = getPinkNoiseBuffer(audioCtx);
+      noise.loop = true;
+
+      const bedFilter = audioCtx.createBiquadFilter();
+      bedFilter.type = 'bandpass';
+      const bedCutoff = clamp(650 + wetness * 2200, 600, 3400);
+      bedFilter.frequency.setValueAtTime(bedCutoff, t);
+      bedFilter.Q.setValueAtTime(0.85, t);
+
+      const bedGain = audioCtx.createGain();
+      const bedVol = clamp(0.035 + wetness * 0.11, 0.03, 0.18);
+      bedGain.gain.setValueAtTime(0.001, t);
+      bedGain.gain.linearRampToValueAtTime(bedVol, t + 0.035);
+      bedGain.gain.setValueAtTime(bedVol, t + Math.max(0.06, duration - 0.08));
+      bedGain.gain.linearRampToValueAtTime(0.0001, t + duration);
+
+      noise.connect(bedFilter);
+      bedFilter.connect(bedGain);
+      bedGain.connect(masterGain);
+
+      noise.start(t);
+      noise.stop(t + duration + 0.02);
+
+      // Tier 2: Procedural Granular Droplets (Stochastic Minnaert Bubble Clicks)
+      const dropCount = Math.round(7 + wetness * 26);
+      for (let i = 0; i < dropCount; i++) {
+        const dropOffset = Math.random() * (duration - 0.035);
+        const dropTime = t + dropOffset;
+
+        const dropOsc = audioCtx.createOscillator();
+        const dropGain = audioCtx.createGain();
+
+        const baseFreq = 950 + Math.random() * 1600 - (wetness * 250);
+        dropOsc.type = 'sine';
+        dropOsc.frequency.setValueAtTime(baseFreq, dropTime);
+        dropOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.82, dropTime + 0.018);
+
+        const dropVol = 0.012 + Math.random() * 0.022;
+        dropGain.gain.setValueAtTime(0.0001, dropTime);
+        dropGain.gain.linearRampToValueAtTime(dropVol, dropTime + 0.002);
+        dropGain.gain.exponentialRampToValueAtTime(0.0001, dropTime + 0.022);
+
+        dropOsc.connect(dropGain);
+        dropGain.connect(masterGain);
+
+        dropOsc.start(dropTime);
+        dropOsc.stop(dropTime + 0.025);
+      }
+
+      // Tier 3: Convective Thunder Rumble on extreme rainfall years (zScore > 1.15)
+      if (zScore > 1.15) {
+        const thunderOsc = audioCtx.createOscillator();
+        const thunderGain = audioCtx.createGain();
+        const thunderFilter = audioCtx.createBiquadFilter();
+
+        thunderOsc.type = 'triangle';
+        thunderOsc.frequency.setValueAtTime(58, t);
+        thunderOsc.frequency.exponentialRampToValueAtTime(36, t + duration * 1.4);
+
+        thunderFilter.type = 'lowpass';
+        thunderFilter.frequency.setValueAtTime(110, t);
+
+        const thunderVol = clamp(0.04 + (zScore - 1.15) * 0.06, 0.04, 0.12);
+        thunderGain.gain.setValueAtTime(0.001, t);
+        thunderGain.gain.linearRampToValueAtTime(thunderVol, t + 0.06);
+        thunderGain.gain.exponentialRampToValueAtTime(0.0001, t + duration * 1.5);
+
+        thunderOsc.connect(thunderFilter);
+        thunderFilter.connect(thunderGain);
+        thunderGain.connect(masterGain);
+
+        thunderOsc.start(t);
+        thunderOsc.stop(t + duration * 1.55);
+      }
+
+      pulseVisualizer(duration);
+    }
+
+    // Planetary Hazards & Shocks Sonification (Volcanoes, Wildfires, Cyclones, Meteors)
+    function playHazardSound(type, duration = 0.85) {
+      if (!audioCtx || state.isMuted) return;
+      const t = audioCtx.currentTime;
+
+      if (type === 'volcano') {
+        // Infrasonic Seismic Rumble + Explosive Pop + Plume Hiss
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(48, t);
+        osc.frequency.exponentialRampToValueAtTime(28, t + duration);
+
+        oscGain.gain.setValueAtTime(0.001, t);
+        oscGain.gain.linearRampToValueAtTime(0.24, t + 0.04);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + duration + 0.02);
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = getPinkNoiseBuffer(audioCtx);
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(350, t);
+        filter.frequency.linearRampToValueAtTime(1400, t + 0.18);
+        filter.frequency.exponentialRampToValueAtTime(200, t + duration);
+
+        const nGain = audioCtx.createGain();
+        nGain.gain.setValueAtTime(0.001, t);
+        nGain.gain.linearRampToValueAtTime(0.28, t + 0.03);
+        nGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        noise.connect(filter);
+        filter.connect(nGain);
+        nGain.connect(masterGain);
+        noise.start(t);
+        noise.stop(t + duration + 0.02);
+      } else if (type === 'wildfire') {
+        // Granular crackle bursts + convective roar
+        const roar = audioCtx.createBufferSource();
+        roar.buffer = getPinkNoiseBuffer(audioCtx);
+        const rFilter = audioCtx.createBiquadFilter();
+        rFilter.type = 'bandpass';
+        rFilter.frequency.setValueAtTime(450, t);
+        rFilter.Q.setValueAtTime(1.5, t);
+
+        const rGain = audioCtx.createGain();
+        rGain.gain.setValueAtTime(0.001, t);
+        rGain.gain.linearRampToValueAtTime(0.18, t + 0.05);
+        rGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        roar.connect(rFilter);
+        rFilter.connect(rGain);
+        rGain.connect(masterGain);
+        roar.start(t);
+        roar.stop(t + duration + 0.02);
+
+        for (let i = 0; i < 14; i++) {
+          const cTime = t + Math.random() * (duration - 0.04);
+          const cOsc = audioCtx.createOscillator();
+          const cGain = audioCtx.createGain();
+          cOsc.type = 'square';
+          cOsc.frequency.setValueAtTime(2400 + Math.random() * 3200, cTime);
+          cGain.gain.setValueAtTime(0.0001, cTime);
+          cGain.gain.linearRampToValueAtTime(0.025, cTime + 0.002);
+          cGain.gain.exponentialRampToValueAtTime(0.0001, cTime + 0.015);
+          cOsc.connect(cGain);
+          cGain.connect(masterGain);
+          cOsc.start(cTime);
+          cOsc.stop(cTime + 0.02);
+        }
+      } else if (type === 'cyclone') {
+        // Resonant howling vortex sweep + barometric sub-bass
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = getPinkNoiseBuffer(audioCtx);
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.setValueAtTime(4.5, t);
+        filter.frequency.setValueAtTime(380, t);
+        filter.frequency.linearRampToValueAtTime(1250, t + duration * 0.45);
+        filter.frequency.exponentialRampToValueAtTime(420, t + duration);
+
+        const nGain = audioCtx.createGain();
+        nGain.gain.setValueAtTime(0.001, t);
+        nGain.gain.linearRampToValueAtTime(0.22, t + 0.08);
+        nGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        noise.connect(filter);
+        filter.connect(nGain);
+        nGain.connect(masterGain);
+        noise.start(t);
+        noise.stop(t + duration + 0.02);
+
+        const sub = audioCtx.createOscillator();
+        const subGain = audioCtx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(44, t);
+        subGain.gain.setValueAtTime(0.001, t);
+        subGain.gain.linearRampToValueAtTime(0.16, t + 0.1);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        sub.connect(subGain);
+        subGain.connect(masterGain);
+        sub.start(t);
+        sub.stop(t + duration + 0.02);
+      } else if (type === 'bolide') {
+        // Hypersonic Doppler whistle + Supersonic N-wave double boom
+        const whistle = audioCtx.createOscillator();
+        const wGain = audioCtx.createGain();
+        whistle.type = 'sine';
+        whistle.frequency.setValueAtTime(3200, t);
+        whistle.frequency.exponentialRampToValueAtTime(420, t + 0.38);
+
+        wGain.gain.setValueAtTime(0.001, t);
+        wGain.gain.linearRampToValueAtTime(0.18, t + 0.04);
+        wGain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+
+        whistle.connect(wGain);
+        wGain.connect(masterGain);
+        whistle.start(t);
+        whistle.stop(t + 0.45);
+
+        [0.26, 0.31].forEach((boomOffset, idx) => {
+          const bTime = t + boomOffset;
+          const boom = audioCtx.createOscillator();
+          const bGain = audioCtx.createGain();
+          boom.type = 'triangle';
+          boom.frequency.setValueAtTime(65, bTime);
+          boom.frequency.exponentialRampToValueAtTime(32, bTime + 0.28);
+
+          bGain.gain.setValueAtTime(0.0001, bTime);
+          bGain.gain.linearRampToValueAtTime(idx === 0 ? 0.3 : 0.22, bTime + 0.02);
+          bGain.gain.exponentialRampToValueAtTime(0.0001, bTime + 0.35);
+
+          boom.connect(bGain);
+          bGain.connect(masterGain);
+          boom.start(bTime);
+          boom.stop(bTime + 0.38);
+        });
+      }
+
+      pulseVisualizer(duration);
+    }
+
+    function playActiveSound(duration) {
+      const val = currentSeries.series[state.index];
+      if (state.track === 'temperature') playTempSound(val, duration);
+      else playRainSound(val, duration);
+    }
+
+    function pulseVisualizer(duration = 0.4) {
+      qsa('.er-v-bar').forEach(b => b.classList.add('active'));
+      pulseAssistant(duration);
+      setTimeout(() => {
+        if (!state.playing && !state.comparing) {
+          qsa('.er-v-bar').forEach(b => b.classList.remove('active'));
+        }
+      }, duration * 1000);
+    }
+
+    // Chart Renderer (SVG)
+    const chart = qs('.er-chart');
+    const chartTooltip = qs('.er-chart-tooltip');
+
+    function drawChart() {
+      const width = Math.max(chart.clientWidth, 280);
+      const height = 90;
+      const left = 38, right = 12, top = 8, bottom = 18;
+      chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+      const valid = currentSeries.series.filter(finite);
+      if (!valid.length) {
+        chart.innerHTML = '<text x="12" y="45">No data for this area selection.</text>';
+        return;
+      }
+
+      let min = Math.min(...valid), max = Math.max(...valid);
+      if (state.track === 'rain') {
+        min = 0;
+        max = Math.max(max, 6.0);
+      } else {
+        min = Math.floor(min * 2) / 2;
+        max = Math.ceil(max * 2) / 2;
+      }
+      if (max - min < 0.2) max = min + 0.2;
+
+      const x = i => left + (i / lastYearIndex) * (width - left - right);
+      const y = val => top + (max - val) / (max - min) * (height - top - bottom);
+
+      let markup = `<title>${state.track === 'temperature' ? 'Annual Temperature Anomaly (°C)' : 'Annual Precipitation (mm/day)'} for ${state.area.name}</title>`;
+
+      const steps = 3;
+      for (let s = 0; s < steps; s++) {
+        const v = min + (max - min) * (s / (steps - 1));
+        const yy = y(v);
+        const isBase = state.track === 'temperature' && Math.abs(v) < 0.05;
+        markup += `<line x1="${left}" x2="${width - right}" y1="${yy}" y2="${yy}" stroke="${isBase ? 'rgba(169, 224, 210, 0.4)' : 'rgba(255,255,255,0.08)'}" stroke-width="${isBase ? '1.5' : '1'}"/>`;
+        markup += `<text x="2" y="${yy + 3}">${v.toFixed(1)}</text>`;
+      }
+
+      const barWidth = Math.max(3, (width - left - right) / years.length - 2);
+      currentSeries.series.forEach((v, i) => {
+        if (!finite(v)) return;
+        const isCurrent = i === state.index;
+        const barColor = getValueColor(v);
+        const opacity = (state.playing || state.comparing) && i > state.index ? 0.35 : 1;
+        const strokeColor = isCurrent ? '#ffffff' : barColor;
+        const strokeWidth = isCurrent ? barWidth + 2 : barWidth;
+        const zeroY = state.track === 'rain' ? y(0) : (min <= 0 && max >= 0 ? y(0) : y(min));
+
+        markup += `
+          <g class="er-chart-bar" data-idx="${i}" style="cursor:pointer">
+            <line x1="${x(i)}" x2="${x(i)}" y1="${zeroY}" y2="${y(v)}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" opacity="${opacity}"/>
+            ${isCurrent ? `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#ffffff"/>` : ''}
+            <rect x="${x(i) - barWidth}" y="${top}" width="${barWidth * 2}" height="${height - bottom - top}" fill="transparent"/>
+          </g>
+        `;
+      });
+
+      [0, 10, 20, 30, 40, lastYearIndex].forEach(i => {
+        markup += `<text x="${x(i)}" y="${height - 2}" text-anchor="${i === 0 ? 'start' : i === lastYearIndex ? 'end' : 'middle'}">${years[i]}</text>`;
+      });
+
+      markup += `<line x1="${x(state.index)}" x2="${x(state.index)}" y1="${top}" y2="${height - bottom}" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.85"/>`;
+
+      chart.innerHTML = markup;
+
+      qsa('.er-chart-bar').forEach(barEl => {
+        const i = Number(barEl.getAttribute('data-idx'));
+        barEl.addEventListener('mouseenter', () => {
+          const val = currentSeries.series[i];
+          const yr = years[i];
+          chartTooltip.innerHTML = `<strong>${yr}</strong>: ${formatValue(val)}`;
+          chartTooltip.hidden = false;
+          chartTooltip.style.left = `${(x(i) / width) * 100}%`;
+          chartTooltip.style.top = `${y(val)}px`;
+        });
+        barEl.addEventListener('mouseleave', () => { chartTooltip.hidden = true; });
+        barEl.addEventListener('click', async () => {
+          stopPlayback();
+          state.index = i;
+          render();
+          if (await initAudio()) playActiveSound(0.45);
+        });
+      });
+    }
+
+    // Historical Climate Insights for Dr. Jo
+    const climateNotes = {
+      1980: "The beginning of our 47-year observation window. Baseline satellite and surface temperature tracking.",
+      1982: "Volcanic dust from El Chichón caused noticeable hemispheric dimming and temporary cooling.",
+      1991: "Mount Pinatubo erupted violently, injecting 20M tons of SO2 and dropping global temperatures by ~0.5 °C.",
+      1992: "Post-Pinatubo aerosol veil cooled tropical oceans and altered worldwide monsoonal rainfall.",
+      1998: "Super El Niño thermal surge drove global warmth to 20th-century record highs (+0.61 °C).",
+      2014: "Commencement of an unprecedented multi-year global temperature acceleration.",
+      2016: "Global anomalies surpassed the +1.0 °C threshold for the first time during intense ocean warming.",
+      2020: "Tied for record warmth at +1.01 °C despite pandemic-era industrial emission slowdowns.",
+      2023: "Historic marine heatwaves pushed North Atlantic and Pacific ocean temperatures off historical charts.",
+      2024: "Record high global anomalies (+1.28 °C), with intense tropical cyclone activity across the globe.",
+      2025: "Continuing high baseline warmth with elevated tropical rainfall and shifted atmospheric rivers.",
+      2024: "Last playable year in this historical archive. This is not a forecast."
+    };
+
+// Included inside the observatory closure by tools/upgrade-layout.py.
+// Keep lesson and conversation state separate from the timeline's narration.
+let lessonStep = 0;
+let lessonPrediction = null;
+let lessonHasListened = false;
+let lessonSession = 0;
+let lessonTimer = null;
+let lessonWaiting = null;
+const lessonEnd = years.includes(2024) ? years.indexOf(2024) : lastYearIndex;
+function updateLearningContext() {
+  const context = qs('#er-view-context');
+  if (context) context.textContent = `${state.area.name} · ${state.track === 'temperature' ? 'Temperature' : 'Rain'} · ${years[state.index]}`;
+}
+function appendConversation(question, answer) {
+  const log = qs('#er-chat-log');
+  for (const [label, text, type] of [['You', question, 'user'], ['Dr. Jo · scripted guide', answer, 'guide']]) {
+    const message = document.createElement('div');
+    message.className = `er-chat-message ${type}`;
+    const name = document.createElement('small');
+    name.textContent = label;
+    const body = document.createElement('p');
+    body.textContent = text;
+    message.append(name, body);
+    log.append(message);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function cancelLessonSound() {
+  lessonSession++;
+  clearTimeout(lessonTimer);
+  if (lessonWaiting) { lessonWaiting(); lessonWaiting = null; }
+  const listen = qs('#er-lesson-listen');
+  if (listen) listen.disabled = false;
+}
+function setExperienceMode(mode) {
+  cancelLessonSound();
+  stopPlayback();
+  abortTour();
+  document.body.dataset.mode = mode;
+  qsa('.er-mode-switch button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
+  if (mode === 'learn') setSlide(0);
+}
+function resetLesson() {
+  cancelLessonSound();
+  lessonStep = 0;
+  lessonPrediction = null;
+  lessonHasListened = false;
+  qsa('[data-predict]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+  updateLesson();
+}
+function updateLesson() {
+  const rain = state.track === 'rain';
+  qs('#er-lesson-progress').textContent = ['STEP 1 OF 3 · PREDICT', 'STEP 2 OF 3 · LISTEN', 'STEP 3 OF 3 · EXPLAIN'][lessonStep];
+  qs('#er-lesson-title').textContent = lessonStep === 2 ? 'What changed between the years?' : rain ? 'Which year will sound rainier?' : 'Which year will sound higher?';
+  qs('.er-predictions').hidden = lessonStep === 2;
+  qs('#er-lesson-listen').textContent = lessonHasListened ? 'Listen again' : 'Listen & compare';
+  qs('[data-predict=first]').textContent = years[0];
+  qs('[data-predict=last]').textContent = years[lessonEnd];
+  qs('#er-lesson-next').textContent = lessonStep === 2 ? 'Explore freely →' : 'Next step →';
+  if (lessonStep === 2) {
+    const a = currentSeries.series[0], b = currentSeries.series[lessonEnd];
+    const delta = b - a;
+    const direction = delta === 0 ? 'The two values are equal.' : rain ? `The ${delta > 0 ? years[lessonEnd] : years[0]} value is wetter, so it makes a denser rain texture.` : `The ${delta > 0 ? years[lessonEnd] : years[0]} value is warmer, so it produces a higher note.`;
+    qs('#er-lesson-feedback').textContent = `${state.area.name}: ${years[0]} ${formatValue(a)} → ${years[lessonEnd]} ${formatValue(b)}. ${direction} Sound is a designed translation of the data.`;
+  } else {
+    qs('#er-lesson-feedback').textContent = lessonStep === 0 ? 'Choose a year, then listen to both. Sound is generated from data.' : `Listen to ${years[0]} first, then ${years[lessonEnd]}. Compare the sound and the values.`;
+  }
+}
+async function listenToLesson() {
+  cancelLessonSound();
+  abortTour();
+  stopPlayback();
+  const session = lessonSession;
+  if (!await initAudio()) {
+    qs('#er-lesson-feedback').textContent = 'Audio could not start. You can still compare the values; try Listen again to retry.';
+    return;
+  }
+  if (session !== lessonSession) return;
+  const button = qs('#er-lesson-listen');
+  button.disabled = true;
+  if (lessonStep < 2) lessonStep = 1;
+  updateLesson();
+  for (const index of [0, lessonEnd]) {
+    if (session !== lessonSession) return;
+    state.index = index;
+    render();
+    playActiveSound(0.8);
+    qs('#er-lesson-feedback').textContent = `${state.isMuted ? 'Sound is muted. Showing' : 'Listening to'} ${years[index]} · ${formatValue(currentSeries.series[index])}`;
+    await new Promise(resolve => { lessonWaiting = resolve; lessonTimer = setTimeout(resolve, 1400); });
+    lessonWaiting = null;
+  }
+  if (session !== lessonSession) return;
+  lessonHasListened = true;
+  button.disabled = false;
+  const a = currentSeries.series[0], b = currentSeries.series[lessonEnd];
+  const selected = lessonPrediction === 'first' ? a : b;
+  const correct = lessonPrediction && selected === Math.max(a, b);
+  qs('#er-lesson-feedback').textContent = `${lessonPrediction ? correct ? 'Your prediction matched the data. ' : 'The other year has the higher value. ' : ''}${years[0]}: ${formatValue(a)}. ${years[lessonEnd]}: ${formatValue(b)}. Select Next step to see why.`;
+}
+function initializeLearningLayout() {
+  qs('.er-console-header').prepend(qs('#ai-assistant-stage'));
+  const conversation = document.createElement('section');
+  conversation.className = 'er-conversation';
+  conversation.setAttribute('aria-label', 'Ask about this view');
+  const start = qs('.er-chat-heading');
+  const siblings = [];
+  for (let node = start; node; node = node.nextElementSibling) siblings.push(node);
+  siblings.forEach(node => conversation.append(node));
+  qs('.er-carousel-container').after(conversation);
+  qsa('.er-mode-switch button').forEach(button => button.addEventListener('click', () => setExperienceMode(button.dataset.mode)));
+  qsa('[data-predict]').forEach(button => button.addEventListener('click', () => {
+    lessonPrediction = button.dataset.predict;
+    qsa('[data-predict]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    qs('#er-lesson-feedback').textContent = `You chose ${button.textContent}. Listen to test your prediction.`;
+  }));
+  qs('#er-lesson-listen').addEventListener('click', listenToLesson);
+  qs('#er-lesson-repeat').addEventListener('click', resetLesson);
+  qs('#er-lesson-next').addEventListener('click', () => {
+    if (lessonStep === 2) return setExperienceMode('explore');
+    if (lessonStep === 1 && !lessonHasListened) {
+      qs('#er-lesson-feedback').textContent = 'Listen & compare first, then continue to the explanation.';
+      return;
+    }
+    lessonStep++;
+    updateLesson();
+  });
+  // A manual timeline or track action cancels a pending lesson before it can jump years.
+  qsa('[data-track], #er-year-slider, [data-action=play-start], [data-action=restart], [data-action=compare], #btn-frame-toggle, #btn-custom-bounds').forEach(control => {
+    control.addEventListener(control.id === 'er-year-slider' ? 'input' : 'click', cancelLessonSound, true);
+  });
+  qsa('[data-track]').forEach(control => control.addEventListener('click', resetLesson));
+  qsa('.er-tempo-picker button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
+  setSlide(0);
+  updateLesson();
+}
+
+    // UI Render
+    function render() {
+      const yr = years[state.index];
+      const val = currentSeries.series[state.index];
+
+      qs('#readout-year').textContent = yr;
+      const valEl = qs('#readout-value');
+      valEl.textContent = formatValue(val);
+      valEl.style.color = getValueColor(val);
+
+      const freqEl = qs('#readout-freq');
+      if (state.track === 'temperature') {
+        const hz = finite(val) ? Math.round(clamp(180 * Math.pow(4, (val + 0.8) / 3), 150, 850)) : 0;
+        freqEl.textContent = `${hz} Hz`;
+        qs('#telemetry-headline').textContent = 'Higher anomaly → higher pitch';
+      } else {
+        const valid = currentSeries.series.filter(finite);
+        const sMin = Math.min(...valid);
+        const sMax = Math.max(...valid);
+        const relNorm = clamp((val - sMin) / Math.max(0.01, sMax - sMin), 0, 1);
+        const wetness = relNorm * 0.65 + clamp(val / 6.0, 0.1, 1) * 0.35;
+        const cutoff = Math.round(650 + wetness * 2200);
+        const drops = Math.round(7 + wetness * 26);
+        freqEl.textContent = `${drops} drops/step · ${cutoff} Hz`;
+        qs('#telemetry-headline').textContent = 'Granular raindrops & storm density';
+      }
+
+      // Evidence Pane dynamic update
+      const val0 = currentSeries.series[0];
+      const valEnd = currentSeries.series[lastYearIndex];
+      const totalJump = valEnd - val0;
+      qs('#evidence-jump-val').textContent = signed(totalJump) + (state.track === 'temperature' ? ' °C' : ' mm/d');
+      qs('#evidence-jump-val').style.color = totalJump >= 0 ? 'var(--er-extreme)' : 'var(--er-cool)';
+      qs('#evidence-summary-text').textContent = state.track === 'temperature'
+        ? `Between ${years[0]} and ${years[lastYearIndex]}, the selected temperature series for ${state.area.name} changed by ${signed(totalJump)} °C. Higher values produce a higher pitch.`
+        : `Between ${years[0]} and ${years[lastYearIndex]}, the selected rainfall series for ${state.area.name} changed by ${signed(totalJump)} mm/day across ${currentSeries.cells} grid cells.`;
+
+      const slider = qs('#er-year-slider');
+      slider.value = state.index;
+      slider.setAttribute('aria-valuenow', state.index);
+      slider.setAttribute('aria-valuetext', `${yr}: ${formatValue(val)}`);
+      updateLearningContext();
+      slider.classList.toggle('playing', state.playing);
+      const scrubberPct = (state.index / Math.max(1, lastYearIndex)) * 100;
+      slider.style.setProperty('--scrubber-progress', `${scrubberPct}%`);
+
+      const playText = qs('.play-btn-text');
+      const playIcon = qs('[data-action=play-start] i, [data-action=play-start] svg');
+      if (state.playing) {
+        playText.textContent = 'Pause';
+        playIcon?.setAttribute('data-lucide', 'pause');
+      } else {
+        playText.textContent = 'Play timeline';
+        playIcon?.setAttribute('data-lucide', 'play');
+      }
+
+      // Planetary Hazards state & badge
+      const activeHazards = (window.PLANETARY_HAZARDS || []).filter(h => h.year === yr);
+      const hazardBtn = qs('#btn-hazards-toggle');
+      if (hazardBtn) {
+        hazardBtn.classList.toggle('active', state.showHazards);
+        qs('#hazard-btn-label').textContent = activeHazards.length > 0 && state.showHazards
+          ? `Hazards (${activeHazards.length} Active)`
+          : 'Hazards';
+      }
+
+      // Update Scrubber Hazard Tick Dots
+      qsa('.er-hazard-tick-dot').forEach(dot => {
+        const dYr = Number(dot.getAttribute('data-year'));
+        dot.classList.toggle('active', dYr === yr);
+      });
+
+      // Update 3D Hazard Beacons on the Globe
+      if (typeof window.updateHazardVisibility === 'function') {
+        window.updateHazardVisibility();
+      }
+
+      const viewSummary = state.track === 'temperature'
+        ? `The selected temperature difference is ${formatValue(val)}. Blue means cooler and red means warmer than the map’s reference average. Higher values produce a higher note.`
+        : `The selected rainfall value is ${formatValue(val)}. The map colors follow the rain scale. Higher values produce a denser rain texture.`;
+      qs('#er-guide-answer').textContent = viewSummary;
+      if (activeHazards.length > 0 && state.showHazards) {
+        const h0 = activeHazards[0];
+        qs('#er-guide-answer').insertAdjacentHTML('beforeend', `
+          <details class="er-event-details"><summary>Event in ${yr}: ${h0.name}</summary>
+          <p>${h0.headline}</p><p>${h0.metrics} · ${h0.location}</p>
+          <button type="button" id="btn-text-hear-hazard">Listen to event sound</button></details>
+        `);
+        qs('#btn-text-hear-hazard')?.addEventListener('click', async e => {
+          e.stopPropagation();
+          if (await initAudio()) playHazardSound(h0.audioPreset, 1.1);
+        });
+      }
+
+      qs('#temp-legend').hidden = !state.showData || state.track !== 'temperature';
+      qs('#rain-legend').hidden = !state.showData || state.track !== 'rain';
+      qs('#layer-toggle-text').textContent = state.showData ? 'Satellite' : 'Show data';
+
+      qsa('.er-evidence-item').forEach(item => {
+        const index = Math.min(lastYearIndex, Number(item.dataset.jump));
+        item.querySelector('.er-evidence-val').textContent = formatValue(currentSeries.series[index]);
+      });
+      drawChart();
+      updateVisual();
+      document.dispatchEvent(new CustomEvent('resonance:render'));
+      window.lucide?.createIcons();
+    }
+
+    function stopPlayback() {
+      clearTimeout(state.timer);
+      state.timer = null;
+      state.playing = false;
+      state.comparing = false;
+      qs('#er-compare-hud').hidden = true;
+      qsa('.er-v-bar').forEach(b => b.classList.remove('active'));
+      render();
+    }
+
+    async function playFromStart(forceFromBeginning = true) {
+      if (state.comparing) stopPlayback();
+      if (state.playing) {
+        stopPlayback();
+        return;
+      }
+      if (!await initAudio()) return;
+
+      if (forceFromBeginning || state.index >= lastYearIndex) {
+        state.index = 0;
+      }
+      state.playing = true;
+
+      const step = () => {
+        if (!state.playing) return;
+        render();
+        playActiveSound((state.tempo / 1000) * 0.85);
+
+        if (state.index >= lastYearIndex) {
+          state.timer = setTimeout(() => {
+            state.playing = false;
+            render();
+          }, state.tempo);
+          return;
+        }
+
+        state.timer = setTimeout(() => {
+          if (!state.playing) return;
+          state.index++;
+          step();
+        }, state.tempo);
+      };
+
+      step();
+    }
+
+    window.playFromStart = playFromStart;
+
+    // Zero-Scroll 3-Slide Carousel Controller
+    let currentSlide = 0;
+    let isAIActive = true;
+    const carouselTrack = qs('#er-carousel-track');
+    const indicatorDots = qsa('.er-indicator-dot');
+    const slideTitle = qs('#er-slide-title');
+
+    const slideTitles = [
+      '<i data-lucide="bot" aria-hidden="true"></i> Scripted climate guide',
+      '<i data-lucide="sparkles" aria-hidden="true"></i> Key Climate Evidence',
+      '<i data-lucide="satellite" aria-hidden="true"></i> Observatory Science Report'
+    ];
+
+    function setSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= indicatorDots.length) index = indicatorDots.length - 1;
+      currentSlide = index;
+      const conversation = qs('.er-conversation');
+      if (conversation) conversation.hidden = index !== 0;
+
+      if (carouselTrack) {
+        carouselTrack.style.transform = '';
+        qsa('.er-carousel-slide').forEach((panel, i) => { panel.classList.toggle('active', i === index); panel.hidden = i !== index; });
+      }
+
+      indicatorDots.forEach((dot, idx) => {
+        const isActive = idx === index;
+        dot.classList.toggle('active', isActive);
+        dot.setAttribute('aria-selected', String(isActive));
+        dot.tabIndex = isActive ? 0 : -1;
+      });
+
+      if (slideTitle && slideTitles[index]) {
+        slideTitle.innerHTML = 'Dr. Jo <span class="er-guide-note">Climate guide</span>';
+        window.lucide?.createIcons();
+      }
+
+      isAIActive = (index === 0);
+      if (isAIActive && typeof drawAI === 'function') {
+        drawAI();
+      }
+    }
+
+    indicatorDots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const idx = Number(dot.dataset.slide);
+        setSlide(idx);
+      });
+      dot.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSlide((currentSlide + 1) % 3);
+          indicatorDots[currentSlide].focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSlide((currentSlide + 2) % 3);
+          indicatorDots[currentSlide].focus();
+        }
+      });
+    });
+
+    // Audio Ducking Helper
+    function duckAudio(duck = true) {
+      if (!audioCtx || !masterGain) return;
+      const target = duck ? 0.12 : (state.isMuted ? 0 : 0.85);
+      masterGain.gain.setTargetAtTime(target, audioCtx.currentTime, 0.05);
+    }
+
+    // Dr. Jo Speech Narration
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.98;
+      utterance.onstart = () => {
+        duckAudio(true);
+        pulseAssistant(4.0);
+        const ind = qs('.er-speech-indicator');
+        if (ind) ind.hidden = false;
+      };
+      utterance.onend = utterance.onerror = () => {
+        duckAudio(false);
+        const ind = qs('.er-speech-indicator');
+        if (ind) ind.hidden = true;
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Guided Tour Controller with Abort Safety
+    let tourController = null;
+
+    function abortTour() {
+      if (tourController) {
+        tourController.aborted = true;
+        clearTimeout(tourController.timer);
+        tourController = null;
+        duckAudio(false);
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      }
+    }
+
+    async function startGuidedTour() {
+      abortTour();
+      stopPlayback();
+      const ctrl = { aborted: false, timer: null };
+      tourController = ctrl;
+
+      const tourSteps = [
+        {
+          yearIndex: 0,
+          track: 'temperature',
+          text: "Welcome to Earthtone Studio. Listen to the first year in this historical archive. The note translates the selected temperature value into pitch."
+        },
+        {
+          yearIndex: 11,
+          track: 'temperature',
+          text: "The 1991 Pinatubo eruption is a historical marker. The selected climate value reflects the full year, not the eruption alone."
+        },
+        {
+          yearIndex: 18,
+          track: 'temperature',
+          text: "Now compare the 1998 reading. El Niño was one influence on the climate during this period."
+        },
+        {
+          yearIndex: lastYearIndex,
+          track: 'temperature',
+          text: "This is 2024, the last playable year. Compare this note with 1980 and read the two values. A higher note represents a higher temperature anomaly."
+        },
+        {
+          yearIndex: lastYearIndex,
+          track: 'rain',
+          text: "Switching to rainfall. The rain texture is synthesized from the selected rainfall value. It is not a recording of weather at this place."
+        },
+        {
+          yearIndex: lastYearIndex,
+          track: 'temperature',
+          text: "You are now in command. Drag the 3D globe to explore, or click Frame Area to measure regional climate bounds."
+        }
+      ];
+
+      for (let i = 0; i < tourSteps.length; i++) {
+        if (ctrl.aborted) return;
+        const step = tourSteps[i];
+        if (state.track !== step.track) {
+          setTrack(step.track);
+        }
+        state.index = step.yearIndex;
+        render();
+        if (await initAudio()) playActiveSound(0.6);
+
+        const speechBubble = qs('#er-guide-answer');
+        if (speechBubble) speechBubble.textContent = step.text;
+        speakText(step.text);
+
+        await new Promise(res => {
+          ctrl.timer = setTimeout(res, 5200);
+        });
+      }
+      tourController = null;
+    }
+
+    // Dr. Jo Contextual QA Engine
+    function answerDrJo(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) return;
+      abortTour();
+
+      let answer = "";
+      if (q.includes('color') || q.includes('colour')) {
+        answer = state.track === 'temperature' ? 'Blue shows cooler and red shows warmer areas relative to the map’s reference average. An anomaly is a difference from that average, not the actual air temperature. The map legend explains its scale.' : 'The rain scale shows rainfall in millimeters per day. Use the legend to read the colors; this is a climate dataset, not a live weather forecast.';
+      } else if (q.includes('view') || q.includes('year') || q.includes('selected')) {
+        answer = `You are viewing ${state.area.name} in ${years[state.index]} on the ${state.track} track. The selected value is ${formatValue(currentSeries.series[state.index])}. Sound is generated from this value; it is not a recording of Earth.`;
+      } else if (q.includes('jukebox') || q.includes('eic') || q.includes('challenge') || q.includes('nasa')) {
+        answer = "NASA's Earth Information Center (EIC) 'Earth Jukebox' challenge invites us to turn satellite climate visuals into real-time sound, making planetary science engaging, multi-sensory, and universally accessible!";
+      } else if (q.includes('flat') || q.includes('globe') || q.includes('map') || q.includes('project')) {
+        answer = "You can toggle between the 3D Spherical Globe and the 2D Equirectangular Flat Map at the bottom-left controls! Both projections share identical continuous climate datasets.";
+      } else if (q.includes('border') || q.includes('country') || q.includes('coast')) {
+        answer = "Country borders and coastlines are rendered by default via Natural Earth global vectors, highlighting geopolitical frontiers directly over the climate layers.";
+      } else if (q.includes('grid') || q.includes('lat') || q.includes('lon') || q.includes('graticule')) {
+        answer = "The Longitude and Latitude graticule grid is active by default, marking meridians and parallels every 30 degrees with coordinate markers along the Equator.";
+      } else if (q.includes('jump') || q.includes('1.02') || q.includes('warm') || q.includes('accelerat')) {
+        answer = `For ${state.area.name}, the ${state.track} series changes from ${formatValue(currentSeries.series[0])} in ${years[0]} to ${formatValue(currentSeries.series[lastYearIndex])} in ${years[lastYearIndex]}. The sound is a designed translation of these values.`;
+      } else if (q.includes('sound') || q.includes('sonif') || q.includes('hear') || q.includes('pitch') || q.includes('acoust')) {
+        answer = "We map thermal anomalies exponentially to fundamental acoustic carrier waves: higher warming produces higher pitch. Satellite precipitation is sonified via granular stochastic raindrop noise.";
+      } else if (q.includes('pinatubo') || q.includes('1991') || q.includes('volcan')) {
+        answer = "In 1991, Mount Pinatubo's aerosol injection caused significant temporary cooling (-0.50 °C drop), clearly audible as an acoustic pitch dip.";
+      } else if (q.includes('el nino') || q.includes('nino') || q.includes('1998')) {
+        answer = "The 1998 Super El Niño unleashed unprecedented equatorial heat (+0.61 °C), marking the steepest modern single-year warming surge.";
+      } else if (q.includes('rain') || q.includes('precip') || q.includes('weather') || q.includes('satellite')) {
+        answer = "Precipitation data comes from the NASA GPCP v2.3 satellite microwave sounder grid, capturing 47 years of regional rain rates.";
+      } else if (q.includes('frame') || q.includes('bound') || q.includes('region') || q.includes('area')) {
+        answer = "Click 'Frame area' in the top bar and drag a bounding box on the 3D globe to isolate and sonify any country or ocean basin!";
+      } else if (q.includes('nasa') || q.includes('space') || q.includes('challenge')) {
+        answer = "Earthtone Studio was engineered for the NASA Space Apps Challenge, turning complex planetary observation datasets into accessible, audible climate intelligence.";
+      } else {
+        answer = 'I can explain this view, colors, sound, regions, and data sources. I do not have a general AI connection. Try “Explain the colors” or “How does sound work?”';
+      }
+
+      appendConversation(query, answer);
+      speakText(answer);
+    }
+
+    // Wire Chat Form and Chips
+    const chatForm = qs('#er-ai-chat-form');
+    const chatInput = qs('#er-chat-input');
+    const micBtn = qs('#btn-chat-mic');
+
+    if (chatForm) {
+      chatForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const val = chatInput.value.trim();
+        if (val) {
+          answerDrJo(val);
+          chatInput.value = '';
+        }
+      });
+    }
+
+    qsa('.er-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.id === 'btn-teach-tour') {
+          setExperienceMode('learn');
+          resetLesson();
+        } else if (btn.dataset.query) {
+          answerDrJo(btn.dataset.query);
+        }
+      });
+    });
+
+    // Voice Recognition (Speech-to-Text)
+    if (micBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      let isListening = false;
+      micBtn.addEventListener('click', () => {
+        if (isListening) {
+          recognition.stop();
+          return;
+        }
+        stopPlayback();
+        abortTour();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        try {
+          recognition.start();
+          isListening = true;
+          micBtn.classList.add('listening');
+          chatInput.placeholder = "Listening to your voice...";
+        } catch (err) {
+          console.warn('Speech recognition start failed:', err);
+        }
+      });
+
+      recognition.onresult = event => {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript;
+        answerDrJo(transcript);
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        chatInput.placeholder = "Ask Dr. Jo about Earth's climate...";
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        chatInput.placeholder = "Ask Dr. Jo about Earth's climate...";
+      };
+    } else if (micBtn) {
+      micBtn.title = "Voice recognition not supported in this browser";
+      micBtn.disabled = true;
+    }
+
+    // Evidence Jump Buttons
+    qsa('.er-evidence-item').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        stopPlayback();
+        abortTour();
+        state.index = Number(btn.dataset.jump);
+        render();
+        if (await initAudio()) playActiveSound(0.5);
+      });
+    });
+
+    // Track Switching
+    function setTrack(track) {
+      if (track === state.track) return;
+      stopPlayback();
+      state.track = track;
+      currentSeries = seriesFor(grids[track], state.area);
+
+      qsa('.er-track-tab').forEach(tab => {
+        const isActive = tab.dataset.track === track;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+      });
+
+      render();
+      updateOutline();
+    }
+
+    qsa('.er-track-tab').forEach(tab => {
+      tab.addEventListener('click', () => setTrack(tab.dataset.track));
+    });
+
+    // Area Management
+    function setArea(area, focus = true) {
+      if (!validateArea(area)) {
+        alert('Please enter valid coordinates: South < North (-90 to 90), West and East (-180 to 180).');
+        return;
+      }
+      stopPlayback();
+      state.area = area;
+      currentSeries = seriesFor(grids[state.track], area);
+      resetLesson();
+
+      qs('#focus-name').textContent = area.name;
+      qs('#focus-meta').textContent = area.global
+        ? `· Global · ${currentSeries.cells} cells`
+        : `· ${area.south.toFixed(1)}° to ${area.north.toFixed(1)}° Lat · ${currentSeries.cells} cells`;
+
+      qs('#focus-badge')?.classList.toggle('framed', !area.global);
+
+      render();
+      updateOutline();
+      if (focus) focusGlobe(area);
+    }
+
+    const focusBadge = qs('#focus-badge');
+    if (focusBadge) {
+      focusBadge.addEventListener('click', () => {
+        if (!state.area.global) {
+          setArea({ ...presetWorld });
+        }
+      });
+    }
+
+    // Area Framing Toggle
+    const frameBtn = qs('#btn-frame-toggle');
+    const earthWrap = qs('#fullscreen-earth-wrap');
+
+    function toggleFraming() {
+      state.framing = !state.framing;
+      frameBtn.classList.toggle('active', state.framing);
+      frameBtn.setAttribute('aria-pressed', String(state.framing));
+      earthWrap.classList.toggle('selecting', state.framing);
+    }
+
+    frameBtn.addEventListener('click', toggleFraming);
+
+    // Custom Bounds Dialog
+    const boundsModal = qs('#bounds-modal');
+    qs('#btn-custom-bounds').addEventListener('click', () => {
+      boundsModal.hidden = false;
+      boundsModal.classList.add('open');
+      qs('#input-south').value = state.area.south;
+      qs('#input-north').value = state.area.north;
+      qs('#input-west').value = state.area.west;
+      qs('#input-east').value = state.area.east;
+    });
+
+    const closeBounds = () => {
+      boundsModal.classList.remove('open');
+      setTimeout(() => { boundsModal.hidden = true; }, 200);
+    };
+    qsa('[data-action=close-bounds]').forEach(b => b.addEventListener('click', closeBounds));
+    boundsModal.addEventListener('click', e => { if (e.target === boundsModal) closeBounds(); });
+
+    qs('#btn-apply-bounds').addEventListener('click', () => {
+      const area = {
+        name: qs('#input-area-name').value.trim() || 'Custom Region',
+        south: Number(qs('#input-south').value),
+        north: Number(qs('#input-north').value),
+        west: Number(qs('#input-west').value),
+        east: Number(qs('#input-east').value)
+      };
+      setArea(area, true);
+      closeBounds();
+    });
+
+    // Scrubber
+    const slider = qs('#er-year-slider');
+    slider.addEventListener('input', () => {
+      const nextIndex = Number(slider.value);
+      stopPlayback();
+      state.index = nextIndex;
+      render();
+    });
+    slider.addEventListener('change', async () => {
+      if (await initAudio()) playActiveSound(0.4);
+    });
+
+    // Transport buttons
+    qs('[data-action=play-start]').addEventListener('click', () => {
+      if (state.playing) stopPlayback();
+      else playFromStart(true);
+    });
+
+    qs('[data-action=restart]').addEventListener('click', async () => {
+      stopPlayback();
+      state.index = 0;
+      render();
+      if (await initAudio()) playActiveSound(0.45);
+    });
+
+    qs('[data-action=single]').addEventListener('click', async () => {
+      stopPlayback();
+      if (await initAudio()) playActiveSound(0.55);
+    });
+
+    // Compare 1980 vs 2024
+    const compareBtn = qs('[data-action=compare]');
+    compareBtn.addEventListener('click', async () => {
+      if (state.comparing) {
+        stopPlayback();
+        return;
+      }
+      stopPlayback();
+      if (!await initAudio()) return;
+
+      state.comparing = true;
+      qs('#er-compare-hud').hidden = false;
+
+      const val0 = currentSeries.series[0];
+      const valEnd = currentSeries.series[lastYearIndex];
+
+      qs('#compare-step-1').innerHTML = `<strong>1980:</strong> ${formatValue(val0)}`;
+      qs('#compare-step-2').innerHTML = `<strong>${years[lastYearIndex]}:</strong> ${formatValue(valEnd)}`;
+      const delta = valEnd - val0;
+      qs('#compare-delta').innerHTML = `<strong>Δ:</strong> ${signed(delta)} ${state.track === 'temperature' ? '°C' : 'mm/day'}`;
+
+      state.index = 0;
+      render();
+      playActiveSound(0.7);
+
+      state.timer = setTimeout(() => {
+        state.index = lastYearIndex;
+        render();
+        playActiveSound(0.85);
+
+        state.timer = setTimeout(() => {
+          state.comparing = false;
+        }, 1200);
+      }, 1200);
+    });
+
+    // Tempo Buttons
+    qsa('.er-tempo-picker button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        qsa('.er-tempo-picker button').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.setAttribute('aria-pressed', 'true');
+        btn.classList.add('active');
+        state.tempo = Number(btn.getAttribute('data-speed'));
+      });
+    });
+
+    // Audio Mute Toggle
+    const muteBtn = qs('[data-action=mute]');
+    muteBtn.addEventListener('click', async () => {
+      await initAudio();
+      state.isMuted = !state.isMuted;
+      if (masterGain) {
+        masterGain.gain.setValueAtTime(state.isMuted ? 0 : 0.85, audioCtx.currentTime);
+      }
+      muteBtn.classList.toggle('muted', state.isMuted);
+      qs('.mute-status-text').textContent = state.isMuted ? 'Muted' : 'Audio On';
+      muteBtn.querySelector('i, svg')?.setAttribute('data-lucide', state.isMuted ? 'volume-x' : 'volume-2');
+      window.lucide?.createIcons();
+    });
+
+    // Speech Narration button (if present)
+    const voiceBtn = qs('[data-action=voice]');
+    const speechIndicator = qs('.er-speech-indicator');
+
+    if (voiceBtn) {
+      voiceBtn.addEventListener('click', () => {
+        if (!('speechSynthesis' in window)) return;
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          if (speechIndicator) speechIndicator.hidden = true;
+          const txt = qs('.voice-btn-text');
+          if (txt) txt.textContent = 'Read explanation aloud';
+          duckAudio(false);
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const textToSpeak = qs('#er-guide-answer')?.textContent || '';
+        speakText(textToSpeak);
+      });
+    }
+
+    // Data Modal
+    const modalBackdrop = qs('#er-modal');
+    const openModal = () => {
+      modalBackdrop.hidden = false;
+      modalBackdrop.classList.add('open');
+    };
+    const closeModal = () => {
+      modalBackdrop.classList.remove('open');
+      setTimeout(() => { modalBackdrop.hidden = true; }, 200);
+    };
+    qsa('[data-action=data]').forEach(button => button.addEventListener('click', openModal));
+    qsa('[data-action=close-modal]').forEach(b => b.addEventListener('click', closeModal));
+    modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', async e => {
+      if (e.key !== 'Escape' && e.target.closest('input, button, select, textarea, a, [contenteditable=true], [role=tab]')) return;
+      if (e.key === 'Escape') {
+        closeModal();
+        closeBounds();
+        if (state.framing) toggleFraming();
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        qs('[data-action=play-start]').click();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        stopPlayback();
+        if (state.index < lastYearIndex) state.index++;
+        render();
+        if (await initAudio()) playActiveSound(0.28);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        stopPlayback();
+        if (state.index > 0) state.index--;
+        render();
+        if (await initAudio()) playActiveSound(0.28);
+      } else if (e.key === 't' || e.key === 'T') {
+        setTrack(state.track === 'temperature' ? 'rain' : 'temperature');
+      } else if (e.key === 'c' || e.key === 'C') {
+        compareBtn.click();
+      } else if (e.key === 'm' || e.key === 'M') {
+        muteBtn.click();
+      }
+    });
+
+    // -------------------------------------------------------------
+    // THREE.JS VIEWPORT 1: FULLSCREEN 3D EARTH GLOBE
+    // -------------------------------------------------------------
+    const globeHolder = qs('#fullscreen-earth-wrap');
+    const globeStatus = qs('#globe-status');
+    let updateVisual = () => {};
+    let updateOutline = () => {};
+    let focusGlobe = () => {};
+
+    try {
+      const THREE = window.THREE;
+      if (!THREE) throw new Error('Three.js unavailable');
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(30, globeHolder.clientWidth / globeHolder.clientHeight, 0.1, 100);
+      camera.position.set(0, 0, 4.35);
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setSize(globeHolder.clientWidth, globeHolder.clientHeight);
+      globeHolder.appendChild(renderer.domElement);
+
+      const group = new THREE.Group();
+      group.rotation.order = 'XYZ';
+      scene.add(group);
+
+      // Geometries for 3D Globe vs 2D Flat Map
+      const sphereBaseGeo = new THREE.SphereGeometry(1, 64, 48);
+      const sphereOverlayGeo = new THREE.SphereGeometry(1.004, 64, 48);
+      const sphereBordersGeo = new THREE.SphereGeometry(1.007, 64, 48);
+      const sphereGraticuleGeo = new THREE.SphereGeometry(1.010, 64, 48);
+
+      const flatBaseGeo = new THREE.PlaneGeometry(3.6, 1.8);
+      const flatOverlayGeo = new THREE.PlaneGeometry(3.6, 1.8);
+      const flatBordersGeo = new THREE.PlaneGeometry(3.6, 1.8);
+      const flatGraticuleGeo = new THREE.PlaneGeometry(3.6, 1.8);
+
+      let projectionMode = 'globe'; // 'globe' or 'flat'
+
+      // 1. Sphere/Plane Base (Blue Marble & Relief)
+      const baseMat = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        shininess: 8,
+        specular: 0x1f3c44
+      });
+      const baseMesh = new THREE.Mesh(sphereBaseGeo, baseMat);
+      group.add(baseMesh);
+
+      // 2. Data Overlay (NASA EIC Temperature or Rain texture)
+      const overlayMat = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.52,
+        depthWrite: false
+      });
+      const overlayMesh = new THREE.Mesh(sphereOverlayGeo, overlayMat);
+      group.add(overlayMesh);
+
+      // 3. Country Borders & Coastlines (Default Layer)
+      const bordersLoader = new THREE.TextureLoader();
+      const bordersTex = bordersLoader.load(
+        'assets/world-borders.png',
+        () => draw(),
+        undefined,
+        err => console.warn('Borders layer texture notice:', err)
+      );
+      bordersTex.colorSpace = THREE.SRGBColorSpace;
+      const bordersMat = new THREE.MeshBasicMaterial({
+        map: bordersTex,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false
+      });
+      const bordersMesh = new THREE.Mesh(sphereBordersGeo, bordersMat);
+      bordersMesh.visible = true;
+      group.add(bordersMesh);
+
+      // 4. Longitude & Latitude Graticule Grid (Default Layer)
+      const graticuleLoader = new THREE.TextureLoader();
+      const graticuleTex = graticuleLoader.load(
+        'assets/world-graticule.png',
+        () => draw(),
+        undefined,
+        err => console.warn('Graticule grid texture notice:', err)
+      );
+      graticuleTex.colorSpace = THREE.SRGBColorSpace;
+      const graticuleMat = new THREE.MeshBasicMaterial({
+        map: graticuleTex,
+        transparent: true,
+        opacity: 0.75,
+        depthWrite: false
+      });
+      const graticuleMesh = new THREE.Mesh(sphereGraticuleGeo, graticuleMat);
+      graticuleMesh.visible = true;
+      group.add(graticuleMesh);
+
+      // 5. Atmospheric back-glow (Globe mode only)
+      const atmoMat = new THREE.MeshBasicMaterial({
+        color: 0x64d2ff,
+        transparent: true,
+        opacity: 0.08,
+        side: THREE.BackSide
+      });
+      const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.025, 48, 32), atmoMat);
+      group.add(atmosphere);
+
+      // 6. Planetary Hazards 3D Beacons
+      const hazardsGroup = new THREE.Group();
+      group.add(hazardsGroup);
+
+      const hazardColors = {
+        volcano: 0xff3d00,
+        wildfire: 0xff9100,
+        cyclone: 0x00e5ff,
+        bolide: 0xe040fb
+      };
+
+      (window.PLANETARY_HAZARDS || []).forEach(h => {
+        const beacon = new THREE.Group();
+        beacon.userData = { hazard: h };
+
+        const color = hazardColors[h.type] || 0xffb74d;
+
+        const dotMat = new THREE.MeshBasicMaterial({ color });
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 12), dotMat);
+        beacon.add(dot);
+
+        const ringMat = new THREE.MeshBasicMaterial({
+          color,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.85
+        });
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.024, 0.046, 24), ringMat);
+        beacon.add(ring);
+
+        beacon.visible = false;
+        h.beacon = beacon;
+        hazardsGroup.add(beacon);
+      });
+
+      function updateHazardPositions() {
+        const isFlat = projectionMode === 'flat';
+        (window.PLANETARY_HAZARDS || []).forEach(h => {
+          if (!h.beacon) return;
+          if (isFlat) {
+            const x = (h.lon / 180) * 1.8;
+            const y = (h.lat / 90) * 0.9;
+            h.beacon.position.set(x, y, 0.014);
+            h.beacon.rotation.set(0, 0, 0);
+          } else {
+            const phi = (90 - h.lat) * (Math.PI / 180);
+            const theta = (h.lon + 180) * (Math.PI / 180);
+            const r = 1.018;
+            const x = -(r * Math.sin(phi) * Math.cos(theta));
+            const z = r * Math.sin(phi) * Math.sin(theta);
+            const y = r * Math.cos(phi);
+            h.beacon.position.set(x, y, z);
+            h.beacon.lookAt(h.beacon.position.clone().multiplyScalar(2));
+          }
+        });
+      }
+      updateHazardPositions();
+
+      window.updateHazardVisibility = function() {
+        if (!state.showHazards) {
+          hazardsGroup.visible = false;
+          return;
+        }
+        hazardsGroup.visible = true;
+        const currentYear = years[state.index];
+        (window.PLANETARY_HAZARDS || []).forEach(h => {
+          if (!h.beacon) return;
+          h.beacon.visible = h.year === currentYear;
+        });
+        draw();
+      };
+
+      function triggerHazard(h) {
+        if (!h) return;
+        initAudio().then(() => playHazardSound(h.audioPreset, 1.1));
+
+        if (projectionMode === 'globe') {
+          const targetY = -((h.lon * Math.PI) / 180) - Math.PI / 2;
+          const targetX = clamp((h.lat * Math.PI) / 180 * 0.5, -0.65, 0.65);
+          group.rotation.y = targetY;
+          group.rotation.x = targetX;
+        }
+
+        const typeIcons = { volcano: '🌋', wildfire: '🔥', cyclone: '🌀', bolide: '☄️' };
+        const icon = typeIcons[h.type] || '⚡';
+        qs('#er-guide-answer').innerHTML = `
+          <p><strong>${icon} ${h.name} (${h.year}):</strong> ${h.description}</p>
+          <p style="margin-top:4px; font-size:11px; color:#ffb74d">
+            ${h.metrics} &bull; Location: ${h.location}
+          </p>
+        `;
+        draw();
+      }
+
+      // Projection Switcher (3D Globe vs Flat Map)
+      function setProjection(mode) {
+        if (mode === projectionMode) return;
+        projectionMode = mode;
+        const isFlat = mode === 'flat';
+
+        baseMesh.geometry = isFlat ? flatBaseGeo : sphereBaseGeo;
+        overlayMesh.geometry = isFlat ? flatOverlayGeo : sphereOverlayGeo;
+        bordersMesh.geometry = isFlat ? flatBordersGeo : sphereBordersGeo;
+        graticuleMesh.geometry = isFlat ? flatGraticuleGeo : sphereGraticuleGeo;
+        atmosphere.visible = !isFlat;
+
+        if (isFlat) {
+          group.rotation.set(0, 0, 0);
+          bordersMesh.position.set(0, 0, 0.003);
+          graticuleMesh.position.set(0, 0, 0.005);
+          overlayMesh.position.set(0, 0, 0.002);
+        } else {
+          bordersMesh.position.set(0, 0, 0);
+          graticuleMesh.position.set(0, 0, 0);
+          overlayMesh.position.set(0, 0, 0);
+          group.rotation.set(0.12, -0.65, 0);
+        }
+
+        updateHazardPositions();
+
+        qsa('.er-proj-tab').forEach(tab => {
+          const isActive = tab.dataset.proj === mode;
+          tab.classList.toggle('active', isActive);
+          tab.setAttribute('aria-selected', String(isActive));
+        });
+
+        resizeGlobe();
+        updateOutline();
+        draw();
+      }
+
+      qs('#proj-globe')?.addEventListener('click', () => setProjection('globe'));
+      qs('#proj-flat')?.addEventListener('click', () => setProjection('flat'));
+
+      scene.add(new THREE.AmbientLight(0xffffff, 1.35));
+      const sun = new THREE.DirectionalLight(0xe8f4f5, 2.5);
+      sun.position.set(-3.5, 2.5, 4.5);
+      scene.add(sun);
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+
+      const draw = () => renderer.render(scene, camera);
+
+      const resizeGlobe = () => {
+        const w = globeHolder.clientWidth;
+        const h = globeHolder.clientHeight;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        // Fit the entire planet (or flat map) within the available column.
+        const radius = Math.min(w * 0.41, h * 0.36);
+        const extent = projectionMode === 'flat' ? 1.9 : 1.05;
+        camera.fov = 2 * Math.atan(extent * h / (2 * radius * 4.35)) * 180 / Math.PI;
+        group.position.set(w > 850 ? 0.22 : 0, w < 600 ? -0.08 : 0, 0);
+        camera.updateProjectionMatrix();
+        draw();
+      };
+      window.addEventListener('resize', resizeGlobe);
+      new ResizeObserver(resizeGlobe).observe(globeHolder);
+      resizeGlobe();
+
+      // Load Blue Marble Texture
+      const loader = new THREE.TextureLoader();
+      loader.load('assets/earth-blue-marble.jpg', tex => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        baseMat.map = tex;
+        baseMat.needsUpdate = true;
+        globeStatus.hidden = true;
+        draw();
+      }, undefined, () => {
+        globeStatus.textContent = 'Satellite texture unavailable. Audio and charts remain fully active.';
+      });
+
+      // Data Overlay Texture Updater
+      let visualPath = '';
+      let loadToken = 0;
+      updateVisual = () => {
+        const yr = years[state.index];
+        const path = state.track === 'temperature'
+          ? `assets/eic/${yr}.webp`
+          : `assets/rain/${yr}.webp`;
+
+        if (path === visualPath) return;
+        const token = ++loadToken;
+
+        loader.load(path, tex => {
+          if (token !== loadToken) { tex.dispose(); return; }
+          tex.colorSpace = THREE.SRGBColorSpace;
+          const old = overlayMat.map;
+          overlayMat.map = tex;
+          overlayMat.opacity = state.track === 'temperature' ? 0.52 : 0.88;
+          overlayMat.needsUpdate = true;
+          visualPath = path;
+          draw();
+          if (old) old.dispose();
+        });
+      };
+
+      // Spatial Framing Boundary Lines (Supports Sphere and Flat Plane)
+      let outline = null;
+      function pointOnSphere(lat, lon, r = 1.013) {
+        const a = lat * radians, b = lon * radians;
+        return new THREE.Vector3(r * Math.cos(a) * Math.cos(b), r * Math.sin(a), -r * Math.cos(a) * Math.sin(b));
+      }
+      function pointOnPlane(lat, lon, z = 0.008) {
+        return new THREE.Vector3((lon / 180) * 1.8, (lat / 90) * 0.9, z);
+      }
+
+      updateOutline = () => {
+        if (outline) {
+          group.remove(outline);
+          outline.geometry.dispose();
+          outline.material.dispose();
+          outline = null;
+        }
+        if (state.area.global) { draw(); return; }
+
+        const vertices = [];
+        const area = state.area;
+        const segments = lonSegments(area);
+        const isFlat = projectionMode === 'flat';
+        const getPoint = isFlat ? pointOnPlane : pointOnSphere;
+
+        const addEdge = (latA, lonA, latB, lonB) => {
+          let prev = getPoint(latA, lonA);
+          const steps = isFlat ? 1 : 32;
+          for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            const next = getPoint(latA + (latB - latA) * t, lonA + (lonB - lonA) * t);
+            vertices.push(...prev.toArray(), ...next.toArray());
+            prev = next;
+          }
+        };
+
+        for (const [west, east] of segments) {
+          addEdge(area.south, west, area.south, east);
+          addEdge(area.north, west, area.north, east);
+        }
+        addEdge(area.south, area.west, area.north, area.west);
+        addEdge(area.south, area.east, area.north, area.east);
+
+        const lineGeo = new THREE.BufferGeometry();
+        lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        outline = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({
+          color: 0xa9e0d2,
+          transparent: true,
+          opacity: 0.95,
+          depthTest: true,
+          depthWrite: false
+        }));
+        group.add(outline);
+        draw();
+      };
+
+      focusGlobe = area => {
+        if (projectionMode === 'flat') {
+          if (area.global) {
+            resizeGlobe();
+            camera.position.z = 4.35;
+          } else {
+            const midLon = area.west < area.east ? (area.west + area.east) / 2 : longitude((area.west + area.east + 360) / 2);
+            const midLat = (area.south + area.north) / 2;
+            const panX = -(midLon / 180) * 1.8;
+            const panY = -(midLat / 90) * 0.9;
+            group.position.x = panX;
+            group.position.y = panY;
+            camera.position.z = 3.2;
+          }
+        } else {
+          if (area.global) {
+            group.rotation.set(0.12, -0.65, 0);
+            camera.position.z = 4.35;
+          } else {
+            const midLon = area.west < area.east ? (area.west + area.east) / 2 : longitude((area.west + area.east + 360) / 2);
+            const midLat = (area.south + area.north) / 2;
+            group.rotation.set(midLat * radians, (-90 - midLon) * radians, 0);
+            const span = Math.max(area.north - area.south, area.west < area.east ? area.east - area.west : 360 - area.west + area.east);
+            camera.position.z = clamp(4.4 - span / 90, 2.5, 4.4);
+          }
+        }
+        resizeGlobe();
+        draw();
+      };
+
+      function hit(e) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const res = raycaster.intersectObject(baseMesh)[0];
+        if (!res) return null;
+        const local = group.worldToLocal(res.point.clone());
+        if (projectionMode === 'flat') {
+          return {
+            lat: clamp((local.y / 0.9) * 90, -90, 90),
+            lon: longitude((local.x / 1.8) * 180)
+          };
+        }
+        return {
+          lat: Math.asin(clamp(local.y, -1, 1)) / radians,
+          lon: longitude(Math.atan2(-local.z, local.x) / radians)
+        };
+      }
+
+      function zoom(delta) {
+        camera.position.z = clamp(camera.position.z + delta, 2.2, 5.5); resizeGlobe();
+        draw();
+      }
+
+      qs('#hud-zoom-in').addEventListener('click', () => zoom(-0.35));
+      qs('#hud-zoom-out').addEventListener('click', () => zoom(0.35));
+      qs('#hud-reset-view').addEventListener('click', () => focusGlobe(state.area));
+
+      qs('#hud-layer-toggle').addEventListener('click', () => {
+        state.showData = !state.showData;
+        overlayMesh.visible = state.showData;
+        render();
+        draw();
+      });
+
+      renderer.domElement.addEventListener('wheel', e => {
+        e.preventDefault();
+        zoom(Math.sign(e.deltaY) * 0.22);
+      }, { passive: false });
+
+      let drag = null;
+      const dragBox = qs('#drag-box');
+
+      renderer.domElement.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        const startHit = hit(e);
+        if (state.framing && !startHit) return;
+        drag = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, start: startHit };
+        renderer.domElement.setPointerCapture(e.pointerId);
+
+        if (state.framing) {
+          dragBox.hidden = false;
+          dragBox.style.width = '0px';
+          dragBox.style.height = '0px';
+        }
+      });
+
+      renderer.domElement.addEventListener('pointermove', e => {
+        if (!drag) return;
+        if (state.framing) {
+          const rect = globeHolder.getBoundingClientRect();
+          const left = Math.min(drag.x, e.clientX) - rect.left;
+          const top = Math.min(drag.y, e.clientY) - rect.top;
+          dragBox.style.left = `${left}px`;
+          dragBox.style.top = `${top}px`;
+          dragBox.style.width = `${Math.abs(e.clientX - drag.x)}px`;
+          dragBox.style.height = `${Math.abs(e.clientY - drag.y)}px`;
+        } else {
+          if (projectionMode === 'flat') {
+            group.position.x += (e.clientX - drag.x) * 0.0035;
+            group.position.y -= (e.clientY - drag.y) * 0.0035;
+            group.position.x = clamp(group.position.x, -3.2, 1.2);
+            group.position.y = clamp(group.position.y, -1.8, 1.8);
+          } else {
+            group.rotation.y += (e.clientX - drag.x) * 0.007;
+            group.rotation.x = clamp(group.rotation.x + (e.clientY - drag.y) * 0.005, -1.45, 1.45);
+          }
+          drag.x = e.clientX;
+          drag.y = e.clientY;
+          draw();
+        }
+      });
+
+      const endDrag = e => {
+        if (!drag) return;
+        if (state.framing) {
+          dragBox.hidden = true;
+          const endHit = hit(e);
+          if (endHit && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 14) {
+            const west = Math.min(drag.start.lon, endHit.lon);
+            const east = Math.max(drag.start.lon, endHit.lon);
+            const cross = east - west > 180;
+            const framed = {
+              name: 'Framed Region',
+              south: Math.min(drag.start.lat, endHit.lat),
+              north: Math.max(drag.start.lat, endHit.lat),
+              west: cross ? east : west,
+              east: cross ? west : east
+            };
+            if (framed.north - framed.south < 0.2) {
+              framed.south -= 0.1;
+              framed.north += 0.1;
+            }
+            if (validateArea(framed)) {
+              setArea(framed, false);
+              toggleFraming();
+            }
+          }
+        } else if (Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) < 7) {
+          // Click: check if an active planetary hazard beacon was tapped
+          const rect = renderer.domElement.getBoundingClientRect();
+          pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObjects(hazardsGroup.children, true);
+          if (hits.length > 0) {
+            let p = hits[0].object;
+            while (p && !p.userData?.hazard) p = p.parent;
+            if (p && p.userData?.hazard) {
+              triggerHazard(p.userData.hazard);
+              drag = null;
+              return;
+            }
+          }
+        }
+        drag = null;
+      };
+
+      renderer.domElement.addEventListener('pointerup', endDrag);
+      renderer.domElement.addEventListener('pointercancel', () => { drag = null; dragBox.hidden = true; });
+
+      focusGlobe(state.area);
+      updateOutline();
+      updateVisual();
+    } catch (err) {
+      console.warn('Fullscreen Earth 3D error:', err);
+      globeStatus.textContent = '3D WebGL renderer unavailable. Audio sonification and charts remain fully operational.';
+    }
+
+    // -------------------------------------------------------------
+    // THREE.JS VIEWPORT 2: DEDICATED 3D AI ASSISTANT VIEWPORT
+    // -------------------------------------------------------------
+    const aiHolder = qs('#ai-assistant-stage');
+    try {
+      const THREE = window.THREE;
+      if (THREE && aiHolder && !document.documentElement.classList.contains('studio-embedded')) {
+        const aiScene = new THREE.Scene();
+        const aiCamera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
+        aiCamera.position.set(0, 0, 3.2);
+
+        const aiRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
+        aiRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        aiRenderer.outputColorSpace = THREE.SRGBColorSpace;
+        aiHolder.appendChild(aiRenderer.domElement);
+
+        aiScene.add(new THREE.AmbientLight(0xffffff, 1.6));
+        const aiKey = new THREE.DirectionalLight(0xa9e0d2, 2.8);
+        aiKey.position.set(2.5, 3, 2.5);
+        aiScene.add(aiKey);
+
+        const aiFill = new THREE.DirectionalLight(0x64d2ff, 1.4);
+        aiFill.position.set(-2, -1, 1);
+        aiScene.add(aiFill);
+
+        const assistantGroup = new THREE.Group();
+        aiScene.add(assistantGroup);
+
+        const ringGeo = new THREE.TorusGeometry(0.72, 0.02, 16, 64);
+        const ringMat = new THREE.MeshPhongMaterial({
+          color: 0xa9e0d2,
+          shininess: 40,
+          specular: 0xffffff,
+          transparent: true,
+          opacity: 0.85
+        });
+        const outerRing = new THREE.Mesh(ringGeo, ringMat);
+        assistantGroup.add(outerRing);
+
+        const midRing = new THREE.Mesh(
+          new THREE.TorusGeometry(0.58, 0.016, 16, 64),
+          new THREE.MeshPhongMaterial({ color: 0x64d2ff, shininess: 30, transparent: true, opacity: 0.75 })
+        );
+        midRing.rotation.x = Math.PI / 3;
+        assistantGroup.add(midRing);
+
+        const coreMesh = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(0.36, 1),
+          new THREE.MeshPhongMaterial({
+            color: 0x1f414a,
+            emissive: 0x11272c,
+            specular: 0xa9e0d2,
+            shininess: 60
+          })
+        );
+        assistantGroup.add(coreMesh);
+
+        const wireMesh = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(0.42, 1),
+          new THREE.MeshBasicMaterial({ color: 0xa9e0d2, wireframe: true, transparent: true, opacity: 0.35 })
+        );
+        assistantGroup.add(wireMesh);
+
+        const gridHelper = new THREE.GridHelper(2.4, 12, 0x34535c, 0x182c33);
+        gridHelper.position.y = -0.92;
+        aiScene.add(gridHelper);
+
+        const drawAI = () => aiRenderer.render(aiScene, aiCamera);
+
+        const resizeAI = () => {
+          const w = aiHolder.clientWidth;
+          const h = aiHolder.clientHeight;
+          if (w > 0 && h > 0) {
+            aiRenderer.setSize(w, h);
+            aiCamera.aspect = w / h;
+            aiCamera.updateProjectionMatrix();
+            drawAI();
+          }
+        };
+        new ResizeObserver(resizeAI).observe(aiHolder);
+        resizeAI();
+
+        let isDraggingAI = false;
+        let prevMouseAI = { x: 0, y: 0 };
+        aiRenderer.domElement.addEventListener('pointerdown', e => {
+          isDraggingAI = true;
+          prevMouseAI = { x: e.clientX, y: e.clientY };
+          aiRenderer.domElement.setPointerCapture(e.pointerId);
+        });
+        aiRenderer.domElement.addEventListener('pointermove', e => {
+          if (!isDraggingAI) return;
+          const dx = e.clientX - prevMouseAI.x;
+          const dy = e.clientY - prevMouseAI.y;
+          assistantGroup.rotation.y += dx * 0.008;
+          assistantGroup.rotation.x += dy * 0.006;
+          prevMouseAI = { x: e.clientX, y: e.clientY };
+          drawAI();
+        });
+        const stopDragAI = () => { isDraggingAI = false; };
+        aiRenderer.domElement.addEventListener('pointerup', stopDragAI);
+        aiRenderer.domElement.addEventListener('pointercancel', stopDragAI);
+
+        let pulseTimer = 0;
+        pulseAssistant = (duration = 0.5) => {
+          pulseTimer = duration * 60;
+        };
+
+        let isCustomModelLoaded = false;
+        let clock = 0;
+
+        const disposeHierarchy = obj => {
+          obj.traverse(child => {
+            if (child.isMesh) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                [].concat(child.material).forEach(mat => {
+                  Object.keys(mat).forEach(k => {
+                    if (mat[k] && typeof mat[k].dispose === 'function') mat[k].dispose();
+                  });
+                  mat.dispose();
+                });
+              }
+            }
+          });
+        };
+
+        function animateAI() {
+          requestAnimationFrame(animateAI);
+          if (!isAIActive) return; // Halt GPU draw calls on Slide 2 or 3!
+          // A small guide avatar only animates when speaking; avoid an idle GPU loop.
+          if (document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches || (pulseTimer <= 0 && !isDraggingAI)) return;
+          clock += 0.015;
+          const speedMultiplier = pulseTimer > 0 ? 2.5 : 1.0;
+          if (pulseTimer > 0) pulseTimer--;
+
+          if (!isDraggingAI) {
+            if (!isCustomModelLoaded) {
+              outerRing.rotation.y += 0.009 * speedMultiplier;
+              outerRing.rotation.x += 0.005 * speedMultiplier;
+              midRing.rotation.z += 0.012 * speedMultiplier;
+              midRing.rotation.y -= 0.008 * speedMultiplier;
+              coreMesh.rotation.y -= 0.015 * speedMultiplier;
+              wireMesh.rotation.y += 0.01 * speedMultiplier;
+            } else {
+              assistantGroup.rotation.y += 0.007 * speedMultiplier;
+            }
+            assistantGroup.position.y = Math.sin(clock * 1.5) * 0.04;
+          }
+          drawAI();
+        }
+        animateAI();
+
+        const loadCustomModel = () => {
+          if (!THREE.GLTFLoader) {
+            console.warn('GLTFLoader not found, using procedural assistant');
+            return;
+          }
+          const loader = new THREE.GLTFLoader();
+          if (typeof MeshoptDecoder !== 'undefined') {
+            loader.setMeshoptDecoder(MeshoptDecoder);
+          } else if (window.MeshoptDecoder) {
+            loader.setMeshoptDecoder(window.MeshoptDecoder);
+          }
+
+          loader.load(
+            'assets/models/dr_jo.glb',
+            gltf => {
+              const model = gltf.scene;
+              const box = new THREE.Box3().setFromObject(model);
+              const size = box.getSize(new THREE.Vector3());
+              const center = box.getCenter(new THREE.Vector3());
+
+              model.position.sub(center);
+              const maxDim = Math.max(size.x, size.y, size.z);
+              if (maxDim > 0) {
+                const scale = 1.35 / maxDim;
+                model.scale.set(scale, scale, scale);
+              }
+
+              disposeHierarchy(assistantGroup);
+              assistantGroup.clear();
+              assistantGroup.add(model);
+              isCustomModelLoaded = true;
+              drawAI();
+              console.log('Custom Dr. Jo 3D model mounted successfully into viewport!');
+            },
+            undefined,
+            err => {
+              console.warn('Custom GLB model fallback to procedural avatar:', err);
+            }
+          );
+        };
+
+        loadCustomModel();
+
+        window.loadAIAssistantModel = modelMesh => {
+          disposeHierarchy(assistantGroup);
+          assistantGroup.clear();
+          assistantGroup.add(modelMesh);
+          isCustomModelLoaded = true;
+          drawAI();
+          console.log('Custom 3D model successfully mounted into Dr. Jo viewport!');
+        };
+      }
+    } catch (err) {
+      console.warn('AI Assistant 3D stage fallback:', err);
+    }
+
+    // Initialize Scrubber Hazard Event Tick-Dots
+    function initHazardTicks() {
+      const container = qs('#er-hazard-ticks');
+      if (!container || !window.PLANETARY_HAZARDS) return;
+      container.innerHTML = '';
+      const addedYears = new Set();
+      window.PLANETARY_HAZARDS.forEach(h => {
+        if (addedYears.has(h.year)) return;
+        addedYears.add(h.year);
+        const idx = years.indexOf(h.year);
+        if (idx === -1) return;
+        const pct = (idx / lastYearIndex) * 100;
+        const dot = document.createElement('div');
+        dot.className = 'er-hazard-tick-dot';
+        dot.setAttribute('data-year', h.year);
+        dot.style.left = `${pct}%`;
+        dot.title = `⚡ ${h.year} Planetary Shock: ${h.name} (${h.metrics})`;
+        dot.addEventListener('click', async e => {
+          e.stopPropagation();
+          stopPlayback();
+          state.index = idx;
+          render();
+          if (await initAudio()) playHazardSound(h.audioPreset, 1.0);
+        });
+        container.appendChild(dot);
+      });
+    }
+    initHazardTicks();
+
+    // Hazards Toggle Listener
+    qs('#btn-hazards-toggle')?.addEventListener('click', () => {
+      state.showHazards = !state.showHazards;
+      render();
+    });
+
+    // Small same-origin interface for the studio; the data/audio engine remains here.
+    window.earthtoneController = Object.freeze({
+      status: () => ({ track: state.track, year: years[state.index], area: state.area.name, playing: state.playing, muted: state.isMuted }),
+      command: (action, value) => {
+        if (action === 'track' && ['temperature','rain'].includes(value)) {
+          cancelLessonSound(); resetLesson(); setTrack(value);
+        } else if (action === 'play') { cancelLessonSound(); playFromStart(false); }
+        else if (action === 'mute') qs('[data-action=mute]').click();
+        else if (action === 'year') {
+          const yr = Number(value);
+          const targetIdx = years.indexOf(yr);
+          if (targetIdx !== -1) {
+            cancelLessonSound();
+            state.index = targetIdx;
+            render();
+            renderScrubberProgress();
+            updateYearReadout();
+            if (state.playing) playStepSound();
+          }
+        }
+        else if (action === 'mode' && ['listen','explore'].includes(value)) {
+          document.body.dataset.monitorMode = value;
+          setExperienceMode(value === 'listen' ? 'learn' : 'explore');
+        }
+      }
+    });
+    if (window.parent !== window) {
+      window.parent.postMessage({type:'earthtone:ready'}, location.origin);
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !document.querySelector('.er-modal-backdrop:not([hidden])')) window.parent.postMessage({type:'earthtone:escape'}, location.origin);
+      });
+    }
+
+    initializeLearningLayout();
+    if (document.documentElement.classList.contains('studio-embedded')) {
+      const entry = document.createElement('button');
+      entry.type = 'button'; entry.id = 'embedded-lesson-entry'; entry.textContent = 'Try a listening lesson';
+      entry.addEventListener('click', () => { setExperienceMode('learn'); resetLesson(); });
+      qs('.er-lesson').before(entry);
+    }
+    render();
+    window.lucide?.createIcons();
+  })();
+  </script>
+</body>
+</html>

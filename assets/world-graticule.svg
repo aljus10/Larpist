@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 1024" width="2048" height="1024">
+  <style>
+    .grid-line { fill: none; stroke: rgba(169, 224, 210, 0.28); stroke-width: 1.0; }
+    .equator-line { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.4; }
+    .prime-meridian { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.4; }
+    .coord-label { fill: rgba(255, 255, 255, 0.85); font-family: monospace, sans-serif; font-size: 16px; font-weight: 600; text-anchor: middle; }
+  </style>
+  <g class="graticule-grid">
+  <line x1="0" y1="853.3" x2="2048" y2="853.3" class="grid-line" />
+  <line x1="0" y1="682.7" x2="2048" y2="682.7" class="grid-line" />
+  <line x1="0" y1="512" x2="2048" y2="512" class="equator-line" />
+  <line x1="0" y1="341.3" x2="2048" y2="341.3" class="grid-line" />
+  <line x1="0" y1="170.7" x2="2048" y2="170.7" class="grid-line" />
+  <line x1="0" y1="0" x2="0" y2="1024" class="grid-line" />
+  <line x1="170.7" y1="0" x2="170.7" y2="1024" class="grid-line" />
+  <line x1="341.3" y1="0" x2="341.3" y2="1024" class="grid-line" />
+  <line x1="512" y1="0" x2="512" y2="1024" class="grid-line" />
+  <line x1="682.7" y1="0" x2="682.7" y2="1024" class="grid-line" />
+  <line x1="853.3" y1="0" x2="853.3" y2="1024" class="grid-line" />
+  <line x1="1024" y1="0" x2="1024" y2="1024" class="prime-meridian" />
+  <line x1="1194.7" y1="0" x2="1194.7" y2="1024" class="grid-line" />
+  <line x1="1365.3" y1="0" x2="1365.3" y2="1024" class="grid-line" />
+  <line x1="1536" y1="0" x2="1536" y2="1024" class="grid-line" />
+  <line x1="1706.7" y1="0" x2="1706.7" y2="1024" class="grid-line" />
+  <line x1="1877.3" y1="0" x2="1877.3" y2="1024" class="grid-line" />
+  <line x1="2048" y1="0" x2="2048" y2="1024" class="grid-line" />
+  <rect x="146.7" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="170.7" y="517" class="coord-label">150°W</text>
+  <rect x="317.3" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="341.3" y="517" class="coord-label">120°W</text>
+  <rect x="488" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="512" y="517" class="coord-label">90°W</text>
+  <rect x="658.7" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="682.7" y="517" class="coord-label">60°W</text>
+  <rect x="829.3" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="853.3" y="517" class="coord-label">30°W</text>
+  <rect x="1000" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1024" y="517" class="coord-label">0°</text>
+  <rect x="1170.7" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1194.7" y="517" class="coord-label">30°E</text>
+  <rect x="1341.3" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1365.3" y="517" class="coord-label">60°E</text>
+  <rect x="1512" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1536" y="517" class="coord-label">90°E</text>
+  <rect x="1682.7" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1706.7" y="517" class="coord-label">120°E</text>
+  <rect x="1853.3" y="502" width="48" height="20" fill="rgba(6, 11, 14, 0.65)" rx="3" />
+  <text x="1877.3" y="517" class="coord-label">150°E</text>
+  </g>
+</svg>
