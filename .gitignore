@@ -1,16 +1,13 @@
 # Blender & Reference 3D Work Files
 assets/models/*.blend
 assets/models/*.blend1
-assets/models/shopify_room_*
 assets/models/dr_jo.glb
 assets/models/textures/
 
 # Duplicate / Legacy Folders & Backups
 Earth-Jukebox-Challenge-1/
 source/
-test_authentic_room.html
 js/*.bak
-docs/shopify-interaction-study.md
 vendor/agentation.bundle.js
 
 # Internal Blender & Capture Scripts (Keep only tools/server.mjs)

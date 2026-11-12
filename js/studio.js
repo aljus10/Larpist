@@ -195,7 +195,7 @@ export const views = {
 };
 
 // -------------------------------------------------------------
-// 2. CENTRAL CAMERA & INTERACTION STATE MODEL (Jarvis HQ S)
+// 2. CENTRAL CAMERA & INTERACTION STATE MODEL
 // -------------------------------------------------------------
 const defaultTarget = focusTargets.get('overview');
 

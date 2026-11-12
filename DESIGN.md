@@ -1,15 +1,12 @@
-# Earthtone Studio
+# EarthTune Studio — Architectural & Design Specification
 
-The entry is an **Experience** surface. The approved reference defines a realistic 3D aerospace room: an arched jukebox on the left, a connected monitor on the right, and a permanent portrait information frame above the jukebox. Preserve the arrangement and physical object metaphor.
+## 1. Spatial & Visual Direction
+- **Night Observatory Palette:** Midnight-slate architectural walls (`#141e2b`), dark charcoal desks (`#151c24`), warm-amber downlighting (`#ffd27d`) over the left workstation table, and cyan hologram illumination (`#4df3ff`) over the right globe table.
+- **Two Hero Instruments:**
+  1. **Left Workstation (`1 · Scan & Compare`):** Houses the 16:9 interactive Monitor Workbench (`960×540` CSS3D surface) directly on `Screen_Observatory_Monitor`.
+  2. **Right Hologram Emitter (`2 · 3D Earth Globe`):** Projects the 3-layer interactive 3D Earth Globe (`earth-blue-marble.jpg` + `1980–2024` NASA anomaly textures + `world-borders-clean.svg`) with 2-axis pointer drag and synchronized 3D latitude band scan rings.
 
-Original procedural geometry supplies real depth, metal rails, an arched cabinet, speaker slats, wall panels, floor contact and a signal cable. Amber and cyan lights sit against aerospace navy and brushed metal. Captured reference scripts/assets stay outside the distributable.
-
-The jukebox has three physical track buttons. Two work; the third visibly reserves future data. The frame always has the same print. Focus moves the camera closer without changing its content. The monitor contains the live observatory.
-
-Overview, Jukebox, Monitor and Frame are explicit camera states with Back/Escape. Pointer parallax is small, damped, stronger horizontally and reduced while focused, with no roll. Motion off and system reduced motion suppress it and make camera changes immediate.
-
-Self-hosted DM Sans controls and Instrument Serif editorial text complement cream print and physical controls. Climate scales keep their legends; scientific colors are not room decoration.
-
-At 760px and below the room becomes a compact overview and the working monitor sits beneath it. Touch controls stay readable. Ordinary HTML and the full explorer provide the same content. The full observatory is an **Operate / Read** surface: preserve named tabs, prediction lesson, separate conversation, rectangular regions, projections, hazards and timeline.
-
-`index.html` is the studio. `observatory.html` is the engine and full explorer. `tools/build-site.py` synchronizes the learning controller into the observatory only. Never rebuild the current UI from the archived `source/` concept.
+## 2. Camera & Accessibility Architecture
+- **Three Explicit Focus States:** `Studio Overview` (`overview`), `1 · Scan & Compare (Monitor)` (`desk`), and `2 · 3D Earth Globe` (`globe`), with `Escape` and click-outside-to-return support.
+- **Keyboard & Screen-Reader Entry:** Top-level `.skip-link` (`#skip-to-workbench`) moves focus directly into the Monitor Workbench, which implements full roving `tabindex` and arrow-key navigation across both section tabs and listening mode tabs.
+- **Responsive Mobile Route (`≤ 760px`):** Docks the Monitor Workbench into `#mobile-workbench-dock` below a `205px` 3D Hologram Globe banner so all controls and all 5 latitude bands remain 100% unclipped on `390×844` screens.

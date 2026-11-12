@@ -1,57 +1,66 @@
-# Earthtone Studio · v0.1.0
+# EarthTune Studio
 
-An original 3D listening room, a three-button jukebox, a connected Earth monitor and a permanent information frame. Local prototype released 8 November 2026. This package does not publish anything online.
+**Hear geographic patterns that a global average can hide.**
 
-## Start on Windows
+**EarthTune Studio** is an interactive 3D Night Observatory and NASA Earth Information Center (EIC) sonification workbench built for the **NASA Space Apps Challenge — The Earth Information Jukebox**. It translates 45 years of NASA surface temperature anomaly visualizations (`1980–2024`) into deterministic, inspectable sound and synchronized 3D holographic visuals.
 
-1. Extract the entire ZIP. Keep the folders together.
-2. Double-click `START-WINDOWS.cmd`. Node.js must be installed and available on PATH.
-3. The launcher opens `http://127.0.0.1:8765/`. Keep its terminal open while using the studio. Close it to stop the server.
+---
 
-Do not double-click `index.html`: 3D module files require a local HTTP server. No npm install, account, API key or paid service is required. Images, fonts, code and data are bundled. External source links and optional browser speech services may require internet access.
+## Quick Start (Local Development)
 
-If port 8765 is occupied, close the previous server or run `node tools/server.mjs 8766` in this folder and open `http://127.0.0.1:8766/` manually. Any static HTTP server can serve this directory.
+### Option 1 — One-Click Windows Launcher
+1. Clone or extract this repository.
+2. Double-click **`START-WINDOWS.cmd`** (requires [Node.js](https://nodejs.org/) installed on `PATH`).
+3. Your browser will open **`http://127.0.0.1:8765/`** automatically.
 
-## Use the studio
+### Option 2 — Terminal (Windows / macOS / Linux)
+```bash
+node tools/server.mjs 8765
+```
+Then open **`http://127.0.0.1:8765/`** in your browser.
+*(Do not open `index.html` via `file://` — ES modules and WebGL textures require a local HTTP server. No `npm install` or external dependencies are needed.)*
 
-- **Jukebox:** choose Temperature or Rainfall, then Play track. The knob button mutes sound. Track 03 is unavailable pending a supported dataset.
-- **Earth monitor:** select it to focus. Listen shows the map and sound timeline. Explore also opens guide, evidence and source panels. Choose **Try a listening lesson** for the predict/listen/explain activity.
-- **Globe / Flat Map:** drag the globe, scrub years or enter geographic bounds. Regions use rectangular bounds, not country-boundary selection.
-- **Information frame:** select it to read the same permanent print. Its content does not change with the data track.
-- **Back to studio** or **Escape:** return to the overview. The footer provides keyboard-accessible object controls. **Motion off** disables camera parallax and transitions; the OS reduced-motion preference is honored by default.
-- **Open explorer / Full view:** opens the full observatory. On narrow screens the monitor moves below the 3D overview for readable touch controls.
+---
 
-Sound starts after a user action. Browser sound settings can still block it. Speech synthesis and microphone support vary by browser; neither is required for the data tracks.
+## Core Experience (`Learn → Scan → Compare → Explain`)
 
-## Scope and data limits
+1. **Interactive 3D Night Observatory (`index.html` & `js/studio.js`)**
+   - **Left Workstation Desk:** Houses the live 16:9 **EarthTune Studio Monitor Workbench** bathed in warm-amber architectural downlighting.
+   - **Right Hologram Desk:** Projects a 3-layer **3D Hologram Earth Globe** (NASA Blue Marble base + dynamic 1980–2024 GISTEMP anomaly heatmaps + crisp vector political country borders) with full 2-axis drag inspection (horizontal spin + polar tilt) and synchronized 3D latitude scan rings.
+   - **Welcome Guide Narration:** Includes synchronized broadcast-style subtitles (`assets/audio/skylar-welcome.mp3`).
 
-The playable archive is **1980–2024**. Inherited 2025–2026 maps and regional grids repeat 2024, so v0.1 excludes those years from playback. Original data files remain in the source snapshot for inspection; they do not extend the playable record.
+2. **Monitor Workbench (`monitor-workbench/`)**
+   - **`1 · History` (1980–2024):** Scrub or play through 45 years of annual global temperature anomalies (`+0.26 °C` in 1980 to `+1.28 °C` in 2024) mapped to pitch (`150–850 Hz`), synchronized live with the 3D Hologram Globe.
+   - **`2 · Frame Scan` (5 Latitude Bands):** Samples NASA SVS #5450 RGB pixels across five geographic bands (`Arctic 60°–90°N`, `N. Mid 30°–60°N`, `Tropics 30°S–30°N`, `S. Mid 30°–60°S`, `Antarctic 60°–90°S`) into **Cooler (`196–204 Hz`)**, **Baseline (`330 Hz`)**, and **Warmer (`540–660 Hz`)** category coverage.
+   - **`3 · Quiz & Proof`:** Interactive listening comprehension test comparing `1980` vs. `2024` Arctic frames, concluding with an **Explain-Back Proof Receipt** that documents the measured regional warming surge and method limitations.
+   - **`2 · Compare A/B` & `3 · Method & Sources`:** Side-by-side acoustic and numerical comparison for any two years and latitude bands, plus full provenance and a copyable Live Frame Ledger.
 
-Temperature values map to pitch; rainfall values shape synthesized rain. This is designed sonification, not recorded planetary audio. NASA temperature visuals use a regional running mean; a map pixel is not the same summary as an annual global value. Regional provenance, aggregation and rain acoustics need a full scientific audit before a competition submission. See `docs/DATA-NOTES.md`.
+3. **Responsive Mobile Route (`≤ 760px`)**
+   - On mobile viewports (e.g., `390×844`), the 3D Hologram Earth Globe renders in the top studio banner while the full Monitor Workbench docks into an unclipped, touch-friendly 2D layout directly below it.
 
-Dr. Jo is a fictional, scripted guide inspired by Joanne Simpson's work, not the scientist herself. No live LLM, forecast model, solar track, country report, premium female narration or future-temperature projection is connected. The system speech voice depends on the device.
+---
 
-This is an independent prototype, not an official NASA product or an assertion of hackathon eligibility. Preserve the release date and disclose pre-event work when checking competition rules.
+## Scientific Scope & Limitations
 
-## Source files
+- **Playable Archive:** `1980–2024` (45 annual frames from NASA SVS #5450 / GISTEMP v4 relative to the `1951–1980` baseline).
+- **Designed Sonification:** Pixel color classification communicates visual category share (`Cooler`, `Baseline`, `Warmer`) within each latitude band rather than raw physical sensor inversion.
 
-- `index.html`, `js/studio.js`, `css/studio.css`: entry and original procedural 3D scene.
-- `observatory.html`, `css/observatory.css`: full data/audio/learning experience.
-- `css/studio-embed.css`: monitor presentation of the same observatory.
-- `js/learning-layout.js`: learning controller. In the development checkout, `python tools/build-site.py` synchronizes it into `observatory.html`; it does not overwrite the studio entry.
-- `data/manifest.json`: inherited numerical/frame source metadata.
-- `tools/server.mjs`: dependency-free local static server.
+---
 
-The ZIP is a runnable source distribution. Packaging tools and reference-analysis notes remain in the development checkout. Captured Shopify code/assets are never distributed or executed.
+## Project Structure
 
-## Credits
+- `index.html`, `css/studio.css`, `js/studio.js` — 3D Night Observatory room, camera controller, 3-layer Hologram Earth Globe, and responsive mobile dock.
+- `monitor-workbench/index.html`, `styles.css`, `app.js` — Embedded NASA EIC sonification workbench, pixel analyzer, Web Audio synthesizer, A/B comparator, and Quiz & Proof receipt.
+- `assets/models/studio_room.glb` — Custom-authored 3D studio architectural model.
+- `assets/eic/1980.webp` … `2024.webp` — NASA SVS #5450 global temperature anomaly frames.
+- `assets/world-borders-clean.svg` — High-contrast equirectangular political country borders and coastlines overlay.
+- `tools/server.mjs` — Zero-dependency Node.js static HTTP server.
 
-- Temperature visuals: [NASA SVS, Global Temperature Anomalies](https://svs.gsfc.nasa.gov/5450/). NASA's Scientific Visualization Studio; data provided by Robert B. Schmunk, NASA/GSFC GISS.
-- Global-temperature snapshot: [NASA GISS GISTEMP v4](https://data.giss.nasa.gov/gistemp/). See the bundled manifest for retrieval date and frame indices.
-- Earth texture: bundled NASA Blue Marble map from the existing project.
-- Three.js **0.160.0**: MIT. `vendor/THREE-LICENSE.txt`.
-- Lucide **0.468.0**: ISC. `vendor/LUCIDE-LICENSE.txt`.
-- DM Sans and Instrument Serif: Open Font License. Licenses in `assets/fonts/`.
-- TopoJSON client: ISC. `vendor/TOPOJSON-LICENSE.txt`.
+---
 
-Studio geometry and interaction code are original Earthtone Studio work. Shopify's BFCM experience informed the interaction direction only.
+## Credits & Data Provenance
+
+- **Temperature Anomaly Visualizations:** [NASA Scientific Visualization Studio (SVS #5450)](https://svs.gsfc.nasa.gov/5450/) — data provided by Robert B. Schmunk, NASA/GSFC GISS.
+- **Global Surface Temperature Dataset:** [NASA GISS Surface Temperature Analysis (GISTEMP v4)](https://data.giss.nasa.gov/gistemp/).
+- **Base Earth Imagery:** NASA Visible Earth (*Blue Marble Next Generation*).
+- **Open-Source Libraries & Fonts:** Three.js `0.160.0` (MIT), TopoJSON Client (ISC), DM Sans & Instrument Serif (SIL Open Font License).

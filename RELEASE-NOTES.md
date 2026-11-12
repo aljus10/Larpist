@@ -1,26 +1,11 @@
-# Earthtone Studio 0.1.0
+# EarthTune Studio · Release Notes
 
-Local prototype release · 8 November 2026
+## Current Release — EarthTune Studio (NASA Space Apps Edition)
 
-## Included
-
-- Original Three.js studio with metal wall panels, arched illuminated jukebox, connected monitor and permanent information frame.
-- Working Temperature and Rainfall selectors; a clearly reserved third track; play/pause and mute controls linked to the existing engine.
-- Four camera views, bounded damped cursor parallax, Back/Escape, persistent motion preference and system reduced-motion support.
-- Live embedded globe/flat map, historical timeline, area tools, guide, evidence, sources and an entry to the predict/listen/explain lesson.
-- Full standalone explorer retained at `observatory.html`. Narrow screens use a readable touch monitor below the room.
-- Locally bundled runtime, images, fonts and data; Windows launcher and runtime source ZIP.
-
-## Data correction
-
-Playback ends in 2024. Inherited 2025–2026 map images and regional grids repeat 2024. The release excludes those repeated years and removes fixed 2026/87% change claims from active explanations. Evidence values and change summaries now use the selected series.
-
-## Still to develop
-
-- Scientific audit of regional inputs, aggregation, map/audio alignment and rain sonification.
-- Refined rainfall acoustics and a consistently selected female narrator voice.
-- Additional dataset-backed tracks, country-boundary reports and validated scenario modelling.
-- Device/browser performance tuning beyond the tested local browser. This is an initial procedural 3D implementation; material and asset detail can improve further.
-- LLM integration, if needed, with source-grounded answers. The current guide is scripted.
-
-The release is local and does not perform a public deployment. Hackathon submission readiness and eligibility are separate checks.
+### Highlights
+- **Unified `EarthTune Studio` Identity:** Standardized brand, first-scene NASA Space Apps mission framing (*"Hear geographic patterns that a global average can hide."*), and task-oriented navigation (`Studio Overview`, `1 · Scan & Compare (Monitor)`, `2 · 3D Earth Globe`).
+- **Night Observatory 3D Room:** Midnight-slate observatory studio (`studio_room.glb`) with warm-amber task lighting on the left monitor table and cyan hologram lighting on the right globe table.
+- **3-Layer Composite Earth + Country Borders:** Combines NASA Blue Marble terrain, dynamic 1980–2024 GISTEMP anomaly heatmaps, and crisp equirectangular political country borders (`world-borders-clean.svg`) on both the 3D Hologram Globe and the 2D Flat Map, with 2-axis globe dragging.
+- **Guided 3-Step Sonification & Proof Receipt:** Sequences `1 · History` → `2 · Frame Scan` → `3 · Quiz & Proof` with persistent `NASA SVS 5450 · Method ↗` provenance access and an **Explain-Back Proof Receipt** summarizing the 1980 vs. 2024 Arctic warming surge and acoustic mapping rules.
+- **Responsive Mobile Route (`390×844`):** Full-width 2D Workbench dock (`#mobile-workbench-dock`) below the 3D studio banner with unclipped section tabs and map stage.
+- **Broadcast Welcome Subtitles:** Synchronized subtitle cues accompanying the friendly guide welcome greeting (`assets/audio/skylar-welcome.mp3`).
