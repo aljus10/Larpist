@@ -2,8 +2,8 @@
 
 ## 1. Spatial & Visual Direction
 - **Night Observatory Palette:** Midnight-slate architectural walls (`#141e2b`), dark charcoal desks (`#151c24`), warm-amber downlighting (`#ffd27d`) over the left workstation table, and cyan hologram illumination (`#4df3ff`) over the right globe table.
-- **Two Hero Instruments:**
-  1. **Left Workstation (`1 · Scan & Compare`):** Houses the 16:9 interactive Monitor Workbench (`960×540` CSS3D surface) directly on `Screen_Observatory_Monitor`.
+- **Two Hero Instruments & Tactile Desk Hardware:**
+  1. **Left Workstation (`1 · Scan & Compare`):** Houses the 16:9 interactive Monitor Workbench (`960×540` CSS3D surface) directly on `Screen_Observatory_Monitor`, flanked on the tabletop by a tactile 3D 65% Mechanical Keyboard (`Desk_Mechanical_Keyboard`) and a Frosted-Amber `? · TEAM` Macro Keycap (`Desk_Team_Keycap`) that opens the **EarthTune Studio Team** modal (`#team-modal`).
   2. **Right Hologram Emitter (`2 · 3D Earth Globe`):** Projects the 3-layer interactive 3D Earth Globe (`earth-blue-marble.jpg` + `1980–2024` NASA anomaly textures + `world-borders-clean.svg`) with 2-axis pointer drag and synchronized 3D latitude band scan rings.
 
 ## 2. Camera & Accessibility Architecture

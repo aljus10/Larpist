@@ -740,6 +740,8 @@ const roomGroup = new THREE.Group();
 scene.add(roomGroup);
 
 let screenMesh = null;
+let deskKeyboardObj = null;
+let deskTeamKeycapObj = null;
 let switchPlateMesh = null;
 let switchRockerMesh = null;
 let jukeboxVolumeKnob = null;
@@ -750,6 +752,56 @@ let playerChassisMesh = null;
 let consoleDeskMesh = null;
 
 const trackButtons = [];
+
+function isDescendantOf(obj, targetRoot) {
+  if (!obj || !targetRoot) return false;
+  let curr = obj;
+  while (curr) {
+    if (curr === targetRoot) return true;
+    curr = curr.parent;
+  }
+  return false;
+}
+
+function animateDeskPropPress(obj, deltaY = 0.03, durationMs = 155) {
+  if (!obj) return;
+  if (obj.userData.origY === undefined) {
+    obj.userData.origY = obj.position.y;
+  }
+  obj.position.y = obj.userData.origY - deltaY;
+  if (obj.userData.pressTimer) clearTimeout(obj.userData.pressTimer);
+  obj.userData.pressTimer = setTimeout(() => {
+    obj.position.y = obj.userData.origY;
+    obj.userData.pressTimer = null;
+  }, durationMs);
+}
+
+const teamModalEl = $('#team-modal');
+const teamModalCloseBtn = $('#team-modal-close');
+const teamModalDoneBtn = $('#team-modal-done');
+
+export function openTeamModal() {
+  if (!teamModalEl) return;
+  teamModalEl.hidden = false;
+  announce('EarthTune Studio Team modal opened.');
+  setTimeout(() => {
+    teamModalCloseBtn?.focus();
+  }, 40);
+}
+
+export function closeTeamModal() {
+  if (!teamModalEl || teamModalEl.hidden) return;
+  teamModalEl.hidden = true;
+  announce('Closed Team modal. Returned to EarthTune Studio.');
+}
+
+teamModalCloseBtn?.addEventListener('click', closeTeamModal);
+teamModalDoneBtn?.addEventListener('click', closeTeamModal);
+teamModalEl?.addEventListener('click', (e) => {
+  if (e.target === teamModalEl) {
+    closeTeamModal();
+  }
+});
 
 function animateButtonDepress(btnIdx) {
   const btn = trackButtons[btnIdx - 1];
@@ -770,6 +822,12 @@ gltfLoader.load(
     roomGroup.add(roomModel);
 
     roomModel.traverse((child) => {
+      if (child.name === 'Desk_Mechanical_Keyboard') {
+        deskKeyboardObj = child;
+      } else if (child.name === 'Desk_Team_Keycap') {
+        deskTeamKeycapObj = child;
+      }
+
       if (child.isMesh) {
         // DoubleSide to prevent any invisible walls or backface culling
         if (child.material) {
@@ -778,7 +836,68 @@ gltfLoader.load(
           if (child.material.emissiveMap) child.material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
         }
 
-        if (child.name === 'Earthtune_Wall_Branding') {
+        const matName = child.material?.name || '';
+
+        if (matName === 'Mat_KB_Chassis') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#18202a',
+            roughness: 0.30,
+            metalness: 0.68,
+            side: THREE.DoubleSide
+          });
+        } else if (matName === 'Mat_KB_Backlight') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#ffba52',
+            emissive: new THREE.Color('#ffa826'),
+            emissiveIntensity: 1.85,
+            roughness: 0.20,
+            metalness: 0.10,
+            side: THREE.DoubleSide
+          });
+        } else if (matName === 'Mat_KB_KeyDark') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#222e3c',
+            roughness: 0.38,
+            metalness: 0.18,
+            side: THREE.DoubleSide
+          });
+        } else if (matName === 'Mat_KB_KeyAccent') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#f2b254',
+            emissive: new THREE.Color('#ff9d2e'),
+            emissiveIntensity: 0.55,
+            roughness: 0.32,
+            metalness: 0.12,
+            side: THREE.DoubleSide
+          });
+        } else if (matName === 'Mat_Team_SwitchBase') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#161e28',
+            roughness: 0.34,
+            metalness: 0.62,
+            side: THREE.DoubleSide
+          });
+        } else if (matName === 'Mat_Team_FrostedAmber') {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#ffd074',
+            emissive: new THREE.Color('#ff9e2c'),
+            emissiveIntensity: 1.25,
+            roughness: 0.22,
+            metalness: 0.06,
+            side: THREE.DoubleSide
+          });
+        } else if (
+          matName === 'Mat_Team_LegendInk' ||
+          child.name === 'Desk_Team_Question_Mark' ||
+          child.name === 'Desk_Team_Label'
+        ) {
+          child.material = new THREE.MeshStandardMaterial({
+            color: '#0a1017',
+            roughness: 0.25,
+            metalness: 0.25,
+            side: THREE.DoubleSide
+          });
+        } else if (child.name === 'Earthtune_Wall_Branding') {
           // 3D vector-extruded wall lettering in matte black finish with depth
           child.material = new THREE.MeshStandardMaterial({
             color: '#141618',
@@ -934,7 +1053,9 @@ function raycastInteractive(clientX, clientY) {
 
   const interactiveTargets = [
     globeSphere,
-    screenMesh
+    screenMesh,
+    deskTeamKeycapObj,
+    deskKeyboardObj
   ].filter(Boolean);
 
   return raycaster.intersectObjects(interactiveTargets, true);
@@ -1045,6 +1166,22 @@ if (renderer) {
     // 2. Interactive Object Hits
     if (hits.length > 0) {
       const hitObj = hits[0].object;
+
+      // Check 3D '? TEAM' Macro Keycap -> tactile click + open Team Modal
+      if (deskTeamKeycapObj && hits.some(h => isDescendantOf(h.object, deskTeamKeycapObj))) {
+        playRelaySwitchSound();
+        animateDeskPropPress(deskTeamKeycapObj, 0.04, 175);
+        openTeamModal();
+        return;
+      }
+
+      // Check 3D Mechanical Keyboard -> tactile click + depress animation
+      if (deskKeyboardObj && hits.some(h => isDescendantOf(h.object, deskKeyboardObj))) {
+        playRelaySwitchSound();
+        animateDeskPropPress(deskKeyboardObj, 0.02, 135);
+        announce('Mechanical studio keyboard tapped.');
+        return;
+      }
 
       // Check Globe click -> toggle focus
       if (hitObj === globeSphere || hitObj.parent === globeSphere) {
@@ -1216,10 +1353,16 @@ $('#skip-to-workbench')?.addEventListener('click', (e) => {
 // Back button handler
 $('#back-button')?.addEventListener('click', () => homeView());
 
-// Escape key to revert
+// Escape key to close Team Modal or revert focus
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && S.focus !== 'overview') {
-    homeView();
+  if (e.key === 'Escape') {
+    if (teamModalEl && !teamModalEl.hidden) {
+      closeTeamModal();
+      return;
+    }
+    if (S.focus !== 'overview') {
+      homeView();
+    }
   }
 });
 
@@ -1498,14 +1641,19 @@ monitorFrame.addEventListener('load', () => {
 window.earthtoneStudio = {
   S,
   scene,
+  camera,
   roomGroup,
   globeGroup,
   globeTiltGroup,
   globeSphere,
+  get deskKeyboardObj() { return deskKeyboardObj; },
+  get deskTeamKeycapObj() { return deskTeamKeycapObj; },
   lights: { hemiLight, keyLight, fillLight, daisSpot, daisEmitterLight, leftDeskSpot, deskTaskLight, leftTableWarmFill, monitorHalo, globeHalo },
   focusTargets,
   registerFocusTarget,
   focusTarget,
   homeView,
-  focusObject
+  focusObject,
+  openTeamModal,
+  closeTeamModal
 };
