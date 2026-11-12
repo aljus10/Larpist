@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore NASA Earth Information Center temperature frames through historical sonification, geographic scanning, and accessible comparison.">
-  <title>Earth Jukebox — Monitor Workbench</title>
+  <meta name="description" content="EarthTune Studio — Explore NASA Earth Information Center temperature frames through historical sonification, geographic latitude scanning, and A/B comparison.">
+  <title>EarthTune Studio — NASA Earth Information Workbench</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#workbench">Skip to workbench</a>
 
   <header class="site-header">
-    <a class="brand" href="#workbench" data-section-target="workbench" aria-label="Earth Jukebox Monitor Workbench">
+    <a class="brand" href="#workbench" data-section-target="workbench" aria-label="EarthTune Studio Monitor Workbench">
       <span class="brand-mark" aria-hidden="true"><span></span></span>
       <span class="brand-text">
-        <strong>Earth Jukebox</strong>
-        <small>NASA SVS 5450</small>
+        <strong>EarthTune Studio</strong>
+        <small>NASA EIC · SVS 5450</small>
       </span>
     </a>
 
     <nav class="section-tabs" role="tablist" aria-label="Monitor views">
-      <button type="button" role="tab" class="section-tab" data-section-target="workbench" aria-selected="true">
-        <span>Atlas</span>
+      <button type="button" role="tab" id="section-tab-workbench" class="section-tab" data-section-target="workbench" aria-controls="workbench" aria-selected="true" tabindex="0">
+        <span>1 · Atlas &amp; Scan</span>
       </button>
-      <button type="button" role="tab" class="section-tab" data-section-target="compare" aria-selected="false">
-        <span>Compare A/B</span>
+      <button type="button" role="tab" id="section-tab-compare" class="section-tab" data-section-target="compare" aria-controls="compare" aria-selected="false" tabindex="-1">
+        <span>2 · Compare A/B</span>
       </button>
-      <button type="button" role="tab" class="section-tab" data-section-target="method" aria-selected="false">
-        <span>About Challenge</span>
+      <button type="button" role="tab" id="section-tab-method" class="section-tab" data-section-target="method" aria-controls="method" aria-selected="false" tabindex="-1">
+        <span>3 · Method &amp; Sources</span>
       </button>
     </nav>
 
@@ -56,6 +56,9 @@
           </div>
 
           <div class="toolbar-meta">
+            <button type="button" class="source-jump-pill" data-section-target="method" title="View NASA SVS 5450 source &amp; acoustic mapping rules">
+              <span>NASA SVS 5450 · Method ↗</span>
+            </button>
             <span class="frame-pill">
               <strong id="frame-year">1980</strong> · #<span id="frame-index">594</span>
             </span>
@@ -81,9 +84,9 @@
 
       <aside class="control-column" aria-label="Listening controls">
         <div class="mode-tabs" role="tablist" aria-label="Listening mode">
-          <button type="button" role="tab" id="history-tab" aria-controls="history-panel" aria-selected="true">History</button>
-          <button type="button" role="tab" id="frame-tab" aria-controls="frame-panel" aria-selected="false">Frame Scan</button>
-          <button type="button" role="tab" id="learn-tab" aria-controls="learn-panel" aria-selected="false">Quiz</button>
+          <button type="button" role="tab" id="history-tab" aria-controls="history-panel" aria-selected="true" tabindex="0">1 · History</button>
+          <button type="button" role="tab" id="frame-tab" aria-controls="frame-panel" aria-selected="false" tabindex="-1">2 · Frame Scan</button>
+          <button type="button" role="tab" id="learn-tab" aria-controls="learn-panel" aria-selected="false" tabindex="-1">3 · Quiz &amp; Proof</button>
         </div>
 
         <section class="mode-panel" id="history-panel" role="tabpanel" aria-labelledby="history-tab">
@@ -121,6 +124,10 @@
             <button class="secondary-button icon-button" id="play-selected" type="button" title="Play selected year tone" aria-label="Play selected year tone">♪</button>
             <button class="secondary-button icon-button" id="next-year" type="button" aria-label="Next year">→</button>
           </div>
+
+          <div class="step-footer-row">
+            <button type="button" class="step-next-link" data-mode-target="frame">Next: 2 · Scan 5 Latitude Bands (N → S) →</button>
+          </div>
         </section>
 
         <section class="mode-panel" id="frame-panel" role="tabpanel" aria-labelledby="frame-tab" hidden>
@@ -151,6 +158,10 @@
             <button class="primary-button" id="scan-frame" type="button">▶ Scan N → S</button>
             <button class="secondary-button" id="play-band" type="button">Play Band</button>
           </div>
+
+          <div class="step-footer-row">
+            <button type="button" class="step-next-link" data-mode-target="learn">Next: 3 · Test Your Ear &amp; Proof Receipt →</button>
+          </div>
         </section>
 
         <section class="mode-panel" id="learn-panel" role="tabpanel" aria-labelledby="learn-tab" hidden>
@@ -165,7 +176,14 @@
             </fieldset>
             <div class="lesson-feedback" id="lesson-feedback" role="status">Listen first, then choose A or B.</div>
           </div>
-          <button class="text-button" id="lesson-reset" type="button">Reset quiz</button>
+          <div class="proof-receipt" id="proof-receipt">
+            <div class="proof-receipt-head">
+              <span>EXPLAIN-BACK PROOF · SVS 5450</span>
+              <button class="text-button" id="lesson-reset" type="button">Reset quiz</button>
+            </div>
+            <p id="proof-takeaway"><strong>Why scan by latitude?</strong> A single global average hides regional extremes—Arctic (60°–90°N) warming coverage surged from 1980 to 2024.</p>
+            <small class="proof-rule"><strong>Rule:</strong> Cooler (196–204 Hz) · Baseline (330 Hz) · Warmer (540–660 Hz) · <em>Visual pixel share, not raw sensor inversion.</em></small>
+          </div>
         </section>
 
         <div class="live-status sr-only" id="live-status" role="status" aria-live="polite">Ready.</div>

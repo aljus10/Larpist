@@ -4,19 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#101c28">
-  <meta name="description" content="Earthtone Studio — Interactive 3D Listening Room for Exploring Earth Data Through Sound.">
-  <title>Earthtone Studio — Interactive 3D Room</title>
+  <meta name="description" content="EarthTune Studio — Hear geographic patterns that a global average can hide. Interactive NASA Earth Information Center temperature sonification (1980–2024).">
+  <title>EarthTune Studio — NASA Earth Information Sonification</title>
   <link rel="stylesheet" href="css/studio.css">
   <script src="vendor/three.min.js"></script>
   <script src="vendor/GLTFLoader.min.js"></script>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
-  <main id="studio" aria-label="Interactive three-dimensional Earthtone Studio">
+  <a class="skip-link" id="skip-to-workbench" href="#mobile-workbench-dock">Skip to EarthTune Workbench</a>
+  <main id="studio" aria-label="Interactive three-dimensional EarthTune Studio">
     <header class="studio-header" role="banner">
-      <a class="wordmark" href="#studio" data-focus-target="overview" aria-label="Earthtune Studio Home">
-        <span class="wordmark-title">Earthtune</span>
-        <span class="wordmark-sub">STUDIO</span>
+      <a class="wordmark" href="#studio" data-focus-target="overview" aria-label="EarthTune Studio Home">
+        <span class="wordmark-title">EarthTune</span>
+        <span class="wordmark-sub">STUDIO · NASA SPACE APPS</span>
+        <span class="wordmark-mission">Hear geographic patterns that a global average can hide.</span>
       </a>
     </header>
 
@@ -31,25 +33,25 @@
       <span id="welcome-subtitle-text" class="welcome-subtitle-text"></span>
     </div>
 
-    <!-- Quick Focus Section Navigation (Extensible for future object targets) -->
+    <!-- Quick Focus Section Navigation (Task-oriented challenge route) -->
     <footer class="studio-footer" role="region" aria-label="Studio navigation">
       <div class="studio-actions">
         <nav class="object-nav" aria-label="Room focus targets">
-          <button type="button" data-focus-target="overview" aria-current="true">Overview</button>
-          <button type="button" data-focus-target="globe">Holographic Dais</button>
-          <button type="button" data-focus-target="desk">Telemetry Desk</button>
+          <button type="button" data-focus-target="overview" aria-current="true">Studio Overview</button>
+          <button type="button" data-focus-target="desk">1 · Scan &amp; Compare (Monitor)</button>
+          <button type="button" data-focus-target="globe">2 · 3D Earth Globe</button>
         </nav>
       </div>
       <div class="interaction-hint">
-        <span>Click 3D objects or buttons to focus • Click outside to return</span>
+        <span>Click Monitor to Learn, Scan &amp; Compare • Drag 3D Globe to inspect latitudes</span>
       </div>
     </footer>
+
+    <!-- Responsive 2D Workbench Host for Mobile / Compact Viewports (<= 760px) -->
+    <section id="mobile-workbench-dock" class="mobile-workbench-dock" aria-label="EarthTune Challenge Workbench" hidden></section>
   </main>
   <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
   <noscript><p class="no-script">The 3D studio needs JavaScript. Enable it to explore the room.</p></noscript>
-
-  <!-- Background audio sonification engine -->
-  <iframe id="observatory" src="observatory.html?embedded=1" style="display:none;position:absolute;width:0;height:0;border:0;" title="Earthtone Sonification Engine" allow="autoplay"></iframe>
 
   <script type="module" src="js/studio.js"></script>
 </body>

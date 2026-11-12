@@ -3,12 +3,13 @@ import { CSS3DRenderer, CSS3DObject } from '../vendor/CSS3DRenderer.js';
 import { store } from './core/JukeboxStore.js';
 
 // -------------------------------------------------------------
-// EARTHTONE STUDIO — 3D INTERACTIVE ROOM ARCHITECTURE
+// EARTHTUNE STUDIO — 3D INTERACTIVE ROOM ARCHITECTURE
 // -------------------------------------------------------------
 
 const $ = (selector) => document.querySelector(selector);
 const stage = $('#studio');
 const sceneHost = $('#scene');
+const mobileWorkbenchDock = $('#mobile-workbench-dock');
 
 // CSS3D Scene setup for interactive web pages on 3D monitor screens
 const cssScene = new THREE.Scene();
@@ -41,7 +42,7 @@ monitorWrapper.style.pointerEvents = 'auto';
 const monitorFrame = document.createElement('iframe');
 monitorFrame.id = 'embedded-workstation-frame';
 monitorFrame.src = './monitor-workbench/index.html';
-monitorFrame.title = 'NASA Earth Jukebox — Monitor Workbench';
+monitorFrame.title = 'EarthTune Studio — NASA Earth Information Sonification Workbench';
 // Monitor-optimized 16:9 virtual canvas (960x540 provides +67% optical boost on 3D monitor)
 monitorFrame.style.width = '960px';
 monitorFrame.style.height = '540px';
@@ -54,7 +55,7 @@ monitorFrame.setAttribute('allow', 'autoplay');
 // Click-to-focus shield over monitor (used only when focused on Globe)
 const monitorClickShield = document.createElement('div');
 monitorClickShield.className = 'monitor-click-shield';
-monitorClickShield.title = 'Click monitor to focus Telemetry Desk';
+monitorClickShield.title = 'Click monitor to focus Scan & Compare Workbench';
 monitorClickShield.style.position = 'absolute';
 monitorClickShield.style.inset = '0';
 monitorClickShield.style.cursor = 'pointer';
@@ -91,6 +92,43 @@ let isMuted = false;
 let isRoomLightOn = true;
 let currentVolume = 0.85;
 
+function syncCompactWorkbenchLayout() {
+  compact = compactQuery.matches;
+  document.body.classList.toggle('compact-mobile', compact);
+  if (compact && mobileWorkbenchDock) {
+    mobileWorkbenchDock.hidden = false;
+    if (monitorFrame.parentElement !== mobileWorkbenchDock) {
+      mobileWorkbenchDock.appendChild(monitorFrame);
+    }
+    monitorFrame.style.width = '100%';
+    monitorFrame.style.height = '920px';
+    monitorFrame.style.pointerEvents = 'auto';
+    if (cssRenderer?.domElement) {
+      cssRenderer.domElement.style.display = 'none';
+    }
+    // On mobile, monitorFrame is docked below #scene, so keep the 3D banner focused on the Globe/Overview
+    if (S && S.focus === 'desk') {
+      const globeView = focusTargets.get('globe') || focusTargets.get('overview');
+      if (globeView) {
+        S.basePos.copy(globeView.position);
+        S.baseLook.copy(globeView.target);
+      }
+    }
+  } else {
+    if (mobileWorkbenchDock) {
+      mobileWorkbenchDock.hidden = true;
+    }
+    if (monitorFrame.parentElement !== monitorWrapper) {
+      monitorWrapper.insertBefore(monitorFrame, monitorClickShield);
+    }
+    monitorFrame.style.width = '960px';
+    monitorFrame.style.height = '540px';
+    if (cssRenderer?.domElement) {
+      cssRenderer.domElement.style.display = '';
+    }
+  }
+}
+
 // Scene setup — Architectural studio environment
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0c131a');
@@ -117,9 +155,9 @@ export function registerFocusTarget(id, config) {
   });
 }
 
-// Register core Earthtone Studio focal anchors
+// Register core EarthTune Studio focal anchors
 registerFocusTarget('overview', {
-  label: 'Studio overview',
+  label: 'EarthTune Studio Overview',
   position: new THREE.Vector3(-0.10, 2.75, 9.05),
   target: new THREE.Vector3(-0.10, 2.20, -0.30),
   fov: 40,
@@ -127,7 +165,7 @@ registerFocusTarget('overview', {
 });
 
 registerFocusTarget('globe', {
-  label: 'Holographic Dais',
+  label: '3D Earth Globe',
   position: new THREE.Vector3(3.15, 2.20, 5.20),
   target: new THREE.Vector3(3.15, 2.10, -0.34),
   fov: 38,
@@ -135,17 +173,17 @@ registerFocusTarget('globe', {
 });
 
 registerFocusTarget('desk', {
-  label: 'Telemetry Workstation',
+  label: 'Scan & Compare Workbench',
   position: new THREE.Vector3(-1.75, 2.64, 2.88),
   target: new THREE.Vector3(-2.955, 2.345, -0.285),
   fov: 42,
   parallaxScale: 0.12,
   onFocus: () => {
     try { monitorFrame.contentWindow?.focus(); } catch {}
-    announce('Telemetry Workstation engaged. Control directly on the monitor.');
+    announce('EarthTune Scan & Compare Workbench engaged. Control directly on the monitor.');
   },
   onBlur: () => {
-    announce('Studio overview focused.');
+    announce('EarthTune Studio overview focused.');
   }
 });
 
@@ -857,10 +895,11 @@ try {
 }
 
 function resize() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  camera.aspect = w / h;
-  const baseOverviewFov = compact ? 44 : THREE.MathUtils.clamp(38 + Math.max(0, 1.45 - camera.aspect) * 8, 38, 44);
+  syncCompactWorkbenchLayout();
+  const w = compact ? (sceneHost.clientWidth || window.innerWidth) : window.innerWidth;
+  const h = compact ? (sceneHost.clientHeight || 205) : window.innerHeight;
+  camera.aspect = w / Math.max(1, h);
+  const baseOverviewFov = compact ? 42 : THREE.MathUtils.clamp(38 + Math.max(0, 1.45 - camera.aspect) * 8, 38, 44);
   const currentTarget = focusTargets.get(S.focus);
   if (S.focus === 'overview') {
     S.targetFov = baseOverviewFov;
@@ -869,9 +908,10 @@ function resize() {
   }
   camera.updateProjectionMatrix();
   if (renderer) renderer.setSize(w, h);
-  if (cssRenderer) cssRenderer.setSize(w, h);
+  if (cssRenderer && !compact) cssRenderer.setSize(w, h);
 }
 window.addEventListener('resize', resize);
+compactQuery.addEventListener?.('change', resize);
 resize();
 
 // -------------------------------------------------------------
@@ -1101,8 +1141,12 @@ export function focusTarget(id) {
   document.body.dataset.focus = target.id;
 
   // Set base anchors to center camera directly on the target
-  S.basePos.copy(target.position);
-  S.baseLook.copy(target.target);
+  // On mobile (compact), the monitor is docked in 2D below #scene, so keep the 3D banner on the 3D Globe when 'desk' is selected
+  const cameraAnchor = (compact && target.id === 'desk')
+    ? (focusTargets.get('globe') || target)
+    : target;
+  S.basePos.copy(cameraAnchor.position);
+  S.baseLook.copy(cameraAnchor.target);
 
   // Compute required FOV
   const baseOverviewFov = compact ? 44 : THREE.MathUtils.clamp(38 + Math.max(0, 1.45 - camera.aspect) * 8, 38, 44);
@@ -1133,15 +1177,15 @@ export const focusObject = focusTarget;
 function updateFocusUI(currentId) {
   const focusBar = $('.focus-bar');
   if (focusBar) {
-    focusBar.hidden = currentId === 'overview' || currentId === 'desk';
+    focusBar.hidden = compact || currentId === 'overview' || currentId === 'desk';
   }
 
   // Enable direct interaction inside the monitor in both Overview and Desk modes
   if (monitorFrame) {
-    monitorFrame.style.pointerEvents = currentId === 'globe' ? 'none' : 'auto';
+    monitorFrame.style.pointerEvents = (!compact && currentId === 'globe') ? 'none' : 'auto';
   }
   if (monitorClickShield) {
-    monitorClickShield.style.display = currentId === 'globe' ? 'block' : 'none';
+    monitorClickShield.style.display = (!compact && currentId === 'globe') ? 'block' : 'none';
   }
 
   // Update any present and future toggle buttons in DOM with data-focus-target
@@ -1149,7 +1193,25 @@ function updateFocusUI(currentId) {
     const isCurrent = btn.getAttribute('data-focus-target') === currentId;
     btn.setAttribute('aria-current', isCurrent ? 'true' : 'false');
   });
+
+  if (compact && currentId === 'desk' && mobileWorkbenchDock) {
+    try {
+      mobileWorkbenchDock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      monitorFrame.contentWindow?.postMessage({ type: 'FOCUS_FIRST_CONTROL' }, '*');
+    } catch {}
+  }
 }
+
+// Skip-link handler: jumps directly into the EarthTune Workbench for keyboard & screen-reader users
+$('#skip-to-workbench')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  focusTarget('desk');
+  try {
+    monitorFrame.focus();
+    monitorFrame.contentWindow?.focus();
+    monitorFrame.contentWindow?.postMessage({ type: 'FOCUS_FIRST_CONTROL' }, '*');
+  } catch {}
+});
 
 // Back button handler
 $('#back-button')?.addEventListener('click', () => homeView());
@@ -1326,11 +1388,11 @@ window.addEventListener('message', (e) => {
 // CARTESIA SKYLAR (FRIENDLY GUIDE) WELCOME GREETING & SUBTITLES
 // -------------------------------------------------------------
 const SKYLAR_WELCOME_TEXT =
-  "Hello, welcome to the Earthtune Studio. As you can learn here, our NASA Earth Information Center challenge turns global temperature records from 1980 to 2024 into sound and light. Feel free to wander, appreciate the studio, and explore the monitor and hologram globe at your own pace.";
+  "Hello, welcome to the EarthTune Studio. As you can learn here, our NASA Earth Information Center challenge turns global temperature records from 1980 to 2024 into sound and light. Feel free to wander, appreciate the studio, and explore the monitor and hologram globe at your own pace.";
 
 // Exact waveform-aligned subtitle cues (measured from skylar-welcome.mp3 breath pauses)
 const SKYLAR_SUBTITLE_CUES = [
-  { start: 0.0, end: 2.62, text: 'Hello, welcome to the Earthtune Studio.' },
+  { start: 0.0, end: 2.62, text: 'Hello, welcome to the EarthTune Studio.' },
   { start: 2.62, end: 6.55, text: 'As you can learn here, our NASA Earth Information Center challenge' },
   { start: 6.55, end: 11.60, text: 'turns global temperature records from 1980 to 2024 into sound and light.' },
   { start: 11.60, end: 14.12, text: 'Feel free to wander, appreciate the studio,' },

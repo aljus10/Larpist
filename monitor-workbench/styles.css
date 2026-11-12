@@ -15,7 +15,7 @@
 
 @font-face {
   font-family: 'Instrument Serif';
-  src: url('../assets/fonts/instrument-serif-italic.ttf') format('truetype');
+  src: url('../assets/fonts/instrument-serif.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -177,16 +177,16 @@ h1, h2, h3, p {
 .section-tabs {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.38rem;
 }
 
 .section-tab {
   border: 1.5px solid var(--line);
   background: var(--paper);
   color: var(--ink);
-  padding: 0.44rem 0.95rem;
+  padding: 0.4rem 0.72rem;
   border-radius: 9px;
-  font-size: 0.98rem;
+  font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
@@ -357,7 +357,25 @@ h1, h2, h3, p {
 .toolbar-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
+}
+
+.source-jump-pill {
+  background: rgba(77, 243, 255, 0.12);
+  border: 1.5px solid rgba(77, 243, 255, 0.42);
+  color: var(--ocean);
+  padding: 0.36rem 0.68rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.source-jump-pill:hover {
+  background: var(--ocean);
+  color: #061018;
 }
 
 .frame-pill {
@@ -622,12 +640,13 @@ h1, h2, h3, p {
 .mode-tabs button {
   border: 0;
   background: transparent;
-  padding: 0.35rem 0.35rem 0.55rem;
-  font-size: 1.05rem;
+  padding: 0.35rem 0.25rem 0.5rem;
+  font-size: 0.94rem;
   font-weight: 850;
   color: var(--muted);
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
 }
 
 .mode-tabs button:hover {
@@ -1021,6 +1040,94 @@ fieldset:disabled {
   color: #ff9880;
 }
 
+/* Step progression link & Explain-Back Proof Receipt */
+.step-footer-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.1rem;
+}
+
+.step-next-link {
+  border: 0;
+  background: transparent;
+  color: var(--ocean);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 0.15rem 0;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+
+.step-next-link:hover {
+  text-decoration: underline;
+  color: var(--sun);
+}
+
+.proof-receipt {
+  background: var(--paper);
+  border: 1.5px solid rgba(77, 243, 255, 0.32);
+  border-radius: 9px;
+  padding: 0.5rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.proof-receipt.is-verified {
+  border-color: var(--sun);
+  background: rgba(255, 210, 77, 0.08);
+}
+
+.proof-receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.proof-receipt-head span {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--sun);
+  text-transform: uppercase;
+}
+
+.proof-receipt p {
+  font-size: 0.82rem;
+  line-height: 1.32;
+  color: var(--ink);
+}
+
+.proof-receipt .proof-rule {
+  display: block;
+  font-size: 0.74rem;
+  line-height: 1.28;
+  color: var(--muted);
+}
+
+#lesson-content h3 {
+  font-size: 1.28rem;
+  font-weight: 900;
+  margin-bottom: 0.45rem;
+}
+
+fieldset {
+  margin: 0.45rem 0;
+  gap: 0.5rem;
+}
+
+fieldset button {
+  padding: 0.55rem;
+  font-size: 1.05rem;
+}
+
+.lesson-feedback {
+  padding: 0.5rem 0.7rem;
+  font-size: 0.88rem;
+}
+
 /* -------------------------------------------------------------
    VIEW 2: COMPARE A/B
    ------------------------------------------------------------- */
@@ -1250,4 +1357,198 @@ button:disabled {
 
 .busy {
   cursor: progress;
+}
+
+/* -------------------------------------------------------------
+   MOBILE & COMPACT RESPONSIVE BREAKPOINT (<= 760px, e.g. 390x844)
+   Eliminates horizontal tab clipping and map height collapse
+   ------------------------------------------------------------- */
+@media (max-width: 760px) {
+  html, body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .site-header {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 0.55rem 0.75rem;
+    gap: 0.45rem;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .brand-text strong {
+    font-size: 1.05rem;
+  }
+
+  .brand-text small {
+    font-size: 0.72rem;
+  }
+
+  .header-actions {
+    gap: 0.35rem;
+  }
+
+  .action-pill {
+    padding: 0.38rem 0.65rem;
+    font-size: 0.82rem;
+  }
+
+  .section-tabs {
+    order: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+  }
+
+  .section-tab {
+    padding: 0.42rem 0.18rem;
+    font-size: 0.73rem;
+    letter-spacing: -0.01em;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .monitor-main {
+    height: auto;
+    min-height: calc(100vh - 96px);
+    padding: 0.6rem 0.75rem 1.25rem;
+    overflow: visible;
+  }
+
+  .monitor-section {
+    height: auto;
+  }
+
+  .workbench-view {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 0.75rem;
+  }
+
+  .map-column {
+    height: auto;
+  }
+
+  .map-toolbar {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .source-jump-pill {
+    font-size: 0.75rem;
+    padding: 0.32rem 0.55rem;
+  }
+
+  .frame-pill {
+    font-size: 0.88rem;
+    padding: 0.32rem 0.65rem;
+  }
+
+  .frame-pill strong {
+    font-size: 1rem;
+  }
+
+  .map-stage {
+    flex: none;
+    width: 100%;
+    height: 225px;
+    min-height: 225px;
+  }
+
+  .band-pill {
+    padding: 0.18rem 0.55rem;
+  }
+
+  .band-pill strong {
+    font-size: 0.88rem;
+  }
+
+  .band-pill small {
+    font-size: 0.74rem;
+  }
+
+  .control-column {
+    height: auto;
+    gap: 0.65rem;
+    padding: 0.7rem 0.8rem;
+  }
+
+  .hero-kicker {
+    font-size: 1rem;
+    white-space: normal;
+  }
+
+  .hero-kicker em {
+    font-size: 1.18rem;
+  }
+
+  #history-year {
+    font-size: 2.65rem;
+  }
+
+  .metric-pill strong {
+    font-size: 1.15rem;
+  }
+
+  .compare-view,
+  .method-view {
+    height: auto;
+    gap: 0.85rem;
+  }
+
+  .compare-controls {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    padding: 0.85rem;
+  }
+
+  .compare-output {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .compare-output > div:not(.difference-mark) {
+    padding: 0.95rem;
+  }
+
+  .compare-output strong {
+    font-size: 2.4rem;
+  }
+
+  .difference-mark {
+    text-align: center;
+    font-size: 1.8rem;
+  }
+
+  .challenge-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .challenge-header h2 {
+    font-size: 1.45rem;
+  }
+
+  .challenge-header h2 em {
+    font-size: 1.65rem;
+  }
+
+  .method-flow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
 }

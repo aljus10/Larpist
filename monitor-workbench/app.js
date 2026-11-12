@@ -459,7 +459,9 @@ function setSection(sectionName){
     sec.hidden = sec.dataset.section !== sectionName;
   });
   $$('.section-tab[data-section-target]').forEach(btn => {
-    btn.setAttribute('aria-selected', String(btn.dataset.sectionTarget === sectionName));
+    const isSelected = btn.dataset.sectionTarget === sectionName;
+    btn.setAttribute('aria-selected', String(isSelected));
+    btn.tabIndex = isSelected ? 0 : -1;
   });
 }
 
@@ -508,14 +510,28 @@ async function answerLesson(year){
   const [a,b]=await Promise.all([analyzeYear(1980),analyzeYear(2024)]);
   const answer=a[0].warm>b[0].warm?'1980':'2024';const correct=year===answer;
   const feedback=$('#lesson-feedback');feedback.className=`lesson-feedback ${correct?'correct':'incorrect'}`;
-  feedback.textContent=`${correct?'Correct!':'Not quite.'} Arctic warmer coverage: ${(a[0].warm*100).toFixed(0)}% in 1980 vs ${(b[0].warm*100).toFixed(0)}% in 2024.`;
+  const warm80=(a[0].warm*100).toFixed(0);
+  const warm24=(b[0].warm*100).toFixed(0);
+  feedback.textContent=`${correct?'Correct!':'Not quite.'} Arctic warmer coverage: ${warm80}% in 1980 vs ${warm24}% in 2024.`;
   $$('.lesson-progress span')[2].classList.add('active');
+  const receipt=$('#proof-receipt');
+  const takeaway=$('#proof-takeaway');
+  if(receipt) receipt.classList.add('is-verified');
+  if(takeaway){
+    takeaway.innerHTML=`<strong>Verified Explain-Back (${year} selected):</strong> Arctic (60°–90°N) warm-pixel coverage rose from <strong>${warm80}% (1980)</strong> to <strong>${warm24}% (2024)</strong>—a polar amplification pattern hidden by a single global average pitch.`;
+  }
 }
 
 function resetLesson(){
   stopAudio(false);$('#lesson-answers').disabled=true;
   $('#lesson-feedback').className='lesson-feedback';$('#lesson-feedback').textContent='Listen first, then choose A or B.';
   $$('.lesson-progress span').forEach((span,index)=>span.classList.toggle('active',index===0));
+  const receipt=$('#proof-receipt');
+  const takeaway=$('#proof-takeaway');
+  if(receipt) receipt.classList.remove('is-verified');
+  if(takeaway){
+    takeaway.innerHTML='<strong>Why scan by latitude?</strong> A single global average hides regional extremes—Arctic (60°–90°N) warming coverage surged from 1980 to 2024.';
+  }
 }
 
 function copyLedger(){
@@ -528,6 +544,27 @@ function bindEvents(){
     el.addEventListener('click', (event) => {
       event.preventDefault();
       setSection(el.dataset.sectionTarget);
+    });
+  });
+
+  $$('.section-tabs [role="tab"]').forEach((tab, index, tabs) => {
+    tab.addEventListener('keydown', (event) => {
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      tabs[next].click();
+      tabs[next].focus();
+    });
+  });
+
+  $$('[data-mode-target]').forEach(btn => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      setMode(btn.dataset.modeTarget);
     });
   });
 
@@ -557,7 +594,7 @@ function bindEvents(){
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
   // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls
-  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], #mute-toggle, #exit-to-studio';
+  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -586,7 +623,16 @@ function bindEvents(){
     tabs[next].click();
     tabs[next].focus();
   }));
-  $('#frame-image').addEventListener('error',()=>setStatus(`The NASA frame for ${currentPoint().year} could not be loaded.`));
+  $('#frame-image').addEventListener('error',()=>{
+    setStatus(`The NASA frame for ${currentPoint().year} could not be loaded. Retrying with 1980 reference frame.`);
+    if ($('#frame-image').dataset.retried !== 'true') {
+      $('#frame-image').dataset.retried = 'true';
+      $('#frame-image').src = '../assets/eic/1980.webp';
+    }
+  });
+  $('#frame-image').addEventListener('load',()=>{
+    delete $('#frame-image').dataset.retried;
+  });
   $('#year-slider').addEventListener('input',event=>{stopAudio(false);updateYear(Number(event.target.value));});
   $('#year-slider').addEventListener('change',()=>playHistoryTone(currentPoint().value,.42));
   $('#previous-year').addEventListener('click',()=>{stopAudio(false);updateYear(state.yearIndex-1,{play:true});});
@@ -618,6 +664,9 @@ function bindEvents(){
   window.addEventListener('message',event=>{
     if(event.data&&(event.data.type==='SUSPEND_WORKSTATION'||event.data.type==='PAUSE_ALL_AUDIO')){
       stopAudio(false);
+    } else if (event.data && event.data.type === 'FOCUS_FIRST_CONTROL') {
+      const firstControl = $('#play-history') || $('#section-tab-workbench');
+      firstControl?.focus();
     }
   });
 
