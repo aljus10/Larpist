@@ -26,6 +26,13 @@ November 14, 2026 · `mics-dev` · Base commit `53fbeaa`
 | Workbench | `monitor-workbench/app.js`, `monitor-workbench/index.html`, `monitor-workbench/styles.css` |
 | Documentation | `README.md`, `DESIGN.md`, `docs/DATA-NOTES.md`, this handoff |
 
+## Studio launch follow-up
+
+- The main 3D studio now preloads the cyan globe icon and displays it in the header at 36 px on desktop and 30 px on mobile. The existing home link retains its accessible name.
+- On a normal launch, the icon and title appear over a backdrop, then the icon moves into the header. Reduced-motion preferences and direct desk or globe links use a short fade. Pointer or keyboard input, resizing, or an animation failure dismisses the intro and leaves the header usable.
+- The follow-up changes `index.html` and `css/studio.css` and adds `js/studio-launch.js`. The six `jmo-skills` installed during the session are local Codex tools. EarthTune runs independently of them.
+- Local Edge checks verified the completed desktop animation, keyboard interruption at mobile width, reduced motion, and a direct globe link. Each case restored the visible header icon.
+
 ## Run and verify
 
 From the repository root, run `node tools/server.mjs 8765` or launch `START-WINDOWS.cmd`. Open `http://127.0.0.1:8765/` for the studio, `/monitor-workbench/` for standalone workbench testing, and `/observatory.html` for the observatory. The app serves static files directly and has no `package.json` or npm build step.

@@ -7,6 +7,7 @@
   <meta name="description" content="EarthTune Studio — Hear geographic patterns that a global average can hide. Interactive NASA Earth Information Center temperature sonification (1980–2025).">
   <title>EarthTune Studio — NASA Earth Information Sonification</title>
   <link rel="stylesheet" href="css/studio.css">
+  <link rel="preload" href="assets/earthtune-icon.png" as="image">
   <script src="vendor/three.min.js"></script>
   <script src="vendor/GLTFLoader.min.js"></script>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
@@ -16,6 +17,7 @@
   <main id="studio" aria-label="Interactive three-dimensional EarthTune Studio">
     <header class="studio-header" role="banner">
       <a class="wordmark" href="#studio" data-focus-target="overview" aria-label="EarthTune Studio Home">
+        <img class="wordmark-icon" src="assets/earthtune-icon.png" width="36" height="36" alt="">
         <span class="wordmark-title">EarthTune</span>
         <span class="wordmark-sub">STUDIO · NASA SPACE APPS</span>
         <span class="wordmark-mission">Hear geographic patterns that a global average can hide.</span>
@@ -114,6 +116,7 @@
   <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
   <noscript><p class="no-script">The 3D studio needs JavaScript. Enable it to explore the room.</p></noscript>
 
+  <script defer src="js/studio-launch.js"></script>
   <script type="module" src="js/studio.js"></script>
 </body>
 </html>
