@@ -971,53 +971,53 @@ const CLIMATE_STORIES = {
     title: 'Expedition 1: The Global Heat Spike',
     audioFile: 'heat-spike.wav',
     cues: [
-      { start: 0.0, end: 3.97, text: 'Welcome to Expedition 1: The Global Heat Spike.' },
-      { start: 3.97, end: 10.24, text: 'In 1980, global temperatures remained close to the historical mid-century baseline.' },
-      { start: 10.24, end: 14.60, text: 'Hear the calm, balanced frequency of this baseline era.' },
-      { start: 14.60, end: 26.35, text: 'Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius.' },
-      { start: 26.35, end: 30.51, text: 'Notice how the pitch climbs higher across the northern hemisphere.' },
-      { start: 30.51, end: 36.84, text: 'In 2023 and 2024, our climate system crossed an uncharted threshold.' },
-      { start: 36.84, end: 46.57, text: 'Global anomalies shattered all prior records at plus 1.18 degrees Celsius, pushing our sonification to the sharpest edge of its acoustic range.' }
+      { start: 0, end: 3.60, text: 'Welcome to Expedition 1: The Global Heat Spike.' },
+      { start: 3.80, end: 9.24, text: 'In 1980, global temperatures remained close to the historical mid-century baseline.' },
+      { start: 9.44, end: 13.36, text: 'Hear the calm, balanced frequency of this baseline era.' },
+      { start: 13.56, end: 23.96, text: 'Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius.' },
+      { start: 24.16, end: 27.76, text: 'Notice how the pitch climbs higher across the northern hemisphere.' },
+      { start: 27.96, end: 33.72, text: 'In 2023 and 2024, our climate system crossed an uncharted threshold.' },
+      { start: 33.92, end: 43.28, text: 'Global anomalies shattered all prior records at plus 1.18 degrees Celsius, pushing our sonification to the sharpest edge of its acoustic range.' }
     ],
     milestones: [
       { time: 0.0, year: 1980, temp: false, band: null, tone: 0.26 },
-      { time: 14.60, year: 2016, temp: true, band: null, tone: 0.99 },
-      { time: 30.51, year: 2024, temp: true, band: null, tone: 1.18 }
+      { time: 13.56, year: 2016, temp: true, band: null, tone: 0.99 },
+      { time: 27.96, year: 2024, temp: true, band: null, tone: 1.18 }
     ]
   },
   'arctic-amplification': {
     title: 'Expedition 2: Arctic Amplification',
     audioFile: 'arctic-amplification.wav',
     cues: [
-      { start: 0.0, end: 4.08, text: 'Welcome to Expedition 2: Arctic Amplification.' },
-      { start: 4.08, end: 9.52, text: 'In 1980, reflective Arctic sea ice acted as Earth natural mirror.' },
-      { start: 9.52, end: 15.42, text: 'At 60 to 90 degrees North, acoustic frequencies matched global equilibrium.' },
-      { start: 15.42, end: 20.43, text: 'By the turn of the millennium, perennial sea ice began shrinking rapidly.' },
-      { start: 20.43, end: 29.01, text: 'As bright ice melted into darker ocean waters, solar heat absorption accelerated, triggering a runaway warming feedback loop.' },
-      { start: 29.01, end: 34.36, text: 'Today, the Arctic is warming nearly four times faster than the rest of the planet.' },
-      { start: 34.36, end: 40.91, text: 'Compare this polar tone to equatorial regions to hear the drastic acoustic divergence of our melting pole.' }
+      { start: 0, end: 3.36, text: 'Welcome to Expedition 2: Arctic Amplification.' },
+      { start: 3.56, end: 8.44, text: 'In 1980, reflective Arctic sea ice acted as Earth\'s natural mirror.' },
+      { start: 8.64, end: 13.76, text: 'At 60 to 90 degrees North, acoustic frequencies matched global equilibrium.' },
+      { start: 13.96, end: 18.28, text: 'By the turn of the millennium, perennial sea ice began shrinking rapidly.' },
+      { start: 18.48, end: 25.92, text: 'As bright ice melted into darker ocean waters, solar heat absorption accelerated, triggering a runaway warming feedback loop.' },
+      { start: 26.12, end: 31.00, text: 'Today, the Arctic is warming nearly four times faster than the rest of the planet.' },
+      { start: 31.20, end: 37.60, text: 'Compare this polar tone to equatorial regions to hear the drastic acoustic divergence of our melting pole.' }
     ],
     milestones: [
       { time: 0.0, year: 1980, temp: true, band: 0, tone: 0.26 },
-      { time: 15.42, year: 2000, temp: true, band: 0, tone: 0.40 },
-      { time: 29.01, year: 2024, temp: true, band: 0, tone: 1.18 }
+      { time: 13.96, year: 2000, temp: true, band: 0, tone: 0.40 },
+      { time: 26.12, year: 2024, temp: true, band: 0, tone: 1.18 }
     ]
   },
   'satellite-era': {
     title: 'Expedition 3: The 45-Year Satellite Era',
     audioFile: 'satellite-era.wav',
     cues: [
-      { start: 0.0, end: 4.72, text: 'Welcome to Expedition 3: The 45-Year Satellite Era.' },
-      { start: 4.72, end: 14.30, text: 'In 1980, NASA and NOAA began continuous orbital Earth monitoring, observing a world still governed by natural decadal variability.' },
-      { start: 14.30, end: 20.77, text: 'In 1998, an unprecedented ocean warming event signaled a permanent regime shift.' },
-      { start: 20.77, end: 26.92, text: 'Natural cooling cycles could no longer counteract the compounding buildup of greenhouse gases.' },
-      { start: 26.92, end: 34.75, text: 'Across 45 years of continuous satellite records, NASA datasets document an undeniable upward trajectory.' },
-      { start: 34.75, end: 40.61, text: 'What was once abstract numbers is now a visceral, audible reality for our home planet.' }
+      { start: 0, end: 4.00, text: 'Welcome to Expedition 3: The 45-Year Satellite Era.' },
+      { start: 4.20, end: 13.96, text: 'In 1980, NASA and NOAA began continuous orbital Earth monitoring, observing a world still governed by natural decadal variability.' },
+      { start: 14.16, end: 20.00, text: 'In 1998, an unprecedented ocean warming event signaled a permanent regime shift.' },
+      { start: 20.20, end: 25.96, text: 'Natural cooling cycles could no longer counteract the compounding buildup of greenhouse gases.' },
+      { start: 26.16, end: 33.60, text: 'Across 45 years of continuous satellite records, NASA datasets document an undeniable upward trajectory.' },
+      { start: 33.80, end: 39.40, text: 'What was once abstract numbers is now a visceral, audible reality for our home planet.' }
     ],
     milestones: [
       { time: 0.0, year: 1980, temp: false, band: null, tone: 0.26 },
-      { time: 14.30, year: 1998, temp: true, band: null, tone: 0.61 },
-      { time: 26.92, year: 2025, temp: true, band: null, tone: 1.18 }
+      { time: 14.16, year: 1998, temp: true, band: null, tone: 0.61 },
+      { time: 26.16, year: 2025, temp: true, band: null, tone: 1.18 }
     ]
   }
 };
