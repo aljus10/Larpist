@@ -789,10 +789,14 @@ function animateDeskPropPress(obj, deltaY = 0.03, durationMs = 155) {
 const teamModalEl = $('#team-modal');
 const teamModalCloseBtn = $('#team-modal-close');
 const teamModalDoneBtn = $('#team-modal-done');
+const teamNavBtn = $('#team-nav-button');
 
 export function openTeamModal() {
   if (!teamModalEl) return;
+  if (!teamModalEl.hidden) return;
   teamModalEl.hidden = false;
+  teamNavBtn?.setAttribute('aria-current', 'true');
+  document.querySelector('[data-focus-target="overview"]')?.setAttribute('aria-current', 'false');
   announce('EarthTune Studio Team modal opened.');
   setTimeout(() => {
     teamModalCloseBtn?.focus();
@@ -802,14 +806,37 @@ export function openTeamModal() {
 export function closeTeamModal() {
   if (!teamModalEl || teamModalEl.hidden) return;
   teamModalEl.hidden = true;
+  teamNavBtn?.setAttribute('aria-current', 'false');
+  homeView();
+  teamNavBtn?.focus();
   announce('Closed Team modal. Returned to EarthTune Studio.');
 }
 
+teamNavBtn?.addEventListener('click', openTeamModal);
 teamModalCloseBtn?.addEventListener('click', closeTeamModal);
 teamModalDoneBtn?.addEventListener('click', closeTeamModal);
 teamModalEl?.addEventListener('click', (e) => {
   if (e.target === teamModalEl) {
     closeTeamModal();
+  }
+});
+teamModalEl?.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const focusable = [...teamModalEl.querySelectorAll('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')]
+    .filter((el) => !el.hidden && el.getAttribute('aria-hidden') !== 'true');
+  if (!focusable.length) {
+    e.preventDefault();
+    teamModalEl.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && (document.activeElement === first || !teamModalEl.contains(document.activeElement))) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (document.activeElement === last || !teamModalEl.contains(document.activeElement))) {
+    e.preventDefault();
+    first.focus();
   }
 });
 
