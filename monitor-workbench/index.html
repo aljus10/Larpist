@@ -32,8 +32,8 @@
     </nav>
 
     <div class="header-actions">
-      <button class="action-pill help-btn" id="help-open" type="button" aria-label="Open beginner help guide" aria-haspopup="dialog">
-        <span aria-hidden="true">?</span>
+      <button class="action-pill help-btn" id="help-open" type="button" aria-label="Open beginner help guide" aria-haspopup="dialog" title="Beginner Guide &amp; How EarthTune Works">
+        <span class="help-q-badge" aria-hidden="true">?</span>
         <span>Guide</span>
       </button>
       <button class="action-pill" id="mute-toggle" type="button" aria-pressed="false" aria-label="Mute audio">
@@ -57,6 +57,10 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17v13h-17zM8 5.5v13m8-13v13M3.5 10h17m-17 4h17"/></svg>
               <span>Flat Map</span>
             </button>
+            <button id="temperature-view" type="button" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14.4V5a3 3 0 0 1 6 0v9.4a5 5 0 1 1-6 0ZM12 7v9"/></svg>
+              <span>Temperature</span>
+            </button>
           </div>
 
           <div class="toolbar-meta">
@@ -71,7 +75,7 @@
         </div>
         <p id="view-description" class="sr-only">Flat view shows the complete source frame and all five latitude bands at once.</p>
 
-        <figure class="map-stage" id="map-stage" data-view="flat" aria-label="NASA global temperature anomaly map">
+        <figure class="map-stage" id="map-stage" data-view="flat" data-temperature="false" aria-label="NASA Blue Marble world map">
           <img class="map-base-earth" src="../assets/earth-blue-marble.jpg" alt="" aria-hidden="true">
           <img id="frame-image" src="../assets/eic/1980.webp" alt="NASA global temperature anomaly visualization for 1980">
           <div class="regional-unavailable" id="regional-unavailable" role="status" aria-live="polite" hidden>
@@ -107,7 +111,7 @@
               </div>
               <div class="readout-metrics">
                 <div class="metric-pill">
-                  <span title="Global surface temperature anomaly relative to the 1951–1980 average">ANOMALY</span>
+                  <span>ANOMALY · VS. 1951–1980</span>
                   <strong id="history-value">+0.26 °C</strong>
                 </div>
                 <div class="metric-pill">
@@ -154,10 +158,22 @@
             </button>
           </div>
 
-          <div class="selected-band" id="selected-band-summary">
-            <span>ACTIVE LATITUDE BAND</span>
-            <strong>Arctic · 60°–90°N</strong>
-            <p class="sr-only">Sampled image points classified.</p>
+          <div class="frame-context-row">
+            <div class="frame-year-control">
+              <div class="frame-year-label-row">
+                <span>FRAME YEAR</span>
+                <div class="frame-year-steppers">
+                  <button type="button" id="frame-prev-year" aria-label="Previous year" title="Previous year">←</button>
+                  <button type="button" id="frame-next-year" aria-label="Next year" title="Next year">→</button>
+                </div>
+              </div>
+              <select id="frame-year-select" aria-label="Select frame year"></select>
+            </div>
+            <div class="selected-band" id="selected-band-summary">
+              <span>ACTIVE LATITUDE BAND</span>
+              <strong>Arctic · 60°–90°N</strong>
+              <p class="sr-only">Sampled image points classified.</p>
+            </div>
           </div>
 
           <div class="category-bars" id="category-bars" aria-label="Selected region category coverage"></div>
@@ -188,11 +204,11 @@
             <div class="quiz-maps">
               <figure class="quiz-map" id="quiz-map-a">
                 <figcaption>Frame A · <span></span></figcaption>
-                <div class="quiz-map-image"><img width="720" height="360" alt=""><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+                <div class="quiz-map-image"><img src="../assets/eic/1980.webp" width="720" height="360" alt="1980 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
               </figure>
               <figure class="quiz-map" id="quiz-map-b">
                 <figcaption>Frame B · <span></span></figcaption>
-                <div class="quiz-map-image"><img width="720" height="360" alt=""><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+                <div class="quiz-map-image"><img src="../assets/eic/2025.webp" width="720" height="360" alt="2025 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
               </figure>
             </div>
             <ul class="quiz-legend" aria-label="Shared map color legend">
@@ -293,6 +309,7 @@
     </section>
   </main>
 
+  <!-- BEGINNER GUIDE & INSTRUCTIONS MODAL (Option B) -->
   <div id="help-modal" class="help-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" hidden>
     <div class="help-modal-box">
       <div class="help-modal-header">
@@ -307,40 +324,30 @@
           <ol class="help-steps">
             <li><strong>Click the monitor</strong> on the left desk to zoom in</li>
             <li>Go to <strong>Tab 2 · Frame Scan</strong> in the right panel</li>
-            <li>Click the 3 coloured sound buttons to <strong>learn the sounds</strong></li>
-            <li>Press <strong>▶ Scan N → S</strong> — hear each region of Earth</li>
-            <li>Check <strong>Tab 3 · Quiz &amp; Proof</strong> to test your ears!</li>
+            <li>Press the big <strong>▶ Scan N → S</strong> button — you will hear the globe play from top (Arctic) to bottom (Antarctic)</li>
+            <li>Watch the cyan scan line move across the map as each latitude sings its temperature!</li>
           </ol>
         </section>
 
-        <!-- THE ROOM -->
+        <!-- 3D NAVIGATION -->
         <section class="help-section">
-          <h3 class="help-section-title">🏛️ Navigating the 3D Room</h3>
+          <h3 class="help-section-title">🖱️ How to Look Around the Studio</h3>
           <table class="help-table">
-            <tr><td>🖱️ Click the <strong>monitor</strong> (left desk)</td><td>Zoom into the control panel</td></tr>
-            <tr><td>🌍 Click the <strong>blue globe</strong> (right desk)</td><td>Zoom into the spinning Earth</td></tr>
-            <tr><td>⌨️ Press <strong>Escape</strong></td><td>Zoom back out to the full room</td></tr>
-            <tr><td>🖱️ Click &amp; drag the <strong>globe</strong></td><td>Spin it left or right</td></tr>
-            <tr><td>💡 Glowing ring on the globe</td><td>Shows which latitude band is being scanned</td></tr>
+            <tr><td><strong>Move your mouse</strong></td><td>Camera shifts gently around the room</td></tr>
+            <tr><td><strong>Click the monitor</strong></td><td>Zooms in to the temperature workstation</td></tr>
+            <tr><td><strong>Click the 3D globe</strong></td><td>Spins the globe and jumps to that latitude</td></tr>
+            <tr><td><strong>Bottom buttons</strong></td><td>Jump between Studio Overview, Monitor, and Globe</td></tr>
+            <tr><td><strong>← Studio button</strong></td><td>Zooms back out to room overview</td></tr>
           </table>
         </section>
 
-        <!-- TOP MENU TABS -->
+        <!-- MAP COLORS -->
         <section class="help-section">
-          <h3 class="help-section-title">📂 Top Menu Tabs</h3>
+          <h3 class="help-section-title">🗺️ What the Map Colors Mean</h3>
+          <p class="help-text">The map displays temperature anomalies compared to the 1951–1980 baseline:</p>
           <table class="help-table">
-            <tr><td><strong>1 · Atlas &amp; Scan</strong></td><td>Main explorer — maps + sound controls <em>(start here!)</em></td></tr>
-            <tr><td><strong>2 · Compare A/B</strong></td><td>Listen to two different years side-by-side</td></tr>
-            <tr><td><strong>3 · Method &amp; Sources</strong></td><td>Where the data comes from and how sounds are made</td></tr>
-          </table>
-        </section>
-
-        <!-- MAP COLOURS -->
-        <section class="help-section">
-          <h3 class="help-section-title">🗺️ Map Colours</h3>
-          <table class="help-table">
-            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Blues &amp; purples</strong></td><td>That area was <strong>cooler</strong> than average</td></tr>
-            <tr><td><span class="help-swatch ref-swatch"></span> <strong>White / pale yellow</strong></td><td>That area was <strong>about normal</strong></td></tr>
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Blues &amp; whites</strong></td><td>That area was <strong>cooler</strong> than average</td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Neutral / beige</strong></td><td>Near normal baseline temperature</td></tr>
             <tr><td><span class="help-swatch warm-swatch"></span> <strong>Oranges &amp; reds</strong></td><td>That area was <strong>warmer</strong> than average</td></tr>
           </table>
         </section>
