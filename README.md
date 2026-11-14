@@ -44,12 +44,12 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 **EarthTune Studio** was created by a dedicated team of six:
 
-1. **Al Justin** — *3D & Web Development* (3D studio scene, spatial layout, and interactive web interface)
-2. **Harvey** — *Audio & Sonification* (Audio synthesizer and latitude temperature pitch mapping)
-3. **Micah** — *Frontend & UI* (Monitor workbench layout, responsive controls, and interface accessibility)
-4. **Roger** — *Testing & Coordination* (Application testing, design feedback, and team project support)
-5. **Kenneth** — *Earth Data & Research* (NASA temperature data review, latitude bands, and reference notes)
-6. **Eddie** — *QA & Content* (Interactive listening questions, explanations, and quality assurance)
+1. **Roger Santiago Aguilar** — *UI/UX Designer* (Designed the user experience, spatial interface layout, and visual aesthetic)
+2. **John Kenneth Enaje** — *Pitch Lead* (Led project presentation, mission storytelling, and challenge alignment)
+3. **Al Justin Marollano** — *Backend Developer* (Engineered core data pipeline, server architecture, and system integration)
+4. **Micah Ella Masilang** — *DevOps* (Managed deployment, version control, build workflows, and infrastructure reliability)
+5. **Harvey Mirabel** — *Frontend Developer* (Built responsive UI components, interactive sound controls, and audio synthesis)
+6. **Eddie Mendoza** — *Project Manager* (Coordinated team milestones, task execution, timeline delivery, and QA)
 
 *Explore the team roster directly in the 3D studio by clicking the desk keycap or via the workbench interface.*
 
