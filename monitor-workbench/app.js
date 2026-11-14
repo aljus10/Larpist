@@ -952,6 +952,375 @@ function copyLedger(){
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(text);}
 }
 
+/* =====================================================
+   NASA CLIMATE STORIES & VOICE NARRATION ENGINE
+   ===================================================== */
+const speechEngine = {
+  synth: (typeof window !== 'undefined' && 'speechSynthesis' in window) ? window.speechSynthesis : null,
+  voice: null,
+  voiceEnabled: true,
+  currentUtterance: null,
+  speaking: false,
+  cancelFallback: null
+};
+
+function initSpeechVoices() {
+  if (!speechEngine.synth) return;
+  function chooseVoice() {
+    const voices = speechEngine.synth.getVoices();
+    if (!voices || !voices.length) return;
+    const preferred = voices.find(v => v.lang && v.lang.startsWith('en') && (
+      v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') ||
+      v.name.includes('David') || v.name.includes('Aria') || v.name.includes('Zira') || v.name.includes('Daniel')
+    )) || voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0];
+    speechEngine.voice = preferred;
+  }
+  chooseVoice();
+  if (speechEngine.synth.onvoiceschanged !== undefined) {
+    speechEngine.synth.onvoiceschanged = chooseVoice;
+  }
+}
+
+function duckAudioOutput(ducked) {
+  if (typeof audioContext !== 'undefined' && audioContext && typeof masterGain !== 'undefined' && masterGain) {
+    try {
+      const now = audioContext.currentTime;
+      const targetGain = ducked ? (state.muted ? 0 : 0.22) : (state.muted ? 0 : 0.95);
+      masterGain.gain.cancelScheduledValues(now);
+      masterGain.gain.setTargetAtTime(targetGain, now, 0.12);
+    } catch (_) {}
+  }
+}
+
+function speakAgentBriefing(text, onComplete) {
+  const captionEl = document.getElementById('story-caption-text');
+  if (captionEl) captionEl.textContent = text;
+
+  if (speechEngine.cancelFallback) {
+    speechEngine.cancelFallback();
+    speechEngine.cancelFallback = null;
+  }
+
+  if (speechEngine.synth) {
+    try { speechEngine.synth.cancel(); } catch (_) {}
+  }
+
+  if (!speechEngine.voiceEnabled || !speechEngine.synth) {
+    const words = text.split(/\s+/).length;
+    const duration = Math.max(3500, words * 280);
+    const timer = setTimeout(() => {
+      speechEngine.cancelFallback = null;
+      if (onComplete) onComplete();
+    }, duration);
+    speechEngine.cancelFallback = () => clearTimeout(timer);
+    return;
+  }
+
+  try {
+    const utterance = new SpeechSynthesisUtterance(text);
+    if (speechEngine.voice) utterance.voice = speechEngine.voice;
+    utterance.rate = 0.96;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    duckAudioOutput(true);
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      duckAudioOutput(false);
+      speechEngine.speaking = false;
+      speechEngine.currentUtterance = null;
+      if (onComplete) onComplete();
+    };
+
+    utterance.onend = finish;
+    utterance.onerror = finish;
+
+    speechEngine.currentUtterance = utterance;
+    speechEngine.speaking = true;
+    speechEngine.synth.speak(utterance);
+  } catch (err) {
+    duckAudioOutput(false);
+    if (onComplete) onComplete();
+  }
+}
+
+function stopAgentSpeech() {
+  if (speechEngine.cancelFallback) {
+    speechEngine.cancelFallback();
+    speechEngine.cancelFallback = null;
+  }
+  if (speechEngine.synth) {
+    try { speechEngine.synth.cancel(); } catch (_) {}
+  }
+  speechEngine.speaking = false;
+  duckAudioOutput(false);
+}
+
+// Stories Catalog Definitions
+const CLIMATE_STORIES = {
+  'heat-spike': {
+    title: 'Expedition 1: The Global Heat Spike',
+    steps: [
+      {
+        year: 1980,
+        tempLayer: false,
+        band: null,
+        title: 'Step 1 of 3: The 1980 Baseline',
+        narration: 'Welcome to Expedition 1. We begin in 1980. For decades, global temperatures hovered close to the historical mid-century baseline. Hear the calm, balanced frequency of this era.',
+        playTone: true
+      },
+      {
+        year: 2016,
+        tempLayer: true,
+        band: null,
+        title: 'Step 2 of 3: The 2016 Super El Niño',
+        narration: 'Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius. Notice how the pitch climbs higher across the northern hemisphere.',
+        playTone: true
+      },
+      {
+        year: 2024,
+        tempLayer: true,
+        band: null,
+        title: 'Step 3 of 3: Record Planetary Heat Surge',
+        narration: 'In 2023 and 2024, global temperatures shattered all prior instrumental records at plus 1.18 degrees Celsius. This acoustic sonification reaches the absolute highest peak of our 45-year telemetry record.',
+        playTone: true
+      }
+    ],
+    summary: 'NASA Earth observations confirm 2024 as the warmest year in modern history, driven primarily by human-induced greenhouse gases.'
+  },
+  'arctic-amplification': {
+    title: 'Expedition 2: Arctic Amplification',
+    steps: [
+      {
+        year: 1980,
+        tempLayer: true,
+        band: 0,
+        title: 'Step 1 of 3: Circumpolar Baseline (1980)',
+        narration: 'Welcome to Expedition 2: Arctic Amplification. In 1980, reflective Arctic sea ice acted as Earth’s natural mirror. In the high north from 60 to 90 degrees North, acoustic frequencies matched global equilibrium.',
+        playTone: true
+      },
+      {
+        year: 2000,
+        tempLayer: true,
+        band: 0,
+        title: 'Step 2 of 3: The Albedo Shift (2000)',
+        narration: 'By the year 2000, perennial sea ice began shrinking rapidly. As bright ice melted into darker ocean waters, solar heat absorption accelerated, triggering the irreversible Arctic amplification feedback loop.',
+        playTone: true
+      },
+      {
+        year: 2024,
+        tempLayer: true,
+        band: 0,
+        title: 'Step 3 of 3: Polar Divergence (2024)',
+        narration: 'Today, the Arctic is warming nearly four times faster than the rest of the planet. Compare this high polar tone to equatorial regions to hear the drastic acoustic divergence of our melting pole.',
+        playTone: true
+      }
+    ],
+    summary: 'Polar ice loss destabilizes the circumpolar jet stream, altering weather and heat extremes across mid-latitudes.'
+  },
+  'satellite-era': {
+    title: 'Expedition 3: The 45-Year Satellite Era',
+    steps: [
+      {
+        year: 1980,
+        tempLayer: false,
+        band: null,
+        title: 'Step 1 of 3: Dawn of Space Climatology',
+        narration: 'Welcome to Expedition 3: The 45-Year Satellite Era. In 1980, NASA and NOAA began continuous orbital Earth monitoring. We begin here in an era still governed by natural decadal variability.',
+        playTone: true
+      },
+      {
+        year: 1998,
+        tempLayer: true,
+        band: null,
+        title: 'Step 2 of 3: The 1998 Regime Shift',
+        narration: 'In 1998, an unprecedented ocean warming event signaled a permanent regime shift. Natural cooling cycles could no longer counteract the compounding buildup of greenhouse gases.',
+        playTone: true
+      },
+      {
+        year: 2025,
+        tempLayer: true,
+        band: null,
+        title: 'Step 3 of 3: Accelerating Momentum',
+        narration: 'Across 45 years of continuous satellite records, NASA datasets document an undeniable upward trajectory. What was once abstract numbers is now a visceral, audible reality for our home planet.',
+        playTone: true
+      }
+    ],
+    summary: 'NASA\'s Earth System Observatory provides the foundational data needed to safeguard communities across the globe.'
+  }
+};
+
+const storyController = {
+  active: false,
+  storyId: null,
+  stepIndex: 0,
+  paused: false,
+  timer: null,
+  token: 0
+};
+
+function getStoryYearIndex(targetYear) {
+  const idx = temperaturePoints.findIndex(p => p.year === targetYear);
+  return idx >= 0 ? idx : 0;
+}
+
+function updateStoryHUD(story, step, stepIdx, totalSteps) {
+  const hud = document.getElementById('story-hud');
+  const titleEl = document.getElementById('story-hud-title');
+  const stepEl = document.getElementById('story-hud-step');
+  const progressFill = document.getElementById('story-progress-fill');
+  const progressBar = hud?.querySelector('.story-progress-bar');
+
+  if (hud) hud.hidden = false;
+  if (titleEl) titleEl.textContent = story.title;
+  if (stepEl) stepEl.textContent = step.title;
+
+  const pct = Math.round(((stepIdx + 1) / totalSteps) * 100);
+  if (progressFill) progressFill.style.width = `${pct}%`;
+  if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
+}
+
+async function runCurrentStoryStep() {
+  if (!storyController.active || storyController.paused) return;
+  const story = CLIMATE_STORIES[storyController.storyId];
+  if (!story) return;
+
+  const steps = story.steps;
+  if (storyController.stepIndex >= steps.length) {
+    completeStory(story);
+    return;
+  }
+
+  const step = steps[storyController.stepIndex];
+  const stepToken = ++storyController.token;
+
+  updateStoryHUD(story, step, storyController.stepIndex, steps.length);
+
+  const targetYearIndex = getStoryYearIndex(step.year);
+  updateYear(targetYearIndex);
+
+  if (typeof setTemperatureMode === 'function') {
+    setTemperatureMode(step.tempLayer);
+  }
+
+  if (step.band !== null && typeof selectBand === 'function') {
+    selectBand(step.band, { showHighlight: true });
+  } else {
+    $$('[data-band]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  }
+
+  if (step.playTone && typeof playHistoryTone === 'function') {
+    const point = temperaturePoints[targetYearIndex];
+    if (point) {
+      await playHistoryTone(point.value, 0.45);
+    }
+  }
+
+  speakAgentBriefing(step.narration, () => {
+    if (!storyController.active || storyController.paused || storyController.token !== stepToken) return;
+
+    storyController.timer = setTimeout(() => {
+      if (!storyController.active || storyController.paused || storyController.token !== stepToken) return;
+      storyController.stepIndex++;
+      runCurrentStoryStep();
+    }, 2200);
+  });
+}
+
+function completeStory(story) {
+  const captionEl = document.getElementById('story-caption-text');
+  const stepEl = document.getElementById('story-hud-step');
+  if (stepEl) stepEl.textContent = 'Expedition Complete ✓';
+  if (captionEl) {
+    captionEl.innerHTML = `<strong>✨ Expedition Complete:</strong> ${story.summary}`;
+  }
+  duckAudioOutput(false);
+
+  storyController.timer = setTimeout(() => {
+    if (storyController.active && storyController.stepIndex >= story.steps.length) {
+      exitStoryMode();
+    }
+  }, 7500);
+}
+
+function startClimateStory(storyId) {
+  if (!CLIMATE_STORIES[storyId]) return;
+  stopAudio(false);
+  stopAgentSpeech();
+  if (storyController.timer) clearTimeout(storyController.timer);
+
+  storyController.active = true;
+  storyController.storyId = storyId;
+  storyController.stepIndex = 0;
+  storyController.paused = false;
+
+  const playBtn = document.getElementById('story-play-btn');
+  const playIcon = document.getElementById('story-play-icon');
+  const playText = document.getElementById('story-play-text');
+  if (playBtn) playBtn.setAttribute('aria-pressed', 'false');
+  if (playIcon) playIcon.textContent = '⏸';
+  if (playText) playText.textContent = 'Pause';
+
+  if (state.view !== 'flat') setEarthView();
+  if (state.mode !== 'history') setMode('history');
+
+  runCurrentStoryStep();
+}
+
+function pauseStory() {
+  if (!storyController.active) return;
+  storyController.paused = true;
+  stopAgentSpeech();
+  if (storyController.timer) clearTimeout(storyController.timer);
+
+  const playBtn = document.getElementById('story-play-btn');
+  const playIcon = document.getElementById('story-play-icon');
+  const playText = document.getElementById('story-play-text');
+  if (playBtn) playBtn.setAttribute('aria-pressed', 'true');
+  if (playIcon) playIcon.textContent = '▶';
+  if (playText) playText.textContent = 'Resume';
+}
+
+function resumeStory() {
+  if (!storyController.active) return;
+  storyController.paused = false;
+
+  const playBtn = document.getElementById('story-play-btn');
+  const playIcon = document.getElementById('story-play-icon');
+  const playText = document.getElementById('story-play-text');
+  if (playBtn) playBtn.setAttribute('aria-pressed', 'false');
+  if (playIcon) playIcon.textContent = '⏸';
+  if (playText) playText.textContent = 'Pause';
+
+  runCurrentStoryStep();
+}
+
+function nextStoryStep() {
+  if (!storyController.active) return;
+  stopAgentSpeech();
+  if (storyController.timer) clearTimeout(storyController.timer);
+  storyController.paused = false;
+  storyController.stepIndex++;
+  runCurrentStoryStep();
+}
+
+function exitStoryMode() {
+  storyController.active = false;
+  storyController.storyId = null;
+  storyController.stepIndex = 0;
+  storyController.paused = false;
+  if (storyController.timer) clearTimeout(storyController.timer);
+  stopAgentSpeech();
+  stopAudio(false);
+
+  const hud = document.getElementById('story-hud');
+  if (hud) hud.hidden = true;
+  duckAudioOutput(false);
+}
+
 function bindEvents(){
   $$('[data-section-target]').forEach(el => {
     el.addEventListener('click', (event) => {
@@ -1006,8 +1375,8 @@ function bindEvents(){
   }, { passive: true });
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
-  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle
-  const noFocusSelector = '#help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle / Stories
+  const noFocusSelector = '#stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1143,9 +1512,86 @@ function bindEvents(){
     }
   });
 
+  /* ---- Climate Stories Modal & Controls ---- */
+  const storiesModal = document.getElementById('stories-modal');
+  const storiesOpen  = document.getElementById('stories-open');
+  const storiesClose = document.getElementById('stories-close');
+
+  function openStories() {
+    if (!storiesModal) return;
+    storiesModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    storiesClose?.focus();
+  }
+
+  function closeStories() {
+    if (!storiesModal) return;
+    storiesModal.hidden = true;
+    document.body.style.overflow = '';
+    storiesOpen?.focus();
+  }
+
+  storiesOpen?.addEventListener('click', openStories);
+  storiesClose?.addEventListener('click', closeStories);
+  storiesModal?.addEventListener('click', (e) => {
+    if (e.target === storiesModal) closeStories();
+  });
+
+  // Launch buttons inside stories modal
+  $$('[data-launch]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const storyId = btn.getAttribute('data-launch');
+      closeStories();
+      startClimateStory(storyId);
+    });
+  });
+
+  // Story HUD action buttons
+  const voiceBtn = document.getElementById('story-voice-btn');
+  const voiceIcon = document.getElementById('story-voice-icon');
+  const voiceText = document.getElementById('story-voice-text');
+  voiceBtn?.addEventListener('click', () => {
+    speechEngine.voiceEnabled = !speechEngine.voiceEnabled;
+    voiceBtn.setAttribute('aria-pressed', String(speechEngine.voiceEnabled));
+    if (speechEngine.voiceEnabled) {
+      if (voiceIcon) voiceIcon.textContent = '🔊';
+      if (voiceText) voiceText.textContent = 'Voice On';
+    } else {
+      if (voiceIcon) voiceIcon.textContent = '🔇';
+      if (voiceText) voiceText.textContent = 'Voice Off';
+      stopAgentSpeech();
+    }
+  });
+
+  const playBtn = document.getElementById('story-play-btn');
+  playBtn?.addEventListener('click', () => {
+    if (storyController.paused) {
+      resumeStory();
+    } else {
+      pauseStory();
+    }
+  });
+
+  const nextBtn = document.getElementById('story-next-btn');
+  nextBtn?.addEventListener('click', nextStoryStep);
+
+  const exitBtnEl = document.getElementById('story-exit-btn');
+  exitBtnEl?.addEventListener('click', exitStoryMode);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (storiesModal && !storiesModal.hidden) {
+        closeStories();
+      } else if (storyController.active) {
+        exitStoryMode();
+      }
+    }
+  });
+
   window.addEventListener('message',event=>{
     if(event.data&&(event.data.type==='SUSPEND_WORKSTATION'||event.data.type==='PAUSE_ALL_AUDIO')){
       stopAudio(false);
+      stopAgentSpeech();
     } else if (event.data && event.data.type === 'FOCUS_FIRST_CONTROL') {
       const firstControl = $('#play-history') || $('#section-tab-workbench');
       firstControl?.focus();
@@ -1155,6 +1601,7 @@ function bindEvents(){
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       stopAudio(false);
+      stopAgentSpeech();
       if(window.self!==window.top){
         returnToStudio();
       }
@@ -1163,6 +1610,7 @@ function bindEvents(){
 }
 
 function initialize(){
+  initSpeechVoices();
   populateSelects();bindEvents();selectBand(0);updateYear(0);updateComparison();
   if(new URLSearchParams(location.search).get('view')==='globe')setEarthView('globe');
 }
