@@ -953,7 +953,7 @@ function copyLedger(){
 }
 
 /* =====================================================
-   NASA CLIMATE STORIES & VOICE NARRATION ENGINE
+   NASA CLIMATE STORIES & DR. JO VOICE NARRATION ENGINE
    ===================================================== */
 const speechEngine = {
   synth: (typeof window !== 'undefined' && 'speechSynthesis' in window) ? window.speechSynthesis : null,
@@ -961,7 +961,8 @@ const speechEngine = {
   voiceEnabled: true,
   currentUtterance: null,
   speaking: false,
-  cancelFallback: null
+  cancelFallback: null,
+  wordTicker: null
 };
 
 function initSpeechVoices() {
@@ -969,9 +970,15 @@ function initSpeechVoices() {
   function chooseVoice() {
     const voices = speechEngine.synth.getVoices();
     if (!voices || !voices.length) return;
+    // Prefer Dr. Jo female-voiced scientific guide:
+    // Windows / Edge: Microsoft Natural (Aria, Jenny, Zira)
+    // Chrome: Google US English female, Victoria
+    // Safari / macOS: Samantha, Karen
     const preferred = voices.find(v => v.lang && v.lang.startsWith('en') && (
-      v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') ||
-      v.name.includes('David') || v.name.includes('Aria') || v.name.includes('Zira') || v.name.includes('Daniel')
+      v.name.includes('Aria') || v.name.includes('Jenny') || v.name.includes('Zira') ||
+      v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Victoria')
+    )) || voices.find(v => v.lang && v.lang.startsWith('en') && (
+      v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Female')
     )) || voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0];
     speechEngine.voice = preferred;
   }
@@ -992,43 +999,140 @@ function duckAudioOutput(ducked) {
   }
 }
 
-function speakAgentBriefing(text, onComplete) {
+function renderSynchronizedSubtitles(text) {
   const captionEl = document.getElementById('story-caption-text');
-  if (captionEl) captionEl.textContent = text;
+  if (!captionEl) return [];
+
+  captionEl.innerHTML = '';
+  const words = [];
+  const regex = /\S+/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    words.push({
+      word: match[0],
+      start: match.index,
+      end: match.index + match[0].length
+    });
+  }
+
+  const fragment = document.createDocumentFragment();
+  words.forEach((item, index) => {
+    const span = document.createElement('span');
+    span.className = 'caption-word';
+    span.textContent = item.word;
+    span.dataset.index = String(index);
+    item.element = span;
+    fragment.appendChild(span);
+    fragment.appendChild(document.createTextNode(' '));
+  });
+
+  captionEl.appendChild(fragment);
+  return words;
+}
+
+function highlightWordByIndex(words, activeIdx) {
+  words.forEach((item, idx) => {
+    if (idx < activeIdx) {
+      item.element.className = 'caption-word spoken';
+    } else if (idx === activeIdx) {
+      item.element.className = 'caption-word active';
+    } else {
+      item.element.className = 'caption-word';
+    }
+  });
+}
+
+function speakAgentBriefing(text, onComplete) {
+  const words = renderSynchronizedSubtitles(text);
 
   if (speechEngine.cancelFallback) {
     speechEngine.cancelFallback();
     speechEngine.cancelFallback = null;
   }
-
+  if (speechEngine.wordTicker) {
+    clearInterval(speechEngine.wordTicker);
+    speechEngine.wordTicker = null;
+  }
   if (speechEngine.synth) {
     try { speechEngine.synth.cancel(); } catch (_) {}
   }
 
+  // If voice is muted or unsupported, visually scrub subtitles with ticker
   if (!speechEngine.voiceEnabled || !speechEngine.synth) {
-    const words = text.split(/\s+/).length;
-    const duration = Math.max(3500, words * 280);
-    const timer = setTimeout(() => {
-      speechEngine.cancelFallback = null;
-      if (onComplete) onComplete();
-    }, duration);
-    speechEngine.cancelFallback = () => clearTimeout(timer);
+    let currentIdx = 0;
+    highlightWordByIndex(words, 0);
+    const intervalMs = Math.max(160, Math.min(260, Math.round(4500 / Math.max(1, words.length))));
+    speechEngine.wordTicker = setInterval(() => {
+      currentIdx++;
+      if (currentIdx < words.length) {
+        highlightWordByIndex(words, currentIdx);
+      } else {
+        clearInterval(speechEngine.wordTicker);
+        speechEngine.wordTicker = null;
+        highlightWordByIndex(words, words.length);
+        if (onComplete) onComplete();
+      }
+    }, intervalMs);
+
+    speechEngine.cancelFallback = () => {
+      if (speechEngine.wordTicker) clearInterval(speechEngine.wordTicker);
+      speechEngine.wordTicker = null;
+    };
     return;
   }
 
   try {
     const utterance = new SpeechSynthesisUtterance(text);
     if (speechEngine.voice) utterance.voice = speechEngine.voice;
-    utterance.rate = 0.96;
-    utterance.pitch = 1.0;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.05; // Dr. Jo clear female vocal timbre
     utterance.volume = 1.0;
 
     duckAudioOutput(true);
+
+    let boundaryFired = false;
+    utterance.onboundary = (event) => {
+      boundaryFired = true;
+      if (event.name === 'word' || event.charIndex !== undefined) {
+        const charIdx = event.charIndex;
+        let foundIdx = words.findIndex(w => charIdx >= w.start && charIdx <= w.end);
+        if (foundIdx === -1) {
+          foundIdx = words.findIndex(w => w.start >= charIdx);
+        }
+        if (foundIdx !== -1) {
+          highlightWordByIndex(words, foundIdx);
+        }
+      }
+    };
+
+    // Fallback ticker if browser doesn't dispatch onboundary
+    const boundaryCheckTimer = setTimeout(() => {
+      if (!boundaryFired && words.length > 0 && speechEngine.speaking) {
+        let currentIdx = 0;
+        const totalDuration = (words.length * 280);
+        const stepMs = totalDuration / words.length;
+        speechEngine.wordTicker = setInterval(() => {
+          currentIdx++;
+          if (currentIdx < words.length) {
+            highlightWordByIndex(words, currentIdx);
+          } else {
+            clearInterval(speechEngine.wordTicker);
+            speechEngine.wordTicker = null;
+          }
+        }, stepMs);
+      }
+    }, 600);
 
     let finished = false;
     const finish = () => {
       if (finished) return;
       finished = true;
+      clearTimeout(boundaryCheckTimer);
+      if (speechEngine.wordTicker) {
+        clearInterval(speechEngine.wordTicker);
+        speechEngine.wordTicker = null;
+      }
+      highlightWordByIndex(words, words.length);
       duckAudioOutput(false);
       speechEngine.speaking = false;
       speechEngine.currentUtterance = null;
@@ -1052,6 +1156,10 @@ function stopAgentSpeech() {
     speechEngine.cancelFallback();
     speechEngine.cancelFallback = null;
   }
+  if (speechEngine.wordTicker) {
+    clearInterval(speechEngine.wordTicker);
+    speechEngine.wordTicker = null;
+  }
   if (speechEngine.synth) {
     try { speechEngine.synth.cancel(); } catch (_) {}
   }
@@ -1059,7 +1167,7 @@ function stopAgentSpeech() {
   duckAudioOutput(false);
 }
 
-// Stories Catalog Definitions
+// Stories Catalog Definitions (Narrated by Dr. Jo)
 const CLIMATE_STORIES = {
   'heat-spike': {
     title: 'Expedition 1: The Global Heat Spike',
@@ -1069,7 +1177,7 @@ const CLIMATE_STORIES = {
         tempLayer: false,
         band: null,
         title: 'Step 1 of 3: The 1980 Baseline',
-        narration: 'Welcome to Expedition 1. We begin in 1980. For decades, global temperatures hovered close to the historical mid-century baseline. Hear the calm, balanced frequency of this era.',
+        narration: 'Hello, I\'m Dr. Jo from NASA\'s Earth Information team. Welcome to Expedition 1: The Global Heat Spike. We begin in 1980, where global temperatures remained close to the historical mid-century baseline. Hear the calm, balanced frequency of this era.',
         playTone: true
       },
       {
@@ -1077,7 +1185,7 @@ const CLIMATE_STORIES = {
         tempLayer: true,
         band: null,
         title: 'Step 2 of 3: The 2016 Super El Niño',
-        narration: 'Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius. Notice how the pitch climbs higher across the northern hemisphere.',
+        narration: 'Dr. Jo here with Step 2. Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius. Notice how the pitch climbs higher across the northern hemisphere.',
         playTone: true
       },
       {
@@ -1089,7 +1197,7 @@ const CLIMATE_STORIES = {
         playTone: true
       }
     ],
-    summary: 'NASA Earth observations confirm 2024 as the warmest year in modern history, driven primarily by human-induced greenhouse gases.'
+    summary: 'Dr. Jo\'s briefing complete: NASA observations confirm 2024 as the warmest year in modern history, driven primarily by human-induced greenhouse gases.'
   },
   'arctic-amplification': {
     title: 'Expedition 2: Arctic Amplification',
@@ -1099,7 +1207,7 @@ const CLIMATE_STORIES = {
         tempLayer: true,
         band: 0,
         title: 'Step 1 of 3: Circumpolar Baseline (1980)',
-        narration: 'Welcome to Expedition 2: Arctic Amplification. In 1980, reflective Arctic sea ice acted as Earth’s natural mirror. In the high north from 60 to 90 degrees North, acoustic frequencies matched global equilibrium.',
+        narration: 'I\'m Dr. Jo, and welcome to Expedition 2: Arctic Amplification. In 1980, reflective Arctic sea ice acted as Earth\'s natural mirror. In the high north from 60 to 90 degrees North, acoustic frequencies matched global equilibrium.',
         playTone: true
       },
       {
@@ -1119,7 +1227,7 @@ const CLIMATE_STORIES = {
         playTone: true
       }
     ],
-    summary: 'Polar ice loss destabilizes the circumpolar jet stream, altering weather and heat extremes across mid-latitudes.'
+    summary: 'Dr. Jo\'s briefing complete: Polar ice loss destabilizes the circumpolar jet stream, altering weather and heat extremes across mid-latitudes.'
   },
   'satellite-era': {
     title: 'Expedition 3: The 45-Year Satellite Era',
@@ -1129,7 +1237,7 @@ const CLIMATE_STORIES = {
         tempLayer: false,
         band: null,
         title: 'Step 1 of 3: Dawn of Space Climatology',
-        narration: 'Welcome to Expedition 3: The 45-Year Satellite Era. In 1980, NASA and NOAA began continuous orbital Earth monitoring. We begin here in an era still governed by natural decadal variability.',
+        narration: 'Welcome back, I\'m Dr. Jo. In Expedition 3, we explore the 45-year modern satellite era. In 1980, NASA and NOAA began continuous orbital monitoring, observing a world still governed by natural decadal variability.',
         playTone: true
       },
       {
@@ -1149,7 +1257,7 @@ const CLIMATE_STORIES = {
         playTone: true
       }
     ],
-    summary: 'NASA\'s Earth System Observatory provides the foundational data needed to safeguard communities across the globe.'
+    summary: 'Dr. Jo\'s briefing complete: NASA\'s Earth System Observatory provides the foundational data needed to safeguard communities across the globe.'
   }
 };
 
