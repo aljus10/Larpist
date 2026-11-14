@@ -306,6 +306,11 @@ body[data-focus=desk] .studio-footer {
   display: none !important;
 }
 
+body[data-focus=desk] .welcome-subtitle {
+  bottom: 24px;
+  z-index: 99;
+}
+
 /* Classic Series / YouTube-style Subtitle Bar */
 .welcome-subtitle {
   position: absolute;

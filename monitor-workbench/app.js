@@ -953,321 +953,73 @@ function copyLedger(){
 }
 
 /* =====================================================
-   NASA CLIMATE STORIES & DR. JO VOICE NARRATION ENGINE
+   NASA CLIMATE STORIES & DR. JO AUDIO ENGINE (OPTION 1)
    ===================================================== */
-const speechEngine = {
-  synth: (typeof window !== 'undefined' && 'speechSynthesis' in window) ? window.speechSynthesis : null,
-  voice: null,
-  voiceEnabled: true,
-  currentUtterance: null,
-  speaking: false,
-  cancelFallback: null,
-  wordTicker: null
-};
+const storyAudio = new Audio();
+storyAudio.preload = 'auto';
+storyAudio.volume = 0.95;
 
-function initSpeechVoices() {
-  if (!speechEngine.synth) return;
-  function chooseVoice() {
-    const voices = speechEngine.synth.getVoices();
-    if (!voices || !voices.length) return;
-    // Prefer Dr. Jo female-voiced scientific guide:
-    // Windows / Edge: Microsoft Natural (Aria, Jenny, Zira)
-    // Chrome: Google US English female, Victoria
-    // Safari / macOS: Samantha, Karen
-    const preferred = voices.find(v => v.lang && v.lang.startsWith('en') && (
-      v.name.includes('Aria') || v.name.includes('Jenny') || v.name.includes('Zira') ||
-      v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Victoria')
-    )) || voices.find(v => v.lang && v.lang.startsWith('en') && (
-      v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Female')
-    )) || voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0];
-    speechEngine.voice = preferred;
-  }
-  chooseVoice();
-  if (speechEngine.synth.onvoiceschanged !== undefined) {
-    speechEngine.synth.onvoiceschanged = chooseVoice;
-  }
-}
+const storySubtitleContainer = document.getElementById('story-subtitle');
+const storySubtitleTextEl = document.getElementById('story-subtitle-text');
 
-function duckAudioOutput(ducked) {
-  if (typeof audioContext !== 'undefined' && audioContext && typeof masterGain !== 'undefined' && masterGain) {
-    try {
-      const now = audioContext.currentTime;
-      const targetGain = ducked ? (state.muted ? 0 : 0.22) : (state.muted ? 0 : 0.95);
-      masterGain.gain.cancelScheduledValues(now);
-      masterGain.gain.setTargetAtTime(targetGain, now, 0.12);
-    } catch (_) {}
-  }
-}
+let activeStory = null;
+let storySyncTimer = null;
+let triggeredMilestones = new Set();
 
-function renderSynchronizedSubtitles(text) {
-  const captionEl = document.getElementById('story-caption-text');
-  if (!captionEl) return [];
-
-  captionEl.innerHTML = '';
-  const words = [];
-  const regex = /\S+/g;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    words.push({
-      word: match[0],
-      start: match.index,
-      end: match.index + match[0].length
-    });
-  }
-
-  const fragment = document.createDocumentFragment();
-  words.forEach((item, index) => {
-    const span = document.createElement('span');
-    span.className = 'caption-word';
-    span.textContent = item.word;
-    span.dataset.index = String(index);
-    item.element = span;
-    fragment.appendChild(span);
-    fragment.appendChild(document.createTextNode(' '));
-  });
-
-  captionEl.appendChild(fragment);
-  return words;
-}
-
-function highlightWordByIndex(words, activeIdx) {
-  words.forEach((item, idx) => {
-    if (idx < activeIdx) {
-      item.element.className = 'caption-word spoken';
-    } else if (idx === activeIdx) {
-      item.element.className = 'caption-word active';
-    } else {
-      item.element.className = 'caption-word';
-    }
-  });
-}
-
-function speakAgentBriefing(text, onComplete) {
-  const words = renderSynchronizedSubtitles(text);
-
-  if (speechEngine.cancelFallback) {
-    speechEngine.cancelFallback();
-    speechEngine.cancelFallback = null;
-  }
-  if (speechEngine.wordTicker) {
-    clearInterval(speechEngine.wordTicker);
-    speechEngine.wordTicker = null;
-  }
-  if (speechEngine.synth) {
-    try { speechEngine.synth.cancel(); } catch (_) {}
-  }
-
-  // If voice is muted or unsupported, visually scrub subtitles with ticker
-  if (!speechEngine.voiceEnabled || !speechEngine.synth) {
-    let currentIdx = 0;
-    highlightWordByIndex(words, 0);
-    const intervalMs = Math.max(160, Math.min(260, Math.round(4500 / Math.max(1, words.length))));
-    speechEngine.wordTicker = setInterval(() => {
-      currentIdx++;
-      if (currentIdx < words.length) {
-        highlightWordByIndex(words, currentIdx);
-      } else {
-        clearInterval(speechEngine.wordTicker);
-        speechEngine.wordTicker = null;
-        highlightWordByIndex(words, words.length);
-        if (onComplete) onComplete();
-      }
-    }, intervalMs);
-
-    speechEngine.cancelFallback = () => {
-      if (speechEngine.wordTicker) clearInterval(speechEngine.wordTicker);
-      speechEngine.wordTicker = null;
-    };
-    return;
-  }
-
-  try {
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (speechEngine.voice) utterance.voice = speechEngine.voice;
-    utterance.rate = 0.95;
-    utterance.pitch = 1.05; // Dr. Jo clear female vocal timbre
-    utterance.volume = 1.0;
-
-    duckAudioOutput(true);
-
-    let boundaryFired = false;
-    utterance.onboundary = (event) => {
-      boundaryFired = true;
-      if (event.name === 'word' || event.charIndex !== undefined) {
-        const charIdx = event.charIndex;
-        let foundIdx = words.findIndex(w => charIdx >= w.start && charIdx <= w.end);
-        if (foundIdx === -1) {
-          foundIdx = words.findIndex(w => w.start >= charIdx);
-        }
-        if (foundIdx !== -1) {
-          highlightWordByIndex(words, foundIdx);
-        }
-      }
-    };
-
-    // Fallback ticker if browser doesn't dispatch onboundary
-    const boundaryCheckTimer = setTimeout(() => {
-      if (!boundaryFired && words.length > 0 && speechEngine.speaking) {
-        let currentIdx = 0;
-        const totalDuration = (words.length * 280);
-        const stepMs = totalDuration / words.length;
-        speechEngine.wordTicker = setInterval(() => {
-          currentIdx++;
-          if (currentIdx < words.length) {
-            highlightWordByIndex(words, currentIdx);
-          } else {
-            clearInterval(speechEngine.wordTicker);
-            speechEngine.wordTicker = null;
-          }
-        }, stepMs);
-      }
-    }, 600);
-
-    let finished = false;
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(boundaryCheckTimer);
-      if (speechEngine.wordTicker) {
-        clearInterval(speechEngine.wordTicker);
-        speechEngine.wordTicker = null;
-      }
-      highlightWordByIndex(words, words.length);
-      duckAudioOutput(false);
-      speechEngine.speaking = false;
-      speechEngine.currentUtterance = null;
-      if (onComplete) onComplete();
-    };
-
-    utterance.onend = finish;
-    utterance.onerror = finish;
-
-    speechEngine.currentUtterance = utterance;
-    speechEngine.speaking = true;
-    speechEngine.synth.speak(utterance);
-  } catch (err) {
-    duckAudioOutput(false);
-    if (onComplete) onComplete();
-  }
-}
-
-function stopAgentSpeech() {
-  if (speechEngine.cancelFallback) {
-    speechEngine.cancelFallback();
-    speechEngine.cancelFallback = null;
-  }
-  if (speechEngine.wordTicker) {
-    clearInterval(speechEngine.wordTicker);
-    speechEngine.wordTicker = null;
-  }
-  if (speechEngine.synth) {
-    try { speechEngine.synth.cancel(); } catch (_) {}
-  }
-  speechEngine.speaking = false;
-  duckAudioOutput(false);
-}
-
-// Stories Catalog Definitions (Narrated by Dr. Jo)
 const CLIMATE_STORIES = {
   'heat-spike': {
     title: 'Expedition 1: The Global Heat Spike',
-    steps: [
-      {
-        year: 1980,
-        tempLayer: false,
-        band: null,
-        title: 'Step 1 of 3: The 1980 Baseline',
-        narration: 'Hello, I\'m Dr. Jo from NASA\'s Earth Information team. Welcome to Expedition 1: The Global Heat Spike. We begin in 1980, where global temperatures remained close to the historical mid-century baseline. Hear the calm, balanced frequency of this era.',
-        playTone: true
-      },
-      {
-        year: 2016,
-        tempLayer: true,
-        band: null,
-        title: 'Step 2 of 3: The 2016 Super El Niño',
-        narration: 'Dr. Jo here with Step 2. Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius. Notice how the pitch climbs higher across the northern hemisphere.',
-        playTone: true
-      },
-      {
-        year: 2024,
-        tempLayer: true,
-        band: null,
-        title: 'Step 3 of 3: Record Planetary Heat Surge',
-        narration: 'In 2023 and 2024, global temperatures shattered all prior instrumental records at plus 1.18 degrees Celsius. This acoustic sonification reaches the absolute highest peak of our 45-year telemetry record.',
-        playTone: true
-      }
+    audioFile: 'heat-spike.wav',
+    cues: [
+      { start: 0.0, end: 3.97, text: 'Welcome to Expedition 1: The Global Heat Spike.' },
+      { start: 3.97, end: 10.24, text: 'In 1980, global temperatures remained close to the historical mid-century baseline.' },
+      { start: 10.24, end: 14.60, text: 'Hear the calm, balanced frequency of this baseline era.' },
+      { start: 14.60, end: 26.35, text: 'Fast forward to 2016. Driven by accumulated greenhouse forcing and an intense El Niño, global anomalies reached plus 0.99 degrees Celsius.' },
+      { start: 26.35, end: 30.51, text: 'Notice how the pitch climbs higher across the northern hemisphere.' },
+      { start: 30.51, end: 36.84, text: 'In 2023 and 2024, our climate system crossed an uncharted threshold.' },
+      { start: 36.84, end: 46.57, text: 'Global anomalies shattered all prior records at plus 1.18 degrees Celsius, pushing our sonification to the sharpest edge of its acoustic range.' }
     ],
-    summary: 'Dr. Jo\'s briefing complete: NASA observations confirm 2024 as the warmest year in modern history, driven primarily by human-induced greenhouse gases.'
+    milestones: [
+      { time: 0.0, year: 1980, temp: false, band: null, tone: 0.26 },
+      { time: 14.60, year: 2016, temp: true, band: null, tone: 0.99 },
+      { time: 30.51, year: 2024, temp: true, band: null, tone: 1.18 }
+    ]
   },
   'arctic-amplification': {
     title: 'Expedition 2: Arctic Amplification',
-    steps: [
-      {
-        year: 1980,
-        tempLayer: true,
-        band: 0,
-        title: 'Step 1 of 3: Circumpolar Baseline (1980)',
-        narration: 'I\'m Dr. Jo, and welcome to Expedition 2: Arctic Amplification. In 1980, reflective Arctic sea ice acted as Earth\'s natural mirror. In the high north from 60 to 90 degrees North, acoustic frequencies matched global equilibrium.',
-        playTone: true
-      },
-      {
-        year: 2000,
-        tempLayer: true,
-        band: 0,
-        title: 'Step 2 of 3: The Albedo Shift (2000)',
-        narration: 'By the year 2000, perennial sea ice began shrinking rapidly. As bright ice melted into darker ocean waters, solar heat absorption accelerated, triggering the irreversible Arctic amplification feedback loop.',
-        playTone: true
-      },
-      {
-        year: 2024,
-        tempLayer: true,
-        band: 0,
-        title: 'Step 3 of 3: Polar Divergence (2024)',
-        narration: 'Today, the Arctic is warming nearly four times faster than the rest of the planet. Compare this high polar tone to equatorial regions to hear the drastic acoustic divergence of our melting pole.',
-        playTone: true
-      }
+    audioFile: 'arctic-amplification.wav',
+    cues: [
+      { start: 0.0, end: 4.08, text: 'Welcome to Expedition 2: Arctic Amplification.' },
+      { start: 4.08, end: 9.52, text: 'In 1980, reflective Arctic sea ice acted as Earth natural mirror.' },
+      { start: 9.52, end: 15.42, text: 'At 60 to 90 degrees North, acoustic frequencies matched global equilibrium.' },
+      { start: 15.42, end: 20.43, text: 'By the turn of the millennium, perennial sea ice began shrinking rapidly.' },
+      { start: 20.43, end: 29.01, text: 'As bright ice melted into darker ocean waters, solar heat absorption accelerated, triggering a runaway warming feedback loop.' },
+      { start: 29.01, end: 34.36, text: 'Today, the Arctic is warming nearly four times faster than the rest of the planet.' },
+      { start: 34.36, end: 40.91, text: 'Compare this polar tone to equatorial regions to hear the drastic acoustic divergence of our melting pole.' }
     ],
-    summary: 'Dr. Jo\'s briefing complete: Polar ice loss destabilizes the circumpolar jet stream, altering weather and heat extremes across mid-latitudes.'
+    milestones: [
+      { time: 0.0, year: 1980, temp: true, band: 0, tone: 0.26 },
+      { time: 15.42, year: 2000, temp: true, band: 0, tone: 0.40 },
+      { time: 29.01, year: 2024, temp: true, band: 0, tone: 1.18 }
+    ]
   },
   'satellite-era': {
     title: 'Expedition 3: The 45-Year Satellite Era',
-    steps: [
-      {
-        year: 1980,
-        tempLayer: false,
-        band: null,
-        title: 'Step 1 of 3: Dawn of Space Climatology',
-        narration: 'Welcome back, I\'m Dr. Jo. In Expedition 3, we explore the 45-year modern satellite era. In 1980, NASA and NOAA began continuous orbital monitoring, observing a world still governed by natural decadal variability.',
-        playTone: true
-      },
-      {
-        year: 1998,
-        tempLayer: true,
-        band: null,
-        title: 'Step 2 of 3: The 1998 Regime Shift',
-        narration: 'In 1998, an unprecedented ocean warming event signaled a permanent regime shift. Natural cooling cycles could no longer counteract the compounding buildup of greenhouse gases.',
-        playTone: true
-      },
-      {
-        year: 2025,
-        tempLayer: true,
-        band: null,
-        title: 'Step 3 of 3: Accelerating Momentum',
-        narration: 'Across 45 years of continuous satellite records, NASA datasets document an undeniable upward trajectory. What was once abstract numbers is now a visceral, audible reality for our home planet.',
-        playTone: true
-      }
+    audioFile: 'satellite-era.wav',
+    cues: [
+      { start: 0.0, end: 4.72, text: 'Welcome to Expedition 3: The 45-Year Satellite Era.' },
+      { start: 4.72, end: 14.30, text: 'In 1980, NASA and NOAA began continuous orbital Earth monitoring, observing a world still governed by natural decadal variability.' },
+      { start: 14.30, end: 20.77, text: 'In 1998, an unprecedented ocean warming event signaled a permanent regime shift.' },
+      { start: 20.77, end: 26.92, text: 'Natural cooling cycles could no longer counteract the compounding buildup of greenhouse gases.' },
+      { start: 26.92, end: 34.75, text: 'Across 45 years of continuous satellite records, NASA datasets document an undeniable upward trajectory.' },
+      { start: 34.75, end: 40.61, text: 'What was once abstract numbers is now a visceral, audible reality for our home planet.' }
     ],
-    summary: 'Dr. Jo\'s briefing complete: NASA\'s Earth System Observatory provides the foundational data needed to safeguard communities across the globe.'
+    milestones: [
+      { time: 0.0, year: 1980, temp: false, band: null, tone: 0.26 },
+      { time: 14.30, year: 1998, temp: true, band: null, tone: 0.61 },
+      { time: 26.92, year: 2025, temp: true, band: null, tone: 1.18 }
+    ]
   }
-};
-
-const storyController = {
-  active: false,
-  storyId: null,
-  stepIndex: 0,
-  paused: false,
-  timer: null,
-  token: 0
 };
 
 function getStoryYearIndex(targetYear) {
@@ -1275,159 +1027,101 @@ function getStoryYearIndex(targetYear) {
   return idx >= 0 ? idx : 0;
 }
 
-function updateStoryHUD(story, step, stepIdx, totalSteps) {
-  const hud = document.getElementById('story-hud');
-  const titleEl = document.getElementById('story-hud-title');
-  const stepEl = document.getElementById('story-hud-step');
-  const progressFill = document.getElementById('story-progress-fill');
-  const progressBar = hud?.querySelector('.story-progress-bar');
-
-  if (hud) hud.hidden = false;
-  if (titleEl) titleEl.textContent = story.title;
-  if (stepEl) stepEl.textContent = step.title;
-
-  const pct = Math.round(((stepIdx + 1) / totalSteps) * 100);
-  if (progressFill) progressFill.style.width = `${pct}%`;
-  if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
+function updateStorySubtitleDisplay(text) {
+  if (storySubtitleContainer && storySubtitleTextEl) {
+    storySubtitleContainer.hidden = false;
+    storySubtitleContainer.classList.add('is-active');
+    storySubtitleTextEl.textContent = text;
+  }
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'STORY_SUBTITLE', text: text, active: true }, '*');
+  }
 }
 
-async function runCurrentStoryStep() {
-  if (!storyController.active || storyController.paused) return;
-  const story = CLIMATE_STORIES[storyController.storyId];
-  if (!story) return;
+function hideStorySubtitleDisplay() {
+  if (storySubtitleContainer) {
+    storySubtitleContainer.classList.remove('is-active');
+    setTimeout(() => {
+      if (!storySubtitleContainer.classList.contains('is-active')) {
+        storySubtitleContainer.hidden = true;
+      }
+    }, 240);
+  }
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'STORY_SUBTITLE', active: false }, '*');
+  }
+}
 
-  const steps = story.steps;
-  if (storyController.stepIndex >= steps.length) {
-    completeStory(story);
-    return;
+function syncStoryProgress() {
+  if (!activeStory || storyAudio.paused || storyAudio.ended) return;
+  const t = storyAudio.currentTime;
+
+  // 1. Update Subtitle Cue
+  const activeCue = activeStory.cues.find(c => t >= c.start && t < c.end);
+  if (activeCue) {
+    updateStorySubtitleDisplay(activeCue.text);
+  } else if (t >= activeStory.cues[activeStory.cues.length - 1].end) {
+    hideStorySubtitleDisplay();
   }
 
-  const step = steps[storyController.stepIndex];
-  const stepToken = ++storyController.token;
-
-  updateStoryHUD(story, step, storyController.stepIndex, steps.length);
-
-  const targetYearIndex = getStoryYearIndex(step.year);
-  updateYear(targetYearIndex);
-
-  if (typeof setTemperatureMode === 'function') {
-    setTemperatureMode(step.tempLayer);
-  }
-
-  if (step.band !== null && typeof selectBand === 'function') {
-    selectBand(step.band, { showHighlight: true });
-  } else {
-    $$('[data-band]').forEach(b => b.setAttribute('aria-pressed', 'false'));
-  }
-
-  if (step.playTone && typeof playHistoryTone === 'function') {
-    const point = temperaturePoints[targetYearIndex];
-    if (point) {
-      await playHistoryTone(point.value, 0.45);
+  // 2. Trigger Visual Milestones on the Monitor accurate to narration
+  activeStory.milestones.forEach((m, idx) => {
+    if (t >= m.time && !triggeredMilestones.has(idx)) {
+      triggeredMilestones.add(idx);
+      updateYear(getStoryYearIndex(m.year));
+      if (typeof setTemperatureMode === 'function') {
+        setTemperatureMode(m.temp);
+      }
+      if (m.band !== null && typeof selectBand === 'function') {
+        selectBand(m.band, { showHighlight: true });
+      } else {
+        $$('[data-band]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      }
+      if (typeof playHistoryTone === 'function') {
+        playHistoryTone(m.tone, 0.45);
+      }
     }
-  }
-
-  speakAgentBriefing(step.narration, () => {
-    if (!storyController.active || storyController.paused || storyController.token !== stepToken) return;
-
-    storyController.timer = setTimeout(() => {
-      if (!storyController.active || storyController.paused || storyController.token !== stepToken) return;
-      storyController.stepIndex++;
-      runCurrentStoryStep();
-    }, 2200);
   });
 }
 
-function completeStory(story) {
-  const captionEl = document.getElementById('story-caption-text');
-  const stepEl = document.getElementById('story-hud-step');
-  if (stepEl) stepEl.textContent = 'Expedition Complete ✓';
-  if (captionEl) {
-    captionEl.innerHTML = `<strong>✨ Expedition Complete:</strong> ${story.summary}`;
-  }
-  duckAudioOutput(false);
-
-  storyController.timer = setTimeout(() => {
-    if (storyController.active && storyController.stepIndex >= story.steps.length) {
-      exitStoryMode();
-    }
-  }, 7500);
-}
-
 function startClimateStory(storyId) {
-  if (!CLIMATE_STORIES[storyId]) return;
+  const story = CLIMATE_STORIES[storyId];
+  if (!story) return;
+
   stopAudio(false);
-  stopAgentSpeech();
-  if (storyController.timer) clearTimeout(storyController.timer);
+  stopClimateStory();
 
-  storyController.active = true;
-  storyController.storyId = storyId;
-  storyController.stepIndex = 0;
-  storyController.paused = false;
-
-  const playBtn = document.getElementById('story-play-btn');
-  const playIcon = document.getElementById('story-play-icon');
-  const playText = document.getElementById('story-play-text');
-  if (playBtn) playBtn.setAttribute('aria-pressed', 'false');
-  if (playIcon) playIcon.textContent = '⏸';
-  if (playText) playText.textContent = 'Pause';
+  activeStory = story;
+  triggeredMilestones.clear();
 
   if (state.view !== 'flat') setEarthView();
   if (state.mode !== 'history') setMode('history');
 
-  runCurrentStoryStep();
+  storyAudio.src = `../assets/audio/stories/${story.audioFile}`;
+  storyAudio.currentTime = 0;
+  storyAudio.play().catch(e => {
+    console.warn('Story audio play blocked or error:', e);
+  });
+
+  if (storySyncTimer) clearInterval(storySyncTimer);
+  storySyncTimer = setInterval(syncStoryProgress, 60);
 }
 
-function pauseStory() {
-  if (!storyController.active) return;
-  storyController.paused = true;
-  stopAgentSpeech();
-  if (storyController.timer) clearTimeout(storyController.timer);
-
-  const playBtn = document.getElementById('story-play-btn');
-  const playIcon = document.getElementById('story-play-icon');
-  const playText = document.getElementById('story-play-text');
-  if (playBtn) playBtn.setAttribute('aria-pressed', 'true');
-  if (playIcon) playIcon.textContent = '▶';
-  if (playText) playText.textContent = 'Resume';
+function stopClimateStory() {
+  if (storySyncTimer) {
+    clearInterval(storySyncTimer);
+    storySyncTimer = null;
+  }
+  storyAudio.pause();
+  storyAudio.currentTime = 0;
+  activeStory = null;
+  triggeredMilestones.clear();
+  hideStorySubtitleDisplay();
 }
 
-function resumeStory() {
-  if (!storyController.active) return;
-  storyController.paused = false;
-
-  const playBtn = document.getElementById('story-play-btn');
-  const playIcon = document.getElementById('story-play-icon');
-  const playText = document.getElementById('story-play-text');
-  if (playBtn) playBtn.setAttribute('aria-pressed', 'false');
-  if (playIcon) playIcon.textContent = '⏸';
-  if (playText) playText.textContent = 'Pause';
-
-  runCurrentStoryStep();
-}
-
-function nextStoryStep() {
-  if (!storyController.active) return;
-  stopAgentSpeech();
-  if (storyController.timer) clearTimeout(storyController.timer);
-  storyController.paused = false;
-  storyController.stepIndex++;
-  runCurrentStoryStep();
-}
-
-function exitStoryMode() {
-  storyController.active = false;
-  storyController.storyId = null;
-  storyController.stepIndex = 0;
-  storyController.paused = false;
-  if (storyController.timer) clearTimeout(storyController.timer);
-  stopAgentSpeech();
-  stopAudio(false);
-
-  const hud = document.getElementById('story-hud');
-  if (hud) hud.hidden = true;
-  duckAudioOutput(false);
-}
+storyAudio.addEventListener('ended', () => {
+  stopClimateStory();
+});
 
 function bindEvents(){
   $$('[data-section-target]').forEach(el => {
@@ -1654,44 +1348,12 @@ function bindEvents(){
     });
   });
 
-  // Story HUD action buttons
-  const voiceBtn = document.getElementById('story-voice-btn');
-  const voiceIcon = document.getElementById('story-voice-icon');
-  const voiceText = document.getElementById('story-voice-text');
-  voiceBtn?.addEventListener('click', () => {
-    speechEngine.voiceEnabled = !speechEngine.voiceEnabled;
-    voiceBtn.setAttribute('aria-pressed', String(speechEngine.voiceEnabled));
-    if (speechEngine.voiceEnabled) {
-      if (voiceIcon) voiceIcon.textContent = '🔊';
-      if (voiceText) voiceText.textContent = 'Voice On';
-    } else {
-      if (voiceIcon) voiceIcon.textContent = '🔇';
-      if (voiceText) voiceText.textContent = 'Voice Off';
-      stopAgentSpeech();
-    }
-  });
-
-  const playBtn = document.getElementById('story-play-btn');
-  playBtn?.addEventListener('click', () => {
-    if (storyController.paused) {
-      resumeStory();
-    } else {
-      pauseStory();
-    }
-  });
-
-  const nextBtn = document.getElementById('story-next-btn');
-  nextBtn?.addEventListener('click', nextStoryStep);
-
-  const exitBtnEl = document.getElementById('story-exit-btn');
-  exitBtnEl?.addEventListener('click', exitStoryMode);
-
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (storiesModal && !storiesModal.hidden) {
         closeStories();
-      } else if (storyController.active) {
-        exitStoryMode();
+      } else if (activeStory) {
+        stopClimateStory();
       }
     }
   });
@@ -1699,7 +1361,7 @@ function bindEvents(){
   window.addEventListener('message',event=>{
     if(event.data&&(event.data.type==='SUSPEND_WORKSTATION'||event.data.type==='PAUSE_ALL_AUDIO')){
       stopAudio(false);
-      stopAgentSpeech();
+      stopClimateStory();
     } else if (event.data && event.data.type === 'FOCUS_FIRST_CONTROL') {
       const firstControl = $('#play-history') || $('#section-tab-workbench');
       firstControl?.focus();
@@ -1709,7 +1371,7 @@ function bindEvents(){
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       stopAudio(false);
-      stopAgentSpeech();
+      stopClimateStory();
       if(window.self!==window.top){
         returnToStudio();
       }
@@ -1718,7 +1380,7 @@ function bindEvents(){
 }
 
 function initialize(){
-  initSpeechVoices();
+  
   populateSelects();bindEvents();selectBand(0);updateYear(0);updateComparison();
   if(new URLSearchParams(location.search).get('view')==='globe')setEarthView('globe');
 }

@@ -1604,6 +1604,16 @@ window.addEventListener('message', (e) => {
       y: rect.top + e.data.ratioY * rect.height
     };
     S.mouseMoved = true;
+  } else if (e.data.type === 'STORY_SUBTITLE') {
+    if (e.data.active && e.data.text) {
+      if (subtitleContainer && subtitleTextEl) {
+        subtitleContainer.hidden = false;
+        subtitleContainer.classList.add('is-active');
+        subtitleTextEl.textContent = e.data.text;
+      }
+    } else {
+      hideSkylarSubtitle();
+    }
   }
 });
 

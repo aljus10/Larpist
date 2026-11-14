@@ -2310,170 +2310,40 @@ button:disabled {
 }
 
 /* -----------------------------------------------------
-   ACTIVE STORY HUD (DOCKED UNDER MAP STAGE)
+   SERIES / YOUTUBE-STYLE SUBTITLES (BOTTOM OF SCREEN)
    ----------------------------------------------------- */
-.story-hud {
-  margin-top: 0.65rem;
-  background: #091520;
-  border: 1.5px solid rgba(77, 243, 255, 0.35);
-  border-radius: 12px;
-  padding: 0.75rem 1rem 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 20px rgba(77, 243, 255, 0.12);
-  animation: hudFadeIn 0.25s ease;
-  box-sizing: border-box;
+.story-subtitle {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 999;
+  width: max-content;
+  max-width: min(88vw, 760px);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
 }
 
-.story-hud[hidden] {
-  display: none !important;
+.story-subtitle.is-active {
+  opacity: 1;
 }
 
-@keyframes hudFadeIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.story-hud-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.story-hud-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.story-pulse-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #ff5733;
-  box-shadow: 0 0 8px #ff5733;
-  animation: pulseDot 1.4s infinite;
-}
-
-@keyframes pulseDot {
-  0%   { transform: scale(0.9); opacity: 0.8; }
-  50%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.8; }
-}
-
-.story-hud-title {
-  font-size: 0.86rem;
-  font-weight: 850;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.story-hud-step {
-  font-size: 0.72rem;
-  font-weight: 750;
-  background: rgba(77, 243, 255, 0.14);
-  color: var(--ocean, #4df3ff);
-  border: 1px solid rgba(77, 243, 255, 0.3);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-}
-
-.story-hud-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.story-ctrl-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(130, 175, 210, 0.25);
-  color: #d2e4ee;
-  font-size: 0.76rem;
-  font-weight: 750;
-  padding: 0.28rem 0.55rem;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: all 0.15s ease;
-}
-
-.story-ctrl-btn:hover {
-  background: rgba(77, 243, 255, 0.2);
-  border-color: rgba(77, 243, 255, 0.5);
-  color: #fff;
-}
-
-.story-ctrl-btn.story-exit:hover {
-  background: rgba(255, 107, 74, 0.25);
-  border-color: rgba(255, 107, 74, 0.6);
-  color: #ff856b;
-}
-
-.story-caption-box {
-  background: rgba(6, 16, 24, 0.6);
-  border: 1px solid rgba(130, 175, 210, 0.2);
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.story-agent-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--sun, #ffd24d);
-}
-
-.story-caption-text {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: #8ea5b4;
-  font-weight: 500;
-  min-height: 2.8em;
-}
-
-.caption-word {
+.story-subtitle-text {
   display: inline;
-  color: #8ea5b4;
-  transition: color 0.15s ease, background 0.15s ease, text-shadow 0.15s ease;
-  padding: 0 1px;
-}
-
-.caption-word.spoken {
-  color: #e6f1f8;
-}
-
-.caption-word.active {
-  color: #ffd24d;
-  background: rgba(255, 210, 77, 0.18);
-  border-radius: 4px;
-  font-weight: 750;
-  text-shadow: 0 0 12px rgba(255, 210, 77, 0.4);
-}
-
-.story-progress-bar {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.story-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--ocean, #4df3ff), var(--sun, #ffd24d));
-  transition: width 0.3s ease;
+  background: rgba(8, 10, 14, 0.82);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: Studio Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(14px, 1.25vw, 17.5px);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 
