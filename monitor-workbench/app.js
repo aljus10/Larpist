@@ -62,40 +62,6 @@ function announceA11y(message, { assertive = false, throttleMs = 0 } = {}) {
   }
 }
 
-function setHighContrast(enabled, save = true) {
-  state.highContrast = Boolean(enabled);
-  document.documentElement.setAttribute('data-high-contrast', String(state.highContrast));
-  document.body.setAttribute('data-high-contrast', String(state.highContrast));
-  const btn = $('#contrast-toggle');
-  if (btn) {
-    btn.setAttribute('aria-pressed', String(state.highContrast));
-    btn.title = state.highContrast ? 'High Contrast Mode: Active (H)' : 'High Contrast Mode (H)';
-  }
-  if (save) {
-    try {
-      localStorage.setItem('earthtune-contrast', state.highContrast ? 'true' : 'false');
-    } catch {}
-  }
-  announceA11y(`High contrast mode ${state.highContrast ? 'enabled' : 'disabled'}.`);
-
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage({
-      type: 'TOGGLE_HIGH_CONTRAST',
-      enabled: state.highContrast
-    }, '*');
-  }
-}
-
-function initHighContrast() {
-  let saved = false;
-  try {
-    saved = localStorage.getItem('earthtune-contrast') === 'true';
-  } catch {}
-  if (saved) {
-    setHighContrast(true, false);
-  }
-}
-
 function notifyParentScan(scanning, bandIndex = state.bandIndex, customLatRatio = null) {
   if (window.parent && window.parent !== window) {
     const band = bands[bandIndex] || bands[0];
@@ -1324,7 +1290,7 @@ function bindEvents(){
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
   // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle / Stories
-  const noFocusSelector = '#contrast-toggle, #section-drawer, #section-drawer-toggle, #section-drawer-menu, .drawer-item, #stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  const noFocusSelector = '#section-drawer, #section-drawer-toggle, #section-drawer-menu, .drawer-item, #stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1500,14 +1466,6 @@ function bindEvents(){
     });
   });
 
-  // High Contrast toggle button
-  const contrastBtn = $('#contrast-toggle');
-  if (contrastBtn) {
-    contrastBtn.addEventListener('click', () => {
-      setHighContrast(!state.highContrast);
-    });
-  }
-
   // COMPREHENSIVE KEYBOARD NAVIGATION & ASSISTIVE SHORTCUTS (WCAG 2.1 & Universal Design)
   window.addEventListener('keydown', (event) => {
     // Let native select, input, and textarea handle their own typing & arrow events
@@ -1641,11 +1599,32 @@ function bindEvents(){
       return;
     }
 
-    // Key 'h' / 'H': Toggle High-Contrast Accessibility Mode
-    if (event.key === 'h' || event.key === 'H') {
+    // Key 'q' / 'Q': Jump directly to Quiz & Proof section on the monitor
+    if (event.key === 'q' || event.key === 'Q') {
       event.preventDefault();
-      setHighContrast(!state.highContrast);
+      stopAudio(false);
+      if (state.section !== 'workbench') {
+        setSection('workbench');
+      }
+      setMode('learn');
+      announceA11y('Switched to Quiz and Proof section.');
       return;
+    }
+
+    // Quiz In-Section Shortcuts (when inside Quiz mode)
+    if (state.mode === 'learn') {
+      if (event.key === 'a' || event.key === 'A') {
+        const btnA = document.querySelector('[data-quiz-play="a"]');
+        if (btnA) { event.preventDefault(); btnA.click(); return; }
+      }
+      if (event.key === 'b' || event.key === 'B') {
+        const btnB = document.querySelector('[data-quiz-play="b"]');
+        if (btnB) { event.preventDefault(); btnB.click(); return; }
+      }
+      if (event.key === 'n' || event.key === 'N') {
+        const nextBtn = document.querySelector('#quiz-next');
+        if (nextBtn && !nextBtn.hidden) { event.preventDefault(); nextBtn.click(); return; }
+      }
     }
 
     // Key 'm' / 'M': Toggle Mute
@@ -1690,14 +1669,11 @@ function bindEvents(){
     } else if (event.data && event.data.type === 'FOCUS_FIRST_CONTROL') {
       const firstControl = $('#play-history') || $('#section-drawer-toggle');
       firstControl?.focus();
-    } else if (event.data && event.data.type === 'TOGGLE_HIGH_CONTRAST') {
-      setHighContrast(event.data.enabled, false);
     }
   });
 }
 
 function initialize(){
-  initHighContrast();
   populateSelects();bindEvents();selectBand(0);updateYear(0);updateComparison();
   if(new URLSearchParams(location.search).get('view')==='globe')setEarthView('globe');
 }

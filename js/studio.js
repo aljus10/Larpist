@@ -1426,12 +1426,6 @@ window.addEventListener('keydown', (e) => {
     if (S.focus !== 'overview') {
       homeView();
     }
-  } else if (e.key === 'h' || e.key === 'H') {
-    if (!e.target.matches?.('input, textarea, select')) {
-      e.preventDefault();
-      const current = document.documentElement.getAttribute('data-high-contrast') === 'true';
-      setStudioHighContrast(!current, true);
-    }
   }
 });
 
@@ -1445,44 +1439,6 @@ document.addEventListener('click', (e) => {
       focusTarget(targetId);
     }
   }
-});
-
-// High-Contrast Assistive Mode Manager
-export function setStudioHighContrast(enabled, notifyIframe = true) {
-  const isHC = Boolean(enabled);
-  document.documentElement.setAttribute('data-high-contrast', String(isHC));
-  document.body.setAttribute('data-high-contrast', String(isHC));
-  const btn = $('#studio-contrast-toggle');
-  if (btn) {
-    btn.setAttribute('aria-pressed', String(isHC));
-    btn.title = isHC ? 'High Contrast Mode: Active (H)' : 'High Contrast Mode (H)';
-  }
-  const liveRegion = $('#studio-live-region');
-  if (liveRegion) {
-    liveRegion.textContent = `High contrast mode ${isHC ? 'enabled' : 'disabled'}.`;
-  }
-  try {
-    localStorage.setItem('earthtune-contrast', isHC ? 'true' : 'false');
-  } catch {}
-
-  if (notifyIframe && monitorFrame?.contentWindow) {
-    monitorFrame.contentWindow.postMessage({
-      type: 'TOGGLE_HIGH_CONTRAST',
-      enabled: isHC
-    }, '*');
-  }
-}
-
-// Check saved high-contrast preference on startup
-try {
-  if (localStorage.getItem('earthtune-contrast') === 'true') {
-    setStudioHighContrast(true, false);
-  }
-} catch {}
-
-$('#studio-contrast-toggle')?.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-high-contrast') === 'true';
-  setStudioHighContrast(!current, true);
 });
 
 // Wheel zoom in overview — clamped inside room boundaries
@@ -1591,8 +1547,6 @@ window.addEventListener('message', (e) => {
   if (!e.data) return;
   if (e.data.type === 'OPEN_TEAM_MODAL' || e.data.action === 'openTeamModal') {
     openTeamModal();
-  } else if (e.data.type === 'TOGGLE_HIGH_CONTRAST') {
-    setStudioHighContrast(e.data.enabled, false);
   } else if (e.data.type === 'EXIT_COMPUTER_MODE') {
     homeView();
   } else if (e.data.type === 'FOCUS_MONITOR') {

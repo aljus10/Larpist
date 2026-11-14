@@ -389,30 +389,6 @@ h1, h2, h3, p {
   line-height: 1;
 }
 
-.action-pill.contrast-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-.action-pill.contrast-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
-}
-
-.action-pill.contrast-btn[aria-pressed="true"] {
-  background: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.6);
-}
-
-.contrast-icon {
-  font-size: 13px;
-  line-height: 1;
-}
-
 .action-pill.help-btn:hover .help-q-badge {
   background: #061018;
   color: var(--sun, #ffd24d);
@@ -2452,157 +2428,6 @@ button:disabled {
   box-shadow: 0 0 12px rgba(77, 243, 255, 0.4);
 }
 
-/* =====================================================
-   HIGH-CONTRAST ASSISTIVE ACCESSIBILITY MODE (WCAG AAA)
-   ===================================================== */
-html[data-high-contrast="true"],
-body[data-high-contrast="true"] {
-  --bg: #000000;
-  --paper: #000000;
-  --paper-deep: #050505;
-  --paper-strong: #ffffff;
-  --ink: #ffffff;
-  --ink-soft: #ffffff;
-  --muted: #e6e6e6;
-  --line: #ffffff;
-  --ocean: #00e5ff;
-  --sun: #ffff00;
-  --amber: #ffaa00;
-  --coral: #ff3344;
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] *:focus-visible {
-  outline: 3px solid #ffff00 !important;
-  outline-offset: 3px !important;
-  box-shadow: 0 0 0 5px #000000 !important;
-}
-
-body[data-high-contrast="true"] .site-header {
-  background: #000000 !important;
-  border-bottom: 2.5px solid #ffffff !important;
-}
-
-body[data-high-contrast="true"] .section-drawer-toggle {
-  background: #000000 !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .section-drawer-menu {
-  background: #000000 !important;
-  border: 2.5px solid #ffffff !important;
-  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3) !important;
-}
-
-body[data-high-contrast="true"] .drawer-item {
-  color: #ffffff !important;
-  border-bottom: 1px solid #333333 !important;
-}
-
-body[data-high-contrast="true"] .drawer-item:hover,
-body[data-high-contrast="true"] .drawer-item.active {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border-color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .drawer-item.active .drawer-item-num {
-  background: #000000 !important;
-  color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .drawer-item.active .drawer-item-check {
-  color: #000000 !important;
-}
-
-body[data-high-contrast="true"] .action-pill {
-  background: #000000 !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .action-pill:hover {
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-body[data-high-contrast="true"] .action-pill[aria-pressed="true"],
-body[data-high-contrast="true"] .action-pill.contrast-btn[aria-pressed="true"] {
-  background: #ffff00 !important;
-  color: #000000 !important;
-  border-color: #ffff00 !important;
-  font-weight: 900 !important;
-}
-
-body[data-high-contrast="true"] .map-column,
-body[data-high-contrast="true"] .control-column {
-  background: #000000 !important;
-  border-color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .map-stage {
-  border: 2px solid #ffffff !important;
-  background: #000000 !important;
-}
-
-body[data-high-contrast="true"] .scan-rule {
-  background: #ffff00 !important;
-  box-shadow: 0 0 12px #ffff00, 0 0 24px #ffff00 !important;
-  height: 4px !important;
-}
-
-body[data-high-contrast="true"] .latitude-bands button {
-  border: 2px solid #ffffff !important;
-  background: #000000 !important;
-  color: #ffffff !important;
-}
-
-body[data-high-contrast="true"] .latitude-bands button[aria-pressed="true"],
-body[data-high-contrast="true"] .latitude-bands button:hover {
-  background: #ffff00 !important;
-  color: #000000 !important;
-  border-color: #ffff00 !important;
-  font-weight: 900 !important;
-}
-
-body[data-high-contrast="true"] .latitude-bands button[aria-pressed="true"] * {
-  color: #000000 !important;
-}
-
-body[data-high-contrast="true"] .readout-metrics .metric-pill {
-  border: 2px solid #ffffff !important;
-  background: #000000 !important;
-}
-
-body[data-high-contrast="true"] .readout-metrics .metric-pill strong {
-  color: #ffff00 !important;
-}
-
-body[data-high-contrast="true"] .slider-block {
-  border: 2px solid #ffffff !important;
-  background: #000000 !important;
-}
-
-body[data-high-contrast="true"] .transport .primary-button {
-  background: #ffff00 !important;
-  color: #000000 !important;
-  border: 2px solid #ffff00 !important;
-  font-weight: 900 !important;
-}
-
-body[data-high-contrast="true"] .transport .secondary-button {
-  background: #000000 !important;
-  color: #ffffff !important;
-  border: 2px solid #ffffff !important;
-}
-
-body[data-high-contrast="true"] .transport .secondary-button:hover {
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
 /* Accessibility Keyboard & DEIA Modal Elements */
 .help-section-a11y {
   border: 2px solid rgba(77, 243, 255, 0.4);
@@ -2610,11 +2435,6 @@ body[data-high-contrast="true"] .transport .secondary-button:hover {
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
-}
-
-body[data-high-contrast="true"] .help-section-a11y {
-  border: 2.5px solid #ffff00 !important;
-  background: #000000 !important;
 }
 
 .help-badge-row {
@@ -2665,11 +2485,6 @@ body[data-high-contrast="true"] .help-section-a11y {
   padding: 0.85rem 1rem;
 }
 
-body[data-high-contrast="true"] .a11y-feature-card {
-  border: 2px solid #ffffff !important;
-  background: #000000 !important;
-}
-
 .a11y-feature-card h4 {
   font-size: 0.92rem;
   font-weight: 800;
@@ -2677,18 +2492,10 @@ body[data-high-contrast="true"] .a11y-feature-card {
   margin-bottom: 0.4rem;
 }
 
-body[data-high-contrast="true"] .a11y-feature-card h4 {
-  color: #ffff00 !important;
-}
-
 .a11y-feature-card p {
   font-size: 0.82rem;
   line-height: 1.45;
   color: #c8dded;
-}
-
-body[data-high-contrast="true"] .a11y-feature-card p {
-  color: #ffffff !important;
 }
 
 .a11y-shortcuts-table kbd {
@@ -2704,13 +2511,6 @@ body[data-high-contrast="true"] .a11y-feature-card p {
   border-radius: 5px;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
   white-space: nowrap;
-}
-
-body[data-high-contrast="true"] .a11y-shortcuts-table kbd {
-  background: #000000 !important;
-  color: #ffff00 !important;
-  border-color: #ffff00 !important;
-  box-shadow: 0 2px 0 #ffffff !important;
 }
 
 
