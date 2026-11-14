@@ -485,7 +485,7 @@ body.compact-mobile .mobile-workbench-dock iframe {
 
 .roster-modal-card {
   width: 100%;
-  max-width: 980px;
+  max-width: 1080px;
   max-height: 90vh;
   overflow-y: auto;
   margin: auto;
@@ -639,8 +639,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
 
 .roster-cards-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
   margin-bottom: 24px;
 }
 
@@ -672,6 +672,21 @@ body.compact-mobile .mobile-workbench-dock iframe {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.roster-avatar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+  z-index: 1;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roster-member-card:hover .roster-avatar-photo {
+  transform: scale(1.05);
 }
 
 .roster-avatar-swoop {
@@ -772,24 +787,32 @@ body.compact-mobile .mobile-workbench-dock iframe {
   transform: translateY(-1px);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
   .roster-cards-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .roster-modal-card {
     padding: 18px;
   }
   .roster-cards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .roster-modal-header {
     grid-template-columns: 1fr;
   }
   .roster-header-brand {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .roster-cards-grid {
+    grid-template-columns: 1fr;
   }
 }
 .wordmark:has(.wordmark-icon) {
