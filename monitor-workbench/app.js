@@ -1,10 +1,8 @@
-const temperaturePoints = [
-  [1980,.26],[1981,.32],[1982,.14],[1983,.31],[1984,.16],[1985,.12],[1986,.18],[1987,.32],[1988,.39],[1989,.27],
-  [1990,.45],[1991,.41],[1992,.22],[1993,.23],[1994,.31],[1995,.45],[1996,.33],[1997,.47],[1998,.61],[1999,.38],
-  [2000,.39],[2001,.53],[2002,.63],[2003,.62],[2004,.53],[2005,.68],[2006,.64],[2007,.66],[2008,.54],[2009,.66],
-  [2010,.72],[2011,.61],[2012,.65],[2013,.67],[2014,.75],[2015,.89],[2016,1.01],[2017,.91],[2018,.85],[2019,.98],
-  [2020,1.01],[2021,.85],[2022,.89],[2023,1.17],[2024,1.28]
-].map(([year,value],index)=>({year,value,frame:594+index*6}));
+const temperaturePoints = EARTH_DATA.points.filter(point => point.year <= 2025).map((point, index) => ({
+  ...point,
+  frame: point.year < 2025 ? 594 + index * 6 : null
+}));
+const LAST_REGIONAL_YEAR = temperaturePoints.at(-1).year;
 
 const bands = [
   {name:'Arctic',range:'60°–90°N',start:0,end:1/6},
@@ -23,6 +21,7 @@ const state = {
   mode:'history',
   section:'workbench',
   view:'flat',
+  temperature:false,
   globeRotation:0,
   muted:false,
   playing:false,
@@ -37,8 +36,10 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const clamp = (value,min,max)=>Math.max(min,Math.min(max,value));
 const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
+const frameImagePath = year => `../assets/eic/${year}.webp`;
 const signed = value => `${value>=0?'+':''}${value.toFixed(2)}`;
 const currentPoint = ()=>temperaturePoints[state.yearIndex];
+const isRegionalAvailable = year => Number.isInteger(year) && year>=temperaturePoints[0].year && year<=LAST_REGIONAL_YEAR;
 
 function setStatus(message){
   const el = $('#live-status');
@@ -52,9 +53,10 @@ function notifyParentScan(scanning, bandIndex = state.bandIndex, customLatRatio 
     const latRatio = typeof customLatRatio === 'number' ? customLatRatio : (band.start + band.end) / 2;
     window.parent.postMessage({
       type: 'MONITOR_SCAN_UPDATE',
-      scanning,
+      scanning: scanning && isRegionalAvailable(point.year),
       year: point.year,
       value: point.value,
+      regionalAvailable: isRegionalAvailable(point.year),
       bandIndex,
       bandName: band.name,
       latRatio
@@ -65,7 +67,7 @@ function notifyParentScan(scanning, bandIndex = state.bandIndex, customLatRatio 
 async function ensureAudio(){
   if(!audioContext){
     const AudioCtor=window.AudioContext||window.webkitAudioContext;
-    if(!AudioCtor){ setStatus('Web Audio API unavailable.'); return true; }
+    if(!AudioCtor){ setStatus('Web Audio API unavailable.'); return false; }
     audioContext=new AudioCtor();
     masterGain=audioContext.createGain();
     masterGain.gain.value=state.muted?0:.72;
@@ -97,6 +99,7 @@ function setPlayHistoryButtonState(playing){
 
 function stopAudio(update=true){
   state.token+=1;
+  showQuizPlayback();
   state.playing=false;
   activeSources.forEach(source=>{try{source.stop();}catch{}});
   activeSources.clear();
@@ -177,8 +180,9 @@ function nearestGroup(r,g,b){
 }
 
 async function getGlobeTexture(year){
+  if(!isRegionalAvailable(year)) throw new Error(`Regional NASA maps are available only through ${LAST_REGIONAL_YEAR}.`);
   if(globeTextureCache.has(year)) return globeTextureCache.get(year);
-  const image=new Image();image.src=`../assets/eic/${year}.webp`;image.alt='';
+  const image=new Image();image.src=frameImagePath(year);image.alt='';
   try{await image.decode();}catch{throw new Error(`The NASA frame for ${year} could not be projected onto the globe.`)}
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
   const context=canvas.getContext('2d',{willReadFrequently:true});
@@ -188,13 +192,36 @@ async function getGlobeTexture(year){
   return texture;
 }
 
+function renderGlobeUnavailable(year){
+  const canvas=$('#earth-globe');
+  if(!canvas) return;
+  const context=canvas.getContext('2d');
+  const size=canvas.width,cx=size/2,cy=size/2,radius=size*.44;
+  context.clearRect(0,0,size,size);
+  const fill=context.createRadialGradient(cx-radius*.25,cy-radius*.3,radius*.08,cx,cy,radius);
+  fill.addColorStop(0,'#173647');fill.addColorStop(1,'#08161f');
+  context.beginPath();context.arc(cx,cy,radius,0,Math.PI*2);context.fillStyle=fill;context.fill();
+  context.strokeStyle='rgba(255,255,255,.38)';context.lineWidth=2;context.stroke();
+  context.textAlign='center';
+  context.fillStyle='rgba(255,253,247,.9)';context.font='600 15px sans-serif';
+  context.fillText('Regional map unavailable',cx,cy-6);
+  context.fillStyle='rgba(255,253,247,.62)';context.font='12px sans-serif';
+  context.fillText(`Regional maps cover 1980–${LAST_REGIONAL_YEAR}`,cx,cy+16);
+  context.textAlign='left';
+  canvas.setAttribute('aria-label',`Regional NASA temperature projection unavailable for ${year}. Regional maps cover 1980 through ${LAST_REGIONAL_YEAR}.`);
+}
+
 async function renderGlobe(){
   if(state.view!=='globe') return;
   const renderId=++state.globeFrame;
   const canvas=$('#earth-globe'),context=canvas.getContext('2d');
   const year=currentPoint().year;
+  if(!isRegionalAvailable(year)){renderGlobeUnavailable(year);return;}
   let texture;
-  try{texture=await getGlobeTexture(year);}catch(error){setStatus(error.message);return;}
+  try{texture=await getGlobeTexture(year);}catch(error){
+    if(renderId===state.globeFrame && state.view==='globe' && year===currentPoint().year) setStatus(error.message);
+    return;
+  }
   if(renderId!==state.globeFrame||state.view!=='globe'||year!==currentPoint().year)return;
   const size=canvas.width,cx=size/2,cy=size/2,radius=size*.44;
   const output=context.createImageData(size,size),data=output.data;
@@ -252,17 +279,39 @@ function scheduleGlobeRender(){
 function setEarthView(){
   state.view='flat';
   $('#map-stage').dataset.view='flat';
-  $('#frame-image').hidden=false;
-  $('#latitude-bands').hidden=false;
-  $('#scan-rule').hidden=false;
+  applyRegionalAvailability(currentPoint().year);
   if($('#flat-view')) $('#flat-view').setAttribute('aria-pressed','true');
+}
+
+function setTemperatureMode(enabled){
+  state.temperature=Boolean(enabled);
+  const mapStage=$('#map-stage');
+  const button=$('#temperature-view');
+  if(mapStage){
+    mapStage.dataset.temperature=String(state.temperature);
+    mapStage.setAttribute('aria-label',state.temperature
+      ? `NASA global temperature anomaly map for ${currentPoint().year}`
+      : 'NASA Blue Marble world map');
+  }
+  if(button) button.setAttribute('aria-pressed',String(state.temperature));
+  if(window.parent&&window.parent!==window){
+    window.parent.postMessage({
+      type:'MONITOR_TEMPERATURE_MODE',
+      enabled:state.temperature,
+      year:currentPoint().year
+    },'*');
+  }
+  setStatus(state.temperature
+    ? `Temperature layer on for ${currentPoint().year}.`
+    : 'Temperature layer off. Showing the natural-color Earth.');
 }
 
 function rotateGlobe(delta){state.globeRotation=(state.globeRotation+delta)%(Math.PI*2);scheduleGlobeRender();}
 
 async function analyzeYear(year){
+  if(!isRegionalAvailable(year)) return null;
   if(analysisCache.has(year)) return analysisCache.get(year);
-  const image=new Image(); image.src=`../assets/eic/${year}.webp`; image.alt='';
+  const image=new Image(); image.src=frameImagePath(year); image.alt='';
   try{await image.decode();}catch{throw new Error(`The NASA frame for ${year} could not be loaded.`)}
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
   const context=canvas.getContext('2d',{willReadFrequently:true});
@@ -287,29 +336,103 @@ async function analyzeYear(year){
   return vectors;
 }
 
+function renderUnavailableAnalysis(){
+  const point=currentPoint();
+  const bars=$('#category-bars');
+  if(bars){
+    bars.innerHTML=`<p class="analysis-unavailable">Regional category analysis is available for 1980–${LAST_REGIONAL_YEAR}.</p>`;
+  }
+  const ledger=$('#ledger-summary');
+  if(ledger){
+    ledger.textContent=`${point.year} · regional analysis unavailable (valid through ${LAST_REGIONAL_YEAR}).`;
+  }
+}
+
+function applyRegionalAvailability(year){
+  const available=isRegionalAvailable(year);
+  const frameImage=$('#frame-image');
+  const bandsEl=$('#latitude-bands');
+  const notice=$('#regional-unavailable');
+  if(frameImage) frameImage.hidden=!available;
+  if(bandsEl) bandsEl.hidden=!available;
+  if(notice) notice.hidden=available;
+  const scanRule=$('#scan-rule');
+  if(scanRule){
+    scanRule.hidden=!available;
+    if(!available) scanRule.classList.remove('scanning');
+  }
+  $$('[data-band]').forEach(button=>{
+    button.disabled=!available;
+    button.setAttribute('aria-disabled',String(!available));
+    button.setAttribute('aria-pressed',String(available && state.mode==='frame' && Number(button.dataset.band)===state.bandIndex));
+  });
+  const scanButton=$('#scan-frame');
+  const playBandButton=$('#play-band');
+  if(scanButton) scanButton.disabled=!available;
+  if(playBandButton) playBandButton.disabled=!available;
+  const viewDescription=$('#view-description');
+  if(viewDescription){
+    viewDescription.textContent=available
+      ?'Flat view shows the complete source frame and all five latitude bands at once.'
+      :`${year} shows the official global annual anomaly. Regional NASA maps are available only through ${LAST_REGIONAL_YEAR}.`;
+  }
+  const frameWindow=$('#frame-window');
+  if(frameWindow){
+    frameWindow.textContent=available?(year === 2025 ? 'Annual regional mean' : 'Running regional mean'):`Global annual value · regional maps 1980–${LAST_REGIONAL_YEAR}`;
+  }
+  const bandSummary=$('#selected-band-summary strong');
+  if(bandSummary){
+    bandSummary.textContent=available
+      ?`${bands[state.bandIndex].name} · ${bands[state.bandIndex].range}`
+      :`Regional bands unavailable · through ${LAST_REGIONAL_YEAR}`;
+  }
+  if(!available) renderUnavailableAnalysis();
+}
+
 async function updateFrameAnalysis(){
   const {year}=currentPoint();
+  if(!isRegionalAvailable(year)){ renderUnavailableAnalysis(); return; }
   try{
     const vectors=await analyzeYear(year);
-    if(currentPoint().year!==year) return;
+    if(!vectors||currentPoint().year!==year) return;
     renderBandVector(vectors[state.bandIndex]);
     updateLedger(vectors[state.bandIndex]);
-  }catch(error){ setStatus(error.message); }
+  }catch(error){
+    if(currentPoint().year===year){
+      $('#category-bars').textContent=error.message;
+      $('#ledger-summary').textContent=`${year} · regional analysis unavailable.`;
+      setStatus(error.message);
+    }
+  }
 }
 
 function updateYear(index,{play=false}={}){
   state.yearIndex=clamp(index,0,temperaturePoints.length-1);
   const point=currentPoint();
-  $('#frame-image').src=`../assets/eic/${point.year}.webp`;
-  $('#frame-image').alt=`NASA global temperature anomaly visualization for ${point.year}`;
+  const regionalAvailable=isRegionalAvailable(point.year);
+  const frameImage=$('#frame-image');
+  if(regionalAvailable){
+    const frameSrc=frameImagePath(point.year);
+    if(frameImage.getAttribute('src')!==frameSrc) frameImage.src=frameSrc;
+    frameImage.alt=`NASA global temperature anomaly visualization for ${point.year}`;
+    $('#frame-index').textContent=point.frame === null ? 'Annual grid' : `#${point.frame}`;
+  }else{
+    frameImage.alt=`Regional NASA temperature map unavailable for ${point.year}`;
+    $('#frame-index').textContent='—';
+  }
   $('#frame-year').textContent=point.year;
-  $('#frame-index').textContent=point.frame;
   $('#history-year').textContent=point.year;
   $('#history-value').textContent=`${signed(point.value)} °C`;
   $('#history-frequency').textContent=`${Math.round(historyFrequency(point.value))} Hz`;
   $('#year-slider').value=state.yearIndex;
-  $('#year-slider').setAttribute('aria-valuetext',`${point.year}, ${signed(point.value)} degrees Celsius`);
+  $('#year-slider').setAttribute('aria-valuetext',`${point.year}, ${signed(point.value)} degrees Celsius relative to the 1951–1980 average`);
   $('#year-output').textContent=point.year;
+  if($('#frame-year-select')) $('#frame-year-select').value=String(point.year);
+  if($('#frame-year-slider')) {
+    $('#frame-year-slider').value=state.yearIndex;
+    $('#frame-year-slider').setAttribute('aria-valuetext',`${point.year}, ${signed(point.value)} degrees Celsius relative to the 1951–1980 average`);
+  }
+  applyRegionalAvailability(point.year);
   updateFrameAnalysis();
   renderGlobe();
   if(play) playHistoryTone(point.value);
@@ -319,7 +442,8 @@ function updateYear(index,{play=false}={}){
     window.parent.postMessage({
       type: 'MONITOR_YEAR_CHANGE',
       year: point.year,
-      value: point.value
+      value: point.value,
+      regionalAvailable
     }, '*');
   }
 }
@@ -340,7 +464,7 @@ async function playHistory(){
   $$('[data-band]').forEach(button=>button.setAttribute('aria-pressed','false'));
   notifyParentScan(false);
 
-  // If starting at the very end (2024), wrap back to 1980
+  // If starting at the end of the record, wrap back to the first year.
   if(state.yearIndex >= temperaturePoints.length - 1){
     state.yearIndex = 0;
   }
@@ -359,6 +483,7 @@ async function playHistory(){
 }
 
 function selectBand(index,{focus=false, showHighlight=(state.mode==='frame')}={}){
+  if(!isRegionalAvailable(currentPoint().year)) return;
   state.bandIndex=clamp(index,0,bands.length-1);
   $$('[data-band]').forEach(button=>{
     const isSelected = showHighlight && Number(button.dataset.band)===state.bandIndex;
@@ -384,6 +509,7 @@ function updateLedger(vector){
 }
 
 async function playBandPattern(vector,label,token=state.token){
+  if(token!==state.token) return;
   await playBoundaryClick();await sleep(120);
   const total=2100;
   for(const category of ['cool','reference','warm']){
@@ -395,6 +521,7 @@ async function playBandPattern(vector,label,token=state.token){
 }
 
 async function playSelectedBand(){
+  if(!isRegionalAvailable(currentPoint().year)){setStatus(`Regional band playback is available only through ${LAST_REGIONAL_YEAR}.`);return;}
   stopAudio(false);const token=state.token;document.body.classList.add('busy');
   try{
     selectBand(state.bandIndex, {showHighlight:true});
@@ -402,7 +529,7 @@ async function playSelectedBand(){
     const vectors=await analyzeYear(currentPoint().year);
     await playBandPattern(vectors[state.bandIndex],`${currentPoint().year}, ${bands[state.bandIndex].name}`,token);
   }
-  catch(error){setStatus(error.message)}
+  catch(error){if(token===state.token) setStatus(error.message)}
   if(token===state.token){
     document.body.classList.remove('busy');
     if(state.mode!=='frame') notifyParentScan(false);
@@ -410,6 +537,7 @@ async function playSelectedBand(){
 }
 
 async function scanFrame(){
+  if(!isRegionalAvailable(currentPoint().year)){setStatus(`Frame Scan is available only through ${LAST_REGIONAL_YEAR}.`);return;}
   stopAudio(false);const token=state.token;document.body.classList.add('busy');
   if(state.view!=='flat') setEarthView('flat');
   $('#scan-rule').classList.add('scanning');
@@ -423,7 +551,7 @@ async function scanFrame(){
       notifyParentScan(true, i);
       await playBandPattern(vectors[i],`${currentPoint().year}, ${bands[i].name}`,token);await sleep(180);
     }
-  }catch(error){setStatus(error.message)}
+  }catch(error){if(token===state.token) setStatus(error.message)}
   if(token===state.token){
     document.body.classList.remove('busy');
     $('#scan-rule').classList.remove('scanning');
@@ -435,6 +563,10 @@ function calcMapHeight(){return $('#frame-image').clientHeight||$('#map-stage')?
 
 function setMode(mode){
   stopAudio(false);state.mode=mode;
+  if (mode === 'learn' && !quizInitialized) {
+    quizInitialized = true;
+    initializeQuiz();
+  }
   const tabs={history:'#history-tab',frame:'#frame-tab',learn:'#learn-tab'};
   const panels={history:'#history-panel',frame:'#frame-panel',learn:'#learn-panel'};
   Object.keys(tabs).forEach(key=>{
@@ -443,8 +575,10 @@ function setMode(mode){
     $(panels[key]).hidden=key!==mode;
   });
   if(mode==='frame'){
+    const regionalAvailable=isRegionalAvailable(currentPoint().year);
     selectBand(state.bandIndex, {showHighlight:true});
-    notifyParentScan(true, state.bandIndex);
+    notifyParentScan(regionalAvailable, state.bandIndex);
+    if(!regionalAvailable) setStatus(`Frame Scan is available only through ${LAST_REGIONAL_YEAR}.`);
   }else{
     $$('[data-band]').forEach(button=>button.setAttribute('aria-pressed','false'));
     $('#scan-rule').classList.remove('scanning');
@@ -465,16 +599,36 @@ function setSection(sectionName){
   });
 }
 
+const yearOptions = points => points.map(({year}) => `<option value="${year}">${year}</option>`).join('');
+const bandOptions = () => bands.map((band,index) => `<option value="${index}">${band.name} · ${band.range}</option>`).join('');
+
 function populateSelects(){
-  const years=temperaturePoints.map(point=>`<option value="${point.year}">${point.year}</option>`).join('');
-  $('#compare-year-a').innerHTML=years;$('#compare-year-b').innerHTML=years;$('#compare-year-b').value='2024';
-  $('#compare-band').innerHTML=bands.map((band,index)=>`<option value="${index}">${band.name} · ${band.range}</option>`).join('');
+  const regionalPoints=temperaturePoints.filter(point=>isRegionalAvailable(point.year));
+  const years=yearOptions(regionalPoints);
+  $('#frame-year-select').innerHTML=years;
+  if($('#frame-year-slider')) $('#frame-year-slider').max=String(regionalPoints.length-1);
+  $('#compare-year-a').innerHTML=years;$('#compare-year-b').innerHTML=years;$('#compare-year-b').value=String(LAST_REGIONAL_YEAR);
+  $('#compare-band').innerHTML=bandOptions();
+  $('#year-slider').max=String(temperaturePoints.length-1);
+}
+
+function setComparisonUnavailable(yearA,yearB){
+  const cards=$$('#compare-output>div:not(.difference-mark)');
+  const message=`Regional analysis unavailable (valid through ${LAST_REGIONAL_YEAR}).`;
+  if(cards[0]) cards[0].innerHTML=`<span>Frame A</span><strong>${yearA}</strong><p>${message}</p>`;
+  if(cards[1]) cards[1].innerHTML=`<span>Frame B</span><strong>${yearB}</strong><p>${message}</p>`;
 }
 
 async function updateComparison(){
   const yearA=Number($('#compare-year-a').value),yearB=Number($('#compare-year-b').value),bandIndex=Number($('#compare-band').value);
+  if(!isRegionalAvailable(yearA)||!isRegionalAvailable(yearB)){
+    setComparisonUnavailable(yearA,yearB);
+    setStatus(`Compare A/B uses regional maps, available only through ${LAST_REGIONAL_YEAR}.`);
+    return;
+  }
   try{
     const [vectorsA,vectorsB]=await Promise.all([analyzeYear(yearA),analyzeYear(yearB)]);
+    if(Number($('#compare-year-a').value)!==yearA || Number($('#compare-year-b').value)!==yearB || Number($('#compare-band').value)!==bandIndex) return;
     const a=vectorsA[bandIndex],b=vectorsB[bandIndex];
     const cards=$$('#compare-output>div:not(.difference-mark)');
     cards[0].innerHTML=`<span>Frame A</span><strong>${yearA}</strong><p>${(a.cool*100).toFixed(0)}% cooler · ${(a.reference*100).toFixed(0)}% baseline · ${(a.warm*100).toFixed(0)}% warmer</p>`;
@@ -485,6 +639,12 @@ async function updateComparison(){
 async function playComparison(){
   stopAudio(false);const token=state.token;document.body.classList.add('busy');
   const yearA=Number($('#compare-year-a').value),yearB=Number($('#compare-year-b').value),bandIndex=Number($('#compare-band').value);
+  if(!isRegionalAvailable(yearA)||!isRegionalAvailable(yearB)){
+    setComparisonUnavailable(yearA,yearB);
+    setStatus(`Compare A/B uses regional maps, available only through ${LAST_REGIONAL_YEAR}.`);
+    document.body.classList.remove('busy');
+    return;
+  }
   try{
     const [a,b]=await Promise.all([analyzeYear(yearA),analyzeYear(yearB)]);
     await playBandPattern(a[bandIndex],`Frame A, ${yearA}`,token);await sleep(500);
@@ -494,44 +654,297 @@ async function playComparison(){
   if(token===state.token)document.body.classList.remove('busy');
 }
 
-async function playLesson(){
-  stopAudio(false);const token=state.token;document.body.classList.add('busy');
-  try{
-    const [a,b]=await Promise.all([analyzeYear(1980),analyzeYear(2024)]);
-    await playBandPattern(a[0],'A, 1980 Arctic',token);await sleep(550);
-    if(token!==state.token)return;
-    await playBandPattern(b[0],'B, 2024 Arctic',token);
-    if(token===state.token){$('#lesson-answers').disabled=false;$('#lesson-feedback').textContent='Choose the frame with more warmer-category coverage.';$$('.lesson-progress span')[1].classList.add('active');}
-  }catch(error){setStatus(error.message)}
-  if(token===state.token)document.body.classList.remove('busy');
+const quizSets = [
+  { years: [1980, 2025], bandIds: [0], color: 'warm', type: 'larger' },
+  { years: [2025, 1990], bandIds: [1], color: 'cool', type: 'larger' },
+  { years: [2000, 2025], bandIds: [2], color: 'warm', type: 'trend' },
+  { years: [2010, 2025], bandIds: [3], color: 'cool', type: 'smaller' },
+  { years: [2025, 2020], bandIds: [4], color: 'warm', type: 'larger' },
+  { years: [1990, 2000], bandIds: [0], color: 'warm', type: 'difference' },
+  { years: [2000, 2010], bandIds: [1], color: 'cool', type: 'trend' },
+  { years: [2024, 2025], bandIds: [2], color: 'warm', type: 'larger' },
+  { years: [1980, 2025], bandIds: [0, 2], color: 'warm', type: 'change' },
+  { years: [1980, 2025], bandIds: [1, 3], color: 'cool', type: 'decrease' }
+];
+const quizMaps = [$('#quiz-map-a'), $('#quiz-map-b')];
+const quizBand = $('#quiz-band');
+const quizPlayButtons = $$('[data-quiz-play]');
+const quizBandName = index => ['Arctic', 'Northern mid-latitudes', 'Tropics', 'Southern mid-latitudes', 'Antarctic'][index];
+let quizInitialized = false;
+let quizQuestions = [];
+let quizAnswers = [];
+let quizIndex = 0;
+let quizReviewing = false;
+let quizComparison = null;
+
+function showQuizPlayback(index, label = '') {
+  quizMaps.forEach((map, position) => map.classList.toggle('is-playing', position === index));
+  $('#quiz-playing').textContent = label;
 }
 
-async function answerLesson(year){
-  const [a,b]=await Promise.all([analyzeYear(1980),analyzeYear(2024)]);
-  const answer=a[0].warm>b[0].warm?'1980':'2024';const correct=year===answer;
-  const feedback=$('#lesson-feedback');feedback.className=`lesson-feedback ${correct?'correct':'incorrect'}`;
-  const warm80=(a[0].warm*100).toFixed(0);
-  const warm24=(b[0].warm*100).toFixed(0);
-  feedback.textContent=`${correct?'Correct!':'Not quite.'} Arctic warmer coverage: ${warm80}% in 1980 vs ${warm24}% in 2024.`;
-  $$('.lesson-progress span')[2].classList.add('active');
-  const receipt=$('#proof-receipt');
-  const takeaway=$('#proof-takeaway');
-  if(receipt) receipt.classList.add('is-verified');
-  if(takeaway){
-    takeaway.innerHTML=`<strong>Verified Explain-Back (${year} selected):</strong> Arctic (60°–90°N) warm-pixel coverage rose from <strong>${warm80}% (1980)</strong> to <strong>${warm24}% (2024)</strong>—a polar amplification pattern hidden by a single global average pitch.`;
+function clearQuizAnswer() {
+  const feedback = $('#lesson-feedback');
+  feedback.hidden = true;
+  feedback.textContent = '';
+  feedback.className = 'lesson-feedback';
+  $('#proof-receipt').hidden = true;
+}
+
+async function resolveQuizQuestions() {
+  const availableYears = temperaturePoints.filter(point => isRegionalAvailable(point.year)).map(point => point.year);
+  const loaded = new Map();
+  async function loadFrame(year) {
+    if (!loaded.has(year)) loaded.set(year, analyzeYear(year).catch(() => null));
+    return loaded.get(year);
+  }
+
+  async function resolve(set) {
+    const alternativeBands = bands.map((_, index) => index).filter(index => !set.bandIds.includes(index));
+    const bandGroups = [set.bandIds];
+    for (const index of alternativeBands) {
+      if (set.bandIds.length === 1) bandGroups.push([index]);
+      else bandGroups.push([set.bandIds[0], index], [index, set.bandIds[1]]);
+    }
+    if (set.bandIds.length === 2) {
+      alternativeBands.forEach((first, index) => {
+        alternativeBands.slice(index + 1).forEach(second => bandGroups.push([first, second]));
+      });
+    }
+
+    const nearest = set.years.map(target => [...availableYears].sort((a, b) => Math.abs(a - target) - Math.abs(b - target)));
+    for (const bandIds of bandGroups) {
+      const usable = frame => bandIds.every(index => frame?.[index].valid);
+      for (const yearA of nearest[0]) {
+        const frameA = await loadFrame(yearA);
+        if (!usable(frameA)) continue;
+        for (const yearB of nearest[1]) {
+          if (Math.sign(yearB - yearA) !== Math.sign(set.years[1] - set.years[0])) continue;
+          const frameB = await loadFrame(yearB);
+          if (!usable(frameB)) continue;
+          const frames = [frameA, frameB];
+          const playableBands = bands.map((_, index) => index).filter(index => frames.every(frame => frame[index].valid));
+          return { ...set, years: [yearA, yearB], bandIds, frames, playableBands };
+        }
+      }
+    }
+    return null;
+  }
+
+  return Promise.all(quizSets.map(resolve));
+}
+
+async function initializeQuiz() {
+  quizQuestions = await resolveQuizQuestions();
+  startQuiz();
+}
+
+function startQuiz() {
+  quizAnswers = Array(quizSets.length).fill(null);
+  quizReviewing = false;
+  advanceQuiz(-1);
+}
+
+function advanceQuiz(after) {
+  const index = quizQuestions.findIndex((question, index) => index > after && question);
+  if (index === -1) showQuizSummary();
+  else openQuizQuestion(index);
+}
+
+function focusQuizProgress() {
+  if (state.section === 'workbench' && state.mode === 'learn') $('#quiz-progress').focus();
+}
+
+function openQuizQuestion(index) {
+  quizIndex = index;
+  const question = quizQuestions[index];
+  $('#quiz-summary').hidden = true;
+  $('#quiz-comparison').hidden = false;
+  $('#quiz-back').hidden = !quizReviewing;
+  $('#quiz-progress').textContent = `Question ${index + 1} of ${quizSets.length}${quizReviewing ? ' · Review' : ''}`;
+  const options = question.bandIds.length === 2 ? question.bandIds : question.playableBands;
+  quizBand.innerHTML = options.map(id => `<option value="${id}">${quizBandName(id)} · ${bands[id].range}</option>`).join('');
+  quizBand.value = String(quizAnswers[index]?.bandId ?? question.bandIds[0]);
+  updateQuiz();
+  focusQuizProgress();
+}
+
+function showQuizSummary() {
+  stopAudio(false);
+  quizComparison = null;
+  $('#quiz-progress').textContent = 'Quiz results';
+  $('#quiz-summary').hidden = false;
+  $('#quiz-comparison').hidden = true;
+  $('#quiz-next').hidden = true;
+  $('#quiz-back').hidden = true;
+  const correct = quizAnswers.filter(answer => answer?.correct).length;
+  $('#quiz-score').textContent = `Score: ${correct} out of ${quizSets.length}`;
+  const missing = quizQuestions.flatMap((question, index) => question ? [] : [`${index + 1} (${quizSets[index].years.join(' → ')} · ${quizSets[index].bandIds.map(quizBandName).join(' and ')})`]);
+  const unavailable = $('#quiz-unavailable');
+  unavailable.hidden = missing.length === 0;
+  unavailable.textContent = missing.length ? `Comparisons unavailable: ${missing.join(', ')}.` : '';
+  $('#quiz-review-list').innerHTML = quizAnswers.map((answer, index) => answer
+    ? `<li value="${index + 1}"><button class="text-button" type="button" data-quiz-review="${index}">Review ${quizQuestions[index].years.join(' → ')} · ${answer.correct ? 'Correct' : 'Incorrect'}</button></li>`
+    : '').join('');
+  focusQuizProgress();
+}
+
+const quizPercent = value => `${(value / 10).toFixed(1)}%`;
+const quizPoints = value => `${(value / 10).toFixed(1)} percentage points`;
+
+function quizEvidence(question, bandId) {
+  const { years, frames, color, type } = question;
+  const bandIds = question.bandIds.length === 2 ? question.bandIds : [bandId];
+  const rows = bandIds.map(id => {
+    // Pixel classifier fractions use valid pixels only. Grade the displayed tenths.
+    const [a, b] = frames.map(frame => Math.round(frame[id][color] * 1000));
+    return { id, a, b, change: b - a };
+  });
+  const [first, second] = rows;
+  const category = `${color}-colored pixel share`;
+  const region = quizBandName(bandId).toLowerCase();
+  let prompt;
+  let choices;
+  let correct;
+  switch (type) {
+    case 'larger':
+    case 'smaller':
+      prompt = `Which frame shows a ${type} share of ${color}-colored pixels in the ${region}?`;
+      choices = ['Frame A', 'Frame B', 'Same share'];
+      correct = first.change === 0 ? 2 : (first.change > 0) === (type === 'larger') ? 1 : 0;
+      break;
+    case 'trend':
+      prompt = `How did the ${category} in the ${region} change from ${years[0]} to ${years[1]}?`;
+      choices = ['Increased', 'Decreased', 'Stayed the same'];
+      correct = first.change === 0 ? 2 : first.change > 0 ? 0 : 1;
+      break;
+    case 'difference': {
+      prompt = `What was the difference in ${category} between the two frames in the ${region}?`;
+      const difference = Math.abs(first.change);
+      const step = Math.max(10, Math.round(difference * 0.15));
+      const start = Math.max(0, Math.min(1000 - step * 2, difference - step));
+      const values = [difference, ...[start, start + step, start + step * 2].filter(value => value !== difference).slice(0, 2)].sort((a, b) => a - b);
+      choices = values.map(quizPoints);
+      correct = values.indexOf(difference);
+      break;
+    }
+    case 'change':
+    case 'decrease': {
+      const decrease = type === 'decrease';
+      const measure = row => decrease ? Math.max(0, -row.change) : Math.abs(row.change);
+      const difference = measure(first) - measure(second);
+      prompt = `Which band had the larger ${type} in ${category} from ${years[0]} to ${years[1]}?`;
+      choices = [...bandIds.map(quizBandName), `Same ${type}`];
+      if (decrease) choices.push('Neither decreased');
+      correct = decrease && !measure(first) && !measure(second) ? 3 : difference === 0 ? 2 : difference > 0 ? 0 : 1;
+      break;
+    }
+  }
+  return { prompt, choices, correct, rows };
+}
+
+function updateQuiz() {
+  stopAudio(false);
+  clearQuizAnswer();
+  const question = quizQuestions[quizIndex];
+  const bandId = Number(quizBand.value);
+  const band = bands[bandId];
+  const evidence = quizEvidence(question, bandId);
+  quizComparison = { ...question, band, bandId, evidence, vectors: question.frames.map(frame => frame[bandId]) };
+  const saved = quizAnswers[quizIndex];
+  const reviewingEvidence = saved && (saved.bandId === bandId || question.bandIds.length === 2);
+  $('#quiz-practice').hidden = !saved || reviewingEvidence;
+  const next = $('#quiz-next');
+  next.hidden = !saved || quizReviewing;
+  next.textContent = quizQuestions.slice(quizIndex + 1).some(Boolean) ? 'Next question' : 'See results';
+
+  quizMaps.forEach((map, position) => {
+    const year = question.years[position];
+    map.querySelector('figcaption span').textContent = year;
+    const image = map.querySelector('img');
+    const path = frameImagePath(year);
+    if (image.getAttribute('src') !== path) image.src = path;
+    image.alt = `${year} temperature anomaly map with ${quizBandName(bandId)} (${band.range}) highlighted`;
+    const highlight = map.querySelector('.quiz-band-highlight');
+    highlight.style.top = `${band.start * 100}%`;
+    highlight.style.height = `${(band.end - band.start) * 100}%`;
+  });
+  $('#quiz-question').textContent = evidence.prompt;
+  $('#quiz-choices').innerHTML = evidence.choices.map((choice, index) =>
+    `<button type="button" data-answer="${index}" aria-pressed="false">${choice}</button>`).join('');
+  $('#lesson-answers').disabled = Boolean(reviewingEvidence);
+  if (reviewingEvidence) showQuizAnswer(saved.choice);
+}
+
+async function playQuiz(order) {
+  const comparison = quizComparison;
+  if (!comparison) return;
+  if (state.muted) {
+    $('#quiz-playing').textContent = 'Audio is muted.';
+    return;
+  }
+  stopAudio(false);
+  const token = state.token;
+  const sequence = order === 'ab' ? [0, 1] : [order === 'a' ? 0 : 1];
+  const { years, band, vectors } = comparison;
+  try {
+    if (!await ensureAudio()) return;
+    for (const index of sequence) {
+      if (token !== state.token) return;
+      const label = `Frame ${index === 0 ? 'A' : 'B'}, ${years[index]}, ${band.name}`;
+      showQuizPlayback(index, `Playing ${label}`);
+      await playBandPattern(vectors[index], label, token);
+      if (token !== state.token) return;
+      showQuizPlayback();
+      if (order === 'ab' && index === 0) await sleep(500);
+    }
+  } catch (error) {
+    if (token === state.token) {
+      showQuizPlayback();
+      $('#quiz-playing').textContent = error.message;
+    }
   }
 }
 
-function resetLesson(){
-  stopAudio(false);$('#lesson-answers').disabled=true;
-  $('#lesson-feedback').className='lesson-feedback';$('#lesson-feedback').textContent='Listen first, then choose A or B.';
-  $$('.lesson-progress span').forEach((span,index)=>span.classList.toggle('active',index===0));
-  const receipt=$('#proof-receipt');
-  const takeaway=$('#proof-takeaway');
-  if(receipt) receipt.classList.remove('is-verified');
-  if(takeaway){
-    takeaway.innerHTML='<strong>Why scan by latitude?</strong> A single global average hides regional extremes—Arctic (60°–90°N) warming coverage surged from 1980 to 2024.';
+function showQuizAnswer(choice) {
+  const { years, color, type, evidence } = quizComparison;
+  const { rows, correct, choices } = evidence;
+  const descriptions = rows.map(({ id, a, b, change }) => {
+    const movement = change === 0 ? 'stayed the same' : `${change > 0 ? 'increased' : 'decreased'} by ${quizPoints(Math.abs(change))}`;
+    return `In the ${quizBandName(id).toLowerCase()}, the ${color}-colored share ${movement} from ${quizPercent(a)} in Frame A (${years[0]}) to ${quizPercent(b)} in Frame B (${years[1]}).`;
+  });
+
+  $$('#quiz-choices [data-answer]').forEach(button => {
+    button.setAttribute('aria-pressed', String(Number(button.dataset.answer) === choice));
+  });
+  const feedback = $('#lesson-feedback');
+  feedback.className = `lesson-feedback ${choice === correct ? 'correct' : 'incorrect'}`;
+  feedback.textContent = `${choice === correct ? 'Correct.' : 'Not quite.'} You picked ${choices[choice]}. Correct answer: ${choices[correct]}. ${descriptions.join(' ')}`;
+  feedback.hidden = false;
+  $('#proof-metric').textContent = `Share of valid map pixels in ${color} colors`;
+  $('#proof-values').innerHTML = rows.map(({ id, a, b, change }) => `
+    <p><strong>${quizBandName(id)} (${bands[id].range})</strong></p>
+    <div class="proof-shares">
+      <div><span>Frame A (${years[0]})</span><strong>${quizPercent(a)}</strong></div>
+      <div><span>Frame B (${years[1]})</span><strong>${quizPercent(b)}</strong></div>
+    </div>
+    <p>${type === 'decrease' ? 'Decrease' : type === 'change' || type === 'difference' ? 'Absolute change' : 'Difference'}: ${quizPoints(type === 'decrease' ? Math.max(0, -change) : Math.abs(change))}.</p>
+  `).join('');
+  $('#proof-takeaway').textContent = rows.length === 2
+    ? 'Switch latitude bands to highlight and replay each strip.'
+    : 'Compare the highlighted strips to see where these colors appear.';
+  $('#proof-receipt').hidden = false;
+}
+
+function answerLesson(choice) {
+  if (!quizComparison) return;
+  const { bandId, evidence } = quizComparison;
+  if (!quizAnswers[quizIndex]) {
+    quizAnswers[quizIndex] = { choice, bandId, correct: choice === evidence.correct };
+    $('#lesson-answers').disabled = true;
+    $('#quiz-next').hidden = false;
   }
+  showQuizAnswer(choice);
+  $('#lesson-feedback').scrollIntoView({ block: 'nearest' });
 }
 
 function copyLedger(){
@@ -593,8 +1006,8 @@ function bindEvents(){
   }, { passive: true });
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
-  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls
-  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio';
+  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle
+  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -624,6 +1037,7 @@ function bindEvents(){
     tabs[next].focus();
   }));
   $('#frame-image').addEventListener('error',()=>{
+    if(!isRegionalAvailable(currentPoint().year)) return;
     setStatus(`The NASA frame for ${currentPoint().year} could not be loaded. Retrying with 1980 reference frame.`);
     if ($('#frame-image').dataset.retried !== 'true') {
       $('#frame-image').dataset.retried = 'true';
@@ -635,17 +1049,55 @@ function bindEvents(){
   });
   $('#year-slider').addEventListener('input',event=>{stopAudio(false);updateYear(Number(event.target.value));});
   $('#year-slider').addEventListener('change',()=>playHistoryTone(currentPoint().value,.42));
+  $('#frame-year-select').addEventListener('change',event=>{
+    stopAudio(false);
+    const index=temperaturePoints.findIndex(point=>point.year===Number(event.target.value));
+    if(index>=0) updateYear(index);
+  });
+  if($('#frame-year-slider')){
+    $('#frame-year-slider').addEventListener('input',event=>{
+      stopAudio(false);
+      updateYear(Number(event.target.value));
+    });
+  }
+  if($('#frame-prev-year')){
+    $('#frame-prev-year').addEventListener('click',()=>{
+      stopAudio(false);
+      updateYear(state.yearIndex-1);
+    });
+  }
+  if($('#frame-next-year')){
+    $('#frame-next-year').addEventListener('click',()=>{
+      stopAudio(false);
+      updateYear(state.yearIndex+1);
+    });
+  }
   $('#previous-year').addEventListener('click',()=>{stopAudio(false);updateYear(state.yearIndex-1,{play:true});});
   $('#next-year').addEventListener('click',()=>{stopAudio(false);updateYear(state.yearIndex+1,{play:true});});
   $('#play-selected').addEventListener('click',()=>playHistoryTone(currentPoint().value,.6));
   $('#play-history').addEventListener('click',(event)=>{event.stopPropagation();playHistory();});
   $$('[data-band]').forEach(button=>button.addEventListener('click',()=>{stopAudio(false);if(state.mode!=='frame')setMode('frame');selectBand(Number(button.dataset.band),{showHighlight:true});notifyParentScan(true,Number(button.dataset.band));}));
-  if($('#flat-view')) $('#flat-view').addEventListener('click',()=>setEarthView('flat'));
+  if($('#flat-view')) $('#flat-view').addEventListener('click',(event)=>{event.stopPropagation();setEarthView('flat');});
+  if($('#temperature-view')) $('#temperature-view').addEventListener('click',(event)=>{event.stopPropagation();setTemperatureMode(!state.temperature);});
   $$('[data-legend]').forEach(button=>button.addEventListener('click',()=>playCategory(button.dataset.legend,1)));
   $('#scan-frame').addEventListener('click',scanFrame);$('#play-band').addEventListener('click',playSelectedBand);
   ['compare-year-a','compare-year-b','compare-band'].forEach(id=>$(`#${id}`).addEventListener('change',updateComparison));
   $('#compare-play').addEventListener('click',playComparison);
-  $('#lesson-listen').addEventListener('click',playLesson);$$('[data-answer]').forEach(button=>button.addEventListener('click',()=>answerLesson(button.dataset.answer)));$('#lesson-reset').addEventListener('click',resetLesson);
+  quizBand.addEventListener('change', updateQuiz);
+  quizPlayButtons.forEach(button => button.addEventListener('click', () => playQuiz(button.dataset.quizPlay)));
+  $('#quiz-choices').addEventListener('click', event => {
+    const button = event.target.closest('[data-answer]');
+    if (button) answerLesson(Number(button.dataset.answer));
+  });
+  $('#quiz-next').addEventListener('click', () => advanceQuiz(quizIndex));
+  $('#quiz-review-list').addEventListener('click', event => {
+    const button = event.target.closest('[data-quiz-review]');
+    if (!button) return;
+    quizReviewing = true;
+    openQuizQuestion(Number(button.dataset.quizReview));
+  });
+  $('#quiz-back').addEventListener('click', showQuizSummary);
+  $('#quiz-retake').addEventListener('click', startQuiz);
   $('#copy-ledger').addEventListener('click',copyLedger);
   $('#mute-toggle').addEventListener('click',async()=>{state.muted=!state.muted;stopAudio(false);if(await ensureAudio())masterGain.gain.value=state.muted?0:.72;$('#mute-toggle').setAttribute('aria-pressed',String(state.muted));$('#mute-toggle').setAttribute('aria-label',state.muted?'Turn audio on':'Mute audio');$('#mute-toggle span:last-child').textContent=state.muted?'Muted':'Audio on';});
 
@@ -686,3 +1138,4 @@ function initialize(){
 }
 
 initialize();
+

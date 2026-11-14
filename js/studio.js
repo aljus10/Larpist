@@ -587,6 +587,7 @@ const globeSphere = new THREE.Mesh(
   })
 );
 globeSphere.renderOrder = 1;
+globeSphere.material.opacity = 0;
 
 // Layer 3: Crisp vector country borders & coastlines shell
 const worldBordersTex = earthTexLoader.load('assets/world-borders-clean.svg');
@@ -1490,6 +1491,11 @@ window.addEventListener('message', (e) => {
     }
   } else if (e.data.type === 'MONITOR_YEAR_CHANGE' && e.data.year) {
     setGlobeYearTexture(e.data.year);
+  } else if (e.data.type === 'MONITOR_TEMPERATURE_MODE') {
+    globeSphere.material.opacity = e.data.enabled ? 0.70 : 0;
+    if (e.data.year) {
+      setGlobeYearTexture(e.data.year);
+    }
   } else if (e.data.type === 'MONITOR_SCAN_UPDATE') {
     if (e.data.year) {
       setGlobeYearTexture(e.data.year);
@@ -1531,15 +1537,14 @@ window.addEventListener('message', (e) => {
 // CARTESIA SKYLAR (FRIENDLY GUIDE) WELCOME GREETING & SUBTITLES
 // -------------------------------------------------------------
 const SKYLAR_WELCOME_TEXT =
-  "Hello, welcome to the EarthTune Studio. As you can learn here, our NASA Earth Information Center challenge turns global temperature records from 1980 to 2024 into sound and light. Feel free to wander, appreciate the studio, and explore the monitor and hologram globe at your own pace.";
+  "Welcome to EarthTune Studio! Feel free to wander around the room and inspect the 3D hologram globe. When you're ready, click the monitor desk on your left, and trigger the temperature button to load the planetary map and start your exploration.";
 
 // Exact waveform-aligned subtitle cues (measured from skylar-welcome.mp3 breath pauses)
 const SKYLAR_SUBTITLE_CUES = [
-  { start: 0.0, end: 2.62, text: 'Hello, welcome to the EarthTune Studio.' },
-  { start: 2.62, end: 6.55, text: 'As you can learn here, our NASA Earth Information Center challenge' },
-  { start: 6.55, end: 11.60, text: 'turns global temperature records from 1980 to 2024 into sound and light.' },
-  { start: 11.60, end: 14.12, text: 'Feel free to wander, appreciate the studio,' },
-  { start: 14.12, end: 17.55, text: 'and explore the monitor and hologram globe at your own pace.' }
+  { start: 0.0, end: 1.85, text: 'Welcome to EarthTune Studio!' },
+  { start: 1.85, end: 5.95, text: 'Feel free to wander around the room and inspect the 3D hologram globe.' },
+  { start: 5.95, end: 8.95, text: "When you're ready, click the monitor desk on your left," },
+  { start: 8.95, end: 13.40, text: 'and trigger the temperature button to load the planetary map and start your exploration.' }
 ];
 
 let skylarSpoken = false;
@@ -1599,43 +1604,97 @@ skylarAudio.addEventListener('ended', () => {
   hideSkylarSubtitle();
 });
 
+let unlockEventsBound = false;
+
+function removeUnlockListeners() {
+  const events = ['pointerdown', 'keydown', 'pointermove', 'mousemove', 'wheel', 'focus', 'touchstart'];
+  events.forEach(evt => {
+    window.removeEventListener(evt, autoPlayAttempt);
+    try {
+      monitorFrame.contentWindow?.removeEventListener(evt, autoPlayAttempt);
+    } catch (_) {}
+  });
+  unlockEventsBound = false;
+}
+
+function autoPlayAttempt() {
+  if (skylarSpoken) {
+    removeUnlockListeners();
+    return;
+  }
+  triggerSkylarGreeting();
+}
+
+function bindUnlockListeners() {
+  if (unlockEventsBound || skylarSpoken) return;
+  unlockEventsBound = true;
+  const events = ['pointerdown', 'keydown', 'pointermove', 'mousemove', 'wheel', 'focus', 'touchstart'];
+  events.forEach(evt => {
+    window.addEventListener(evt, autoPlayAttempt, { passive: true });
+    try {
+      monitorFrame.contentWindow?.addEventListener(evt, autoPlayAttempt, { passive: true });
+    } catch (_) {}
+  });
+}
+
 export function triggerSkylarGreeting() {
   if (skylarSpoken) return;
-  skylarSpoken = true;
-  announce(SKYLAR_WELCOME_TEXT);
 
-  try {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+  const tryPlay = () => {
+    if (skylarSpoken) return;
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (_) {}
+
+    skylarAudio.currentTime = 0;
+    const playPromise = skylarAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        skylarSpoken = true;
+        announce(SKYLAR_WELCOME_TEXT);
+        startSubtitleSyncLoop();
+        removeUnlockListeners();
+      }).catch(() => {
+        // Autoplay blocked by browser policy until mouse moves or focus shifts
+        skylarSpoken = false;
+        hideSkylarSubtitle();
+        bindUnlockListeners();
+      });
     }
-  } catch (_) {}
+  };
 
-  skylarAudio.currentTime = 0;
-  skylarAudio.play().then(() => {
-    startSubtitleSyncLoop();
-  }).catch(() => {
-    // If blocked by browser autoplay policy before user gesture, re-arm for first gesture
-    skylarSpoken = false;
-    hideSkylarSubtitle();
-  });
+  if (skylarAudio.readyState >= 2) {
+    tryPlay();
+  } else {
+    skylarAudio.addEventListener('canplay', tryPlay, { once: true });
+    skylarAudio.load();
+  }
 }
 
-// Attempt polite autoplay on load, and guarantee playback on first user interaction in studio or monitor
-if (document.readyState === 'complete') {
-  setTimeout(triggerSkylarGreeting, 450);
-} else {
-  window.addEventListener('load', () => {
-    setTimeout(triggerSkylarGreeting, 450);
+// Automatically start audio when the whole interface has finished loading
+function initAutoPlayback() {
+  skylarAudio.load();
+
+  if (document.readyState === 'complete') {
+    triggerSkylarGreeting();
+  } else {
+    window.addEventListener('load', () => {
+      triggerSkylarGreeting();
+    }, { once: true });
+  }
+
+  monitorFrame.addEventListener('load', () => {
+    triggerSkylarGreeting();
+    bindUnlockListeners();
   });
+
+  // Passive unlock listeners: moving cursor, scrolling or focus triggers audio without requiring a screen tap
+  bindUnlockListeners();
 }
-window.addEventListener('pointerdown', triggerSkylarGreeting);
-window.addEventListener('keydown', triggerSkylarGreeting);
-monitorFrame.addEventListener('load', () => {
-  try {
-    monitorFrame.contentWindow?.addEventListener('pointerdown', triggerSkylarGreeting);
-    monitorFrame.contentWindow?.addEventListener('keydown', triggerSkylarGreeting);
-  } catch (_) {}
-});
+
+initAutoPlayback();
 
 // Expose public API on window for external toggle buttons, dev tools, and extensions
 window.earthtoneStudio = {

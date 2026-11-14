@@ -2,7 +2,7 @@
 
 **Hear geographic patterns that a global average can hide.**
 
-**EarthTune Studio** is an interactive 3D Night Observatory and NASA Earth Information Center (EIC) sonification workbench built for the **NASA Space Apps Challenge — The Earth Information Jukebox**. It translates 45 years of NASA surface temperature anomaly visualizations (`1980–2024`) into deterministic, inspectable sound and synchronized 3D holographic visuals.
+**EarthTune Studio** is an interactive 3D Night Observatory and NASA Earth Information Center (EIC) sonification workbench built for the **NASA Space Apps Challenge — The Earth Information Jukebox**. It translates 46 years of NASA surface temperature anomaly visualizations (`1980–2025`) into deterministic, inspectable sound and synchronized 3D holographic visuals.
 
 ---
 
@@ -26,13 +26,13 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 1. **Interactive 3D Night Observatory (`index.html` & `js/studio.js`)**
    - **Left Workstation Desk:** Houses the live 16:9 **EarthTune Studio Monitor Workbench** bathed in warm-amber architectural downlighting.
-   - **Right Hologram Desk:** Projects a 3-layer **3D Hologram Earth Globe** (NASA Blue Marble base + dynamic 1980–2024 GISTEMP anomaly heatmaps + crisp vector political country borders) with full 2-axis drag inspection (horizontal spin + polar tilt) and synchronized 3D latitude scan rings.
-   - **Welcome Guide Narration:** Includes synchronized broadcast-style subtitles (`assets/audio/skylar-welcome.mp3`).
+   - **Right Hologram Desk:** Projects a 3-layer **3D Hologram Earth Globe** (NASA Blue Marble base + dynamic 1980–2025 GISTEMP anomaly heatmaps + crisp vector political country borders) with full 2-axis drag inspection (horizontal spin + polar tilt) and synchronized 3D latitude scan rings.
+   - **Welcome Guide Narration:** Powered by Cartesia Skylar (Friendly Guide) with automatic playback on interface load, ambient gesture unlocks, and synchronized broadcast-style subtitles (`assets/audio/skylar-welcome.mp3`).
 
 2. **Monitor Workbench (`monitor-workbench/`)**
-   - **`1 · History` (1980–2024):** Scrub or play through 45 years of annual global temperature anomalies (`+0.26 °C` in 1980 to `+1.28 °C` in 2024) mapped to pitch (`150–850 Hz`), synchronized live with the 3D Hologram Globe.
-   - **`2 · Frame Scan` (5 Latitude Bands):** Samples NASA SVS #5450 RGB pixels across five geographic bands (`Arctic 60°–90°N`, `N. Mid 30°–60°N`, `Tropics 30°S–30°N`, `S. Mid 30°–60°S`, `Antarctic 60°–90°S`) into **Cooler (`196–204 Hz`)**, **Baseline (`330 Hz`)**, and **Warmer (`540–660 Hz`)** category coverage.
-   - **`3 · Quiz & Proof`:** Interactive listening comprehension test comparing `1980` vs. `2024` Arctic frames, concluding with an **Explain-Back Proof Receipt** that documents the measured regional warming surge and method limitations.
+   - **`1 · History` (1980–2025):** Scrub or play through 46 years of annual global temperature anomalies (`+0.26 °C` in 1980 to `+1.19 °C` in 2025) mapped to pitch (`150–850 Hz`), synchronized live with the 3D Hologram Globe.
+   - **`2 · Frame Scan` (5 Latitude Bands & Frame Year Navigator):** Features a dedicated Frame Year Navigator (`←` / `→` steppers and direct jump select) and samples NASA SVS #5450 & 2025 EIC RGB pixels across five geographic bands (`Arctic 60°–90°N`, `N. Mid 30°–60°N`, `Tropics 30°S–30°N`, `S. Mid 30°–60°S`, `Antarctic 60°–90°S`) into **Cooler (`196–204 Hz`)**, **Baseline (`330 Hz`)**, and **Warmer (`540–660 Hz`)** category coverage.
+   - **`3 · Quiz & Proof`:** Interactive 10-question listening comprehension test with preset year pairs and latitude bands, concluding with an **Explain-Back Proof Receipt** that documents measured regional warming shares, differences, and method limitations.
    - **`2 · Compare A/B` & `3 · Method & Sources`:** Side-by-side acoustic and numerical comparison for any two years and latitude bands, plus full provenance and a copyable Live Frame Ledger.
 
 3. **Responsive Mobile Route (`≤ 760px`)**
@@ -42,7 +42,7 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 ## Scientific Scope & Limitations
 
-- **Playable Archive:** `1980–2024` (45 annual frames from NASA SVS #5450 / GISTEMP v4 relative to the `1951–1980` baseline).
+- **Playable Archive:** `1980–2025` (46 annual frames from NASA SVS #5450 / GISTEMP v4 relative to the `1951–1980` baseline).
 - **Designed Sonification:** Pixel color classification communicates visual category share (`Cooler`, `Baseline`, `Warmer`) within each latitude band rather than raw physical sensor inversion.
 
 ---
@@ -52,7 +52,7 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 - `index.html`, `css/studio.css`, `js/studio.js` — 3D Night Observatory room, camera controller, 3-layer Hologram Earth Globe, and responsive mobile dock.
 - `monitor-workbench/index.html`, `styles.css`, `app.js` — Embedded NASA EIC sonification workbench, pixel analyzer, Web Audio synthesizer, A/B comparator, and Quiz & Proof receipt.
 - `assets/models/studio_room.glb` — Custom-authored 3D studio architectural model.
-- `assets/eic/1980.webp` … `2024.webp` — NASA SVS #5450 global temperature anomaly frames.
+- `assets/eic/1980.webp` … `2025.webp` — NASA SVS #5450 and 2025 global temperature anomaly frames.
 - `assets/world-borders-clean.svg` — High-contrast equirectangular political country borders and coastlines overlay.
 - `tools/server.mjs` — Zero-dependency Node.js static HTTP server.
 

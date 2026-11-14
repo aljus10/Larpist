@@ -7,15 +7,28 @@
   <meta name="description" content="EarthTune Studio — Hear geographic patterns that a global average can hide. Interactive NASA Earth Information Center temperature sonification (1980–2024).">
   <title>EarthTune Studio — NASA Earth Information Sonification</title>
   <link rel="stylesheet" href="css/studio.css">
+  <link rel="preload" href="assets/earthtune-icon.png" as="image">
   <script src="vendor/three.min.js"></script>
   <script src="vendor/GLTFLoader.min.js"></script>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
   <a class="skip-link" id="skip-to-workbench" href="#mobile-workbench-dock">Skip to EarthTune Workbench</a>
+  <div class="studio-launch" id="studio-launch" aria-hidden="true">
+    <div class="studio-launch-backdrop"></div>
+    <div class="studio-launch-mark">
+      <img class="studio-launch-glow" src="assets/earthtune-icon.png" width="184" height="184" alt="">
+      <img src="assets/earthtune-icon.png" width="184" height="184" alt="">
+    </div>
+    <div class="studio-launch-caption">
+      <strong>EarthTune Studio</strong>
+      <span>NASA Space Apps Challenge</span>
+    </div>
+  </div>
   <main id="studio" aria-label="Interactive three-dimensional EarthTune Studio">
     <header class="studio-header" role="banner">
       <a class="wordmark" href="#studio" data-focus-target="overview" aria-label="EarthTune Studio Home">
+        <img class="wordmark-icon" src="assets/earthtune-icon.png" width="36" height="36" alt="">
         <span class="wordmark-title">EarthTune</span>
         <span class="wordmark-sub">STUDIO · NASA SPACE APPS</span>
         <span class="wordmark-mission">Hear geographic patterns that a global average can hide.</span>
@@ -114,6 +127,7 @@
   <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
   <noscript><p class="no-script">The 3D studio needs JavaScript. Enable it to explore the room.</p></noscript>
 
+  <script defer src="js/studio-launch.js"></script>
   <script type="module" src="js/studio.js"></script>
 </body>
 </html>

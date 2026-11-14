@@ -12,7 +12,7 @@
 
   <header class="site-header">
     <a class="brand" href="#workbench" data-section-target="workbench" aria-label="EarthTune Studio Monitor Workbench">
-      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <img class="brand-mark" src="../assets/earthtune-icon.png" width="36" height="36" alt="">
       <span class="brand-text">
         <strong>EarthTune Studio</strong>
         <small>NASA EIC · SVS 5450</small>
@@ -53,23 +53,28 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17v13h-17zM8 5.5v13m8-13v13M3.5 10h17m-17 4h17"/></svg>
               <span>Flat Map</span>
             </button>
+            <button id="temperature-view" type="button" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14.4V5a3 3 0 0 1 6 0v9.4a5 5 0 1 1-6 0ZM12 7v9"/></svg>
+              <span>Temperature</span>
+            </button>
           </div>
 
           <div class="toolbar-meta">
-            <button type="button" class="source-jump-pill" data-section-target="method" title="View NASA SVS 5450 source &amp; acoustic mapping rules">
-              <span>NASA SVS 5450 · Method ↗</span>
-            </button>
             <span class="frame-pill">
-              <strong id="frame-year">1980</strong> · #<span id="frame-index">594</span>
+              <strong id="frame-year">1980</strong><span class="frame-separator" aria-hidden="true">·</span><span id="frame-index">#594</span>
             </span>
             <span class="sr-only" id="frame-window">Running regional mean</span>
           </div>
         </div>
         <p id="view-description" class="sr-only">Flat view shows the complete source frame and all five latitude bands at once.</p>
 
-        <figure class="map-stage" id="map-stage" data-view="flat" aria-label="NASA global temperature anomaly map">
+        <figure class="map-stage" id="map-stage" data-view="flat" data-temperature="false" aria-label="NASA Blue Marble world map">
           <img class="map-base-earth" src="../assets/earth-blue-marble.jpg" alt="" aria-hidden="true">
           <img id="frame-image" src="../assets/eic/1980.webp" alt="NASA global temperature anomaly visualization for 1980">
+          <div class="regional-unavailable" id="regional-unavailable" role="status" aria-live="polite" hidden>
+            <strong>Regional map unavailable.</strong>
+            <span id="regional-unavailable-detail">Global annual values are available in History.</span>
+          </div>
           <img class="map-borders-overlay" src="../assets/world-borders-clean.svg" alt="" aria-hidden="true">
           <div class="latitude-bands" id="latitude-bands" aria-label="Geographic latitude bands">
             <button type="button" data-band="0"><span class="band-pill"><strong>Arctic</strong><small>60°–90°N</small></span></button>
@@ -99,7 +104,7 @@
               </div>
               <div class="readout-metrics">
                 <div class="metric-pill">
-                  <span>ANOMALY</span>
+                  <span>ANOMALY · VS. 1951–1980</span>
                   <strong id="history-value">+0.26 °C</strong>
                 </div>
                 <div class="metric-pill">
@@ -112,10 +117,10 @@
 
           <div class="slider-block">
             <label class="range-label" for="year-slider">
-              <span>1980 — 2024 RECORD</span>
+              <span>1980 — 2025 RECORD</span>
               <output id="year-output" for="year-slider">1980</output>
             </label>
-            <input id="year-slider" type="range" min="0" max="44" value="0" step="1" aria-valuetext="1980, plus 0.26 degrees Celsius">
+            <input id="year-slider" type="range" min="0" max="45" value="0" step="1" aria-valuetext="1980, plus 0.26 degrees Celsius">
           </div>
 
           <div class="transport">
@@ -146,10 +151,22 @@
             </button>
           </div>
 
-          <div class="selected-band" id="selected-band-summary">
-            <span>ACTIVE LATITUDE BAND</span>
-            <strong>Arctic · 60°–90°N</strong>
-            <p class="sr-only">Sampled image points classified.</p>
+          <div class="frame-context-row">
+            <div class="frame-year-control">
+              <div class="frame-year-label-row">
+                <span>FRAME YEAR</span>
+                <div class="frame-year-steppers">
+                  <button type="button" id="frame-prev-year" aria-label="Previous year" title="Previous year">←</button>
+                  <button type="button" id="frame-next-year" aria-label="Next year" title="Next year">→</button>
+                </div>
+              </div>
+              <select id="frame-year-select" aria-label="Select frame year"></select>
+            </div>
+            <div class="selected-band" id="selected-band-summary">
+              <span>ACTIVE LATITUDE BAND</span>
+              <strong>Arctic · 60°–90°N</strong>
+              <p class="sr-only">Sampled image points classified.</p>
+            </div>
           </div>
 
           <div class="category-bars" id="category-bars" aria-label="Selected region category coverage"></div>
@@ -164,25 +181,55 @@
           </div>
         </section>
 
-        <section class="mode-panel" id="learn-panel" role="tabpanel" aria-labelledby="learn-tab" hidden>
-          <div class="lesson-progress" aria-label="Lesson progress"><span class="active"></span><span></span><span></span></div>
-          <div id="lesson-content">
-            <h3>Which Arctic frame is warmer?</h3>
-            <button class="primary-button full-button" id="lesson-listen" type="button">▶ Listen: A (1980) vs B (2024)</button>
-            <fieldset id="lesson-answers" disabled>
-              <legend>Select the warmer frame:</legend>
-              <button type="button" data-answer="1980">A · 1980</button>
-              <button type="button" data-answer="2024">B · 2024</button>
-            </fieldset>
-            <div class="lesson-feedback" id="lesson-feedback" role="status">Listen first, then choose A or B.</div>
-          </div>
-          <div class="proof-receipt" id="proof-receipt">
-            <div class="proof-receipt-head">
-              <span>EXPLAIN-BACK PROOF · SVS 5450</span>
-              <button class="text-button" id="lesson-reset" type="button">Reset quiz</button>
+        <section class="mode-panel quiz-panel" id="learn-panel" role="tabpanel" aria-labelledby="learn-tab" tabindex="0" hidden>
+          <h3 id="quiz-progress" tabindex="-1" aria-live="polite">Loading quiz…</h3>
+          <section class="proof-receipt" id="quiz-summary" hidden>
+            <h4 id="quiz-score"></h4>
+            <p id="quiz-unavailable" hidden></p>
+            <ol id="quiz-review-list"></ol>
+            <button class="primary-button" id="quiz-retake" type="button">Retake quiz</button>
+          </section>
+          <div id="quiz-comparison" hidden>
+            <div class="quiz-controls">
+              <label>Latitude band <select id="quiz-band"></select></label>
+              <span id="quiz-practice" hidden>Practice · your first answer is saved</span>
             </div>
-            <p id="proof-takeaway"><strong>Why scan by latitude?</strong> A single global average hides regional extremes—Arctic (60°–90°N) warming coverage surged from 1980 to 2024.</p>
-            <small class="proof-rule"><strong>Rule:</strong> Cooler (196–204 Hz) · Baseline (330 Hz) · Warmer (540–660 Hz) · <em>Visual pixel share, not raw sensor inversion.</em></small>
+            <div class="quiz-maps">
+              <figure class="quiz-map" id="quiz-map-a">
+                <figcaption>Frame A · <span></span></figcaption>
+                <div class="quiz-map-image"><img src="../assets/eic/1980.webp" width="720" height="360" alt="1980 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+              </figure>
+              <figure class="quiz-map" id="quiz-map-b">
+                <figcaption>Frame B · <span></span></figcaption>
+                <div class="quiz-map-image"><img src="../assets/eic/2025.webp" width="720" height="360" alt="2025 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+              </figure>
+            </div>
+            <ul class="quiz-legend" aria-label="Shared map color legend">
+              <li><span class="legend-swatch cool"></span>Cooler</li>
+              <li><span class="legend-swatch reference"></span>Baseline</li>
+              <li><span class="legend-swatch warm"></span>Warmer</li>
+            </ul>
+            <div class="quiz-actions" role="group" aria-label="Listen to the selected latitude band">
+              <button class="secondary-button" type="button" data-quiz-play="a">Play A</button>
+              <button class="secondary-button" type="button" data-quiz-play="b">Play B</button>
+              <button class="primary-button" type="button" data-quiz-play="ab">Play A → B</button>
+            </div>
+            <p class="sr-only" id="quiz-playing" role="status"></p>
+            <fieldset id="lesson-answers">
+              <legend id="quiz-question"></legend>
+              <div id="quiz-choices"></div>
+            </fieldset>
+            <p class="lesson-feedback" id="lesson-feedback" role="status" hidden></p>
+            <div class="proof-receipt" id="proof-receipt" hidden>
+              <strong id="proof-metric"></strong>
+              <div id="proof-values"></div>
+              <p id="proof-takeaway"></p>
+              <small class="proof-rule">Masked and missing areas are excluded. Historical maps show running means. The 2025 map shows annual grid means.</small>
+            </div>
+          </div>
+          <div class="quiz-actions">
+            <button class="primary-button" id="quiz-next" type="button" hidden>Next question</button>
+            <button class="secondary-button" id="quiz-back" type="button" hidden>Back to results</button>
           </div>
         </section>
 
@@ -206,12 +253,12 @@
       <div class="compare-output" id="compare-output">
         <div><span>Frame A</span><strong>1980</strong><p>Loading…</p></div>
         <div class="difference-mark" aria-hidden="true">vs</div>
-        <div><span>Frame B</span><strong>2024</strong><p>Loading…</p></div>
+        <div><span>Frame B</span><strong>2025</strong><p>Loading…</p></div>
       </div>
     </section>
 
     <!-- VIEW 3: ABOUT THE CHALLENGE -->
-    <section class="monitor-section method-view" id="method" data-section="method" aria-labelledby="method-title" hidden>
+    <section class="monitor-section method-view" id="method" data-section="method" aria-labelledby="method-title" tabindex="0" hidden>
       <div class="method-top">
         <div class="challenge-header">
           <div>
@@ -221,10 +268,10 @@
           <a class="source-pill-link" href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA SVS 5450 ↗</a>
         </div>
         <p class="challenge-lead">
-          This interactive sonification turns 45 years of NASA Earth Information Center temperature frames (1980–2024) into deterministic sound—mapping global warming to pitch and scanning five latitude bands by color share.
+          This interactive sonification maps NASA global temperature history (1980–2025) to pitch, and uses regional temperature maps (1980–2025) for five latitude-band scans by color share.
         </p>
         <ol class="method-flow">
-          <li><strong>1. Frame</strong><span>NASA SVS image</span></li>
+          <li><strong>1. Frame</strong><span>Temperature map</span></li>
           <li><strong>2. Region</strong><span>5 latitude bands</span></li>
           <li><strong>3. Vector</strong><span>3 color shares</span></li>
           <li><strong>4. Sound</strong><span>Audible phrase</span></li>
@@ -234,14 +281,14 @@
 
       <div class="details-grid">
         <article>
-          <h3>NASA GISTEMP v4</h3>
-          <p>Global annual anomaly (°C) mapped to 150–850 Hz pitch.</p>
-          <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noreferrer">GISTEMP Data ↗</a>
+          <h3>NASA GISS GISTEMP v4</h3>
+          <a href="https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv" target="_blank" rel="noreferrer">GISTEMP v4 annual data (CSV) ↗</a>
+          <p>Global annual anomalies (1980–2025) are in °C relative to the 1951–1980 average. A temperature anomaly shows how much warmer or cooler a period was compared with the average from 1951 to 1980.</p>
         </article>
         <article>
-          <h3>NASA SVS 5450</h3>
-          <p>512×256 RGB pixels classified into Cooler, Baseline, and Warmer tones.</p>
+          <h3>Regional temperature maps</h3>
           <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">SVS Archive ↗</a>
+          <p>NASA’s Scientific Visualization Studio supplied the 1980–2024 running-mean maps. The 2025 map uses NASA GISS GISTEMP v4 annual grid-cell means. The latitude scan plays cooler, baseline, and warmer tones based on map colors.</p>
         </article>
         <article>
           <h3>Live Frame Ledger</h3>
@@ -253,6 +300,8 @@
   </main>
 
   <canvas id="analysis-canvas" width="1024" height="512" hidden></canvas>
+  <script src="../js/data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+
