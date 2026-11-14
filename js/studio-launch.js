@@ -36,7 +36,20 @@ async function playStudioLaunch() {
 
   try {
     if (motion.matches || ['desk', 'globe'].includes(new URLSearchParams(location.search).get('view'))) {
-      await animate(backdrop, [{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: easeOut }, 1);
+      const title = document.createElement('div');
+      title.className = 'studio-launch-caption';
+      title.style.top = '50%';
+      title.style.transform = 'translateY(-50%)';
+      title.style.opacity = '1';
+      const name = document.createElement('strong');
+      name.textContent = 'EarthTune Studio';
+      title.append(name);
+      backdrop.append(title);
+      await animate(backdrop, [
+        { opacity: 1, offset: 0 },
+        { opacity: 1, offset: 0.6, easing: easeOut },
+        { opacity: 0, offset: 1 }
+      ], { duration: 600 }, 1);
       return;
     }
 
