@@ -90,27 +90,27 @@ export class DeskWorkbenchBridge {
 
           <div class="chart-container" aria-label="Historical anomaly chart">
             <svg id="workbench-chart" viewBox="0 0 900 130" role="img" preserveAspectRatio="none">
-              <title>Global Temperature Anomaly 1980–2024</title>
+              <title>Global Temperature Anomaly 1980–2025</title>
             </svg>
             <div class="chart-axis-labels" aria-hidden="true">
               <span>1980</span>
               <span>1990</span>
               <span>2000</span>
               <span>2010</span>
-              <span>2024</span>
+              <span>2025</span>
             </div>
           </div>
 
           <div class="scrubber-row">
             <label for="year-slider" class="sr-only">Move through historical years</label>
-            <input type="range" id="year-slider" min="0" max="44" value="0" step="1" aria-label="Select year from 1980 to 2024">
+            <input type="range" id="year-slider" min="0" max="45" value="0" step="1" aria-label="Select year from 1980 to 2025">
           </div>
 
           <div class="transport-row">
             <button type="button" id="btn-prev-year" class="btn-secondary icon-btn" aria-label="Previous Year">←</button>
             <button type="button" id="btn-play-history" class="btn-primary">
               <span id="play-history-icon" aria-hidden="true">▶</span>
-              <span id="play-history-label">Play 1980–2024</span>
+              <span id="play-history-label">Play 1980–2025</span>
             </button>
             <button type="button" id="btn-next-year" class="btn-secondary icon-btn" aria-label="Next Year">→</button>
             <button type="button" id="btn-play-single" class="btn-secondary">Play Year Note</button>
@@ -368,7 +368,7 @@ export class DeskWorkbenchBridge {
           label.textContent = 'Stop History';
         } else {
           icon.textContent = '▶';
-          label.textContent = 'Play 1980–2024';
+          label.textContent = 'Play 1980–2025';
         }
       }
     });

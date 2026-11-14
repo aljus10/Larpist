@@ -482,7 +482,7 @@ function updateScreenTexture(time) {
   screenCtx.fillRect(0, 0, w, 38);
   screenCtx.fillStyle = '#4df3ff';
   screenCtx.font = 'bold 15px monospace';
-  screenCtx.fillText('NASA EARTH JUKEBOX · 1980–2024', 18, 24);
+  screenCtx.fillText('NASA EARTH JUKEBOX · 1980–2025', 18, 24);
 
   // Status indicator dot
   screenCtx.fillStyle = '#4df3ff';
@@ -494,7 +494,7 @@ function updateScreenTexture(time) {
   // Active track label
   screenCtx.fillStyle = '#8ea9b8';
   screenCtx.font = '12px sans-serif';
-  screenCtx.fillText('ACTIVE ANOMALY ARCHIVE — SVS 5450', 18, 66);
+  screenCtx.fillText('ACTIVE ANOMALY ARCHIVE · GISTEMP v4', 18, 66);
 
   screenCtx.fillStyle = '#ffffff';
   screenCtx.font = 'bold 20px monospace';
@@ -547,6 +547,7 @@ globeGroup.add(globeTiltGroup);
 
 const earthTexLoader = new THREE.TextureLoader();
 const globeTexCache = new Map();
+const LAST_REGIONAL_YEAR = 2025;
 
 // Layer 1: High-clarity NASA Blue Marble base Earth (continents, terrain relief, oceans)
 const blueMarbleTex = earthTexLoader.load('assets/earth-blue-marble.jpg');
@@ -566,7 +567,7 @@ const globeBaseSphere = new THREE.Mesh(
 );
 globeBaseSphere.renderOrder = 0;
 
-// Layer 2: Dynamic NASA GISS temperature anomaly heatmap layer (1980-2024)
+// Layer 2: Dynamic NASA GISS temperature anomaly heatmap layer (1980–2025)
 let activeEarthTex = earthTexLoader.load('assets/eic/1980.webp');
 activeEarthTex.colorSpace = THREE.SRGBColorSpace;
 activeEarthTex.anisotropy = 8;
@@ -613,12 +614,20 @@ globeSphere.rotation.y = -Math.PI / 2;
 globeTiltGroup.add(globeSphere);
 
 let currentGlobeYear = 1980;
-function setGlobeYearTexture(year) {
+function setGlobeYearTexture(year, available = true) {
   const numYear = Number(year);
-  if (!numYear || numYear === currentGlobeYear) return;
+  if (!Number.isInteger(numYear) || numYear < 1980) return;
+  const regionalAvailable = available && numYear <= LAST_REGIONAL_YEAR;
+  if (!regionalAvailable) {
+    globeSphere.material.visible = false;
+    currentGlobeYear = null;
+    return;
+  }
+  if (numYear === currentGlobeYear) return;
   currentGlobeYear = numYear;
   if (globeTexCache.has(numYear)) {
     const cachedTex = globeTexCache.get(numYear);
+    globeSphere.material.visible = true;
     globeSphere.material.map = cachedTex;
     globeSphere.material.emissiveMap = cachedTex;
     globeSphere.material.needsUpdate = true;
@@ -629,6 +638,7 @@ function setGlobeYearTexture(year) {
     tex.anisotropy = 8;
     globeTexCache.set(numYear, tex);
     if (currentGlobeYear === numYear) {
+      globeSphere.material.visible = true;
       globeSphere.material.map = tex;
       globeSphere.material.emissiveMap = tex;
       globeSphere.material.needsUpdate = true;
@@ -1489,12 +1499,31 @@ window.addEventListener('message', (e) => {
       focusTarget('desk');
     }
   } else if (e.data.type === 'MONITOR_YEAR_CHANGE' && e.data.year) {
-    setGlobeYearTexture(e.data.year);
-  } else if (e.data.type === 'MONITOR_SCAN_UPDATE') {
-    if (e.data.year) {
-      setGlobeYearTexture(e.data.year);
+    const year = Number(e.data.year);
+    const regionalAvailable = e.data.regionalAvailable !== false && year <= LAST_REGIONAL_YEAR;
+    setGlobeYearTexture(year, regionalAvailable);
+    if (!regionalAvailable) {
+      globeScanState.active = false;
+      globeScanState.bandIndex = -1;
+      globeScanGroup.visible = false;
+      globeBandMeshes.forEach((mesh) => {
+        mesh.visible = false;
+      });
     }
-    if (e.data.scanning && typeof e.data.latRatio === 'number') {
+  } else if (e.data.type === 'MONITOR_SCAN_UPDATE') {
+    const year = Number(e.data.year);
+    const regionalAvailable = e.data.regionalAvailable !== false && (!year || year <= LAST_REGIONAL_YEAR);
+    if (year) {
+      setGlobeYearTexture(year, regionalAvailable);
+    }
+    if (!regionalAvailable || !e.data.scanning || typeof e.data.latRatio !== 'number') {
+      globeScanState.active = false;
+      globeScanState.bandIndex = -1;
+      globeScanGroup.visible = false;
+      globeBandMeshes.forEach((mesh) => {
+        mesh.visible = false;
+      });
+    } else {
       const targetPhi = (Math.PI / 2) - (e.data.latRatio * Math.PI);
       if (!globeScanState.active) {
         globeScanState.currentPhi = targetPhi;
@@ -1506,13 +1535,6 @@ window.addEventListener('message', (e) => {
 
       globeBandMeshes.forEach((mesh, idx) => {
         mesh.visible = idx === e.data.bandIndex;
-      });
-    } else {
-      globeScanState.active = false;
-      globeScanState.bandIndex = -1;
-      globeScanGroup.visible = false;
-      globeBandMeshes.forEach((mesh) => {
-        mesh.visible = false;
       });
     }
   } else if (e.data.type === 'MONITOR_POINTER_MOVE' && !motionOff) {
