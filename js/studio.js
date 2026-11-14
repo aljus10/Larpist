@@ -798,6 +798,10 @@ export function closeTeamModal() {
 
 teamModalCloseBtn?.addEventListener('click', closeTeamModal);
 teamModalDoneBtn?.addEventListener('click', closeTeamModal);
+const headerTeamTrigger = $('#header-team-trigger');
+const footerTeamTrigger = $('#footer-team-trigger');
+headerTeamTrigger?.addEventListener('click', openTeamModal);
+footerTeamTrigger?.addEventListener('click', openTeamModal);
 teamModalEl?.addEventListener('click', (e) => {
   if (e.target === teamModalEl) {
     closeTeamModal();
@@ -1483,7 +1487,9 @@ render();
 // -------------------------------------------------------------
 window.addEventListener('message', (e) => {
   if (!e.data) return;
-  if (e.data.type === 'EXIT_COMPUTER_MODE') {
+  if (e.data.type === 'OPEN_TEAM_MODAL' || e.data.action === 'openTeamModal') {
+    openTeamModal();
+  } else if (e.data.type === 'EXIT_COMPUTER_MODE') {
     homeView();
   } else if (e.data.type === 'FOCUS_MONITOR') {
     if (S.focus !== 'desk') {

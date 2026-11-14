@@ -227,6 +227,36 @@ h1, h2, h3, p {
   color: #061018;
 }
 
+.action-pill.team-modal-trigger {
+  background: rgba(255, 208, 116, 0.12);
+  color: #ffd074;
+  border-color: rgba(255, 208, 116, 0.45);
+}
+
+.action-pill.team-modal-trigger:hover {
+  background: #ffd074;
+  color: #0c141d;
+  border-color: #ffd074;
+}
+
+.action-pill .team-q-badge {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffd074;
+  color: #0c141d;
+  font-weight: 900;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.action-pill.team-modal-trigger:hover .team-q-badge {
+  background: #0c141d;
+  color: #ffd074;
+}
+
 .sound-icon {
   width: 15px;
   height: 12px;

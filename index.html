@@ -33,6 +33,12 @@
         <span class="wordmark-sub">STUDIO · NASA SPACE APPS</span>
         <span class="wordmark-mission">Hear geographic patterns that a global average can hide.</span>
       </a>
+      <div class="studio-header-actions">
+        <button type="button" id="header-team-trigger" class="studio-team-btn" aria-label="EarthTune Studio Team Roster" title="View Team Roster">
+          <span class="team-q-badge" aria-hidden="true">?</span>
+          <span class="team-btn-label">ROSTER</span>
+        </button>
+      </div>
     </header>
 
     <div id="scene" aria-hidden="true"></div>
@@ -53,73 +59,199 @@
           <button type="button" data-focus-target="overview" aria-current="true">Studio Overview</button>
           <button type="button" data-focus-target="desk">1 · Scan &amp; Compare (Monitor)</button>
           <button type="button" data-focus-target="globe">2 · 3D Earth Globe</button>
+          <button type="button" id="footer-team-trigger" class="object-nav-team" aria-label="View Team Roster">? · Roster</button>
         </nav>
       </div>
       <div class="interaction-hint">
-        <span>Click Monitor to Learn, Scan &amp; Compare • Drag 3D Globe to inspect latitudes</span>
+        <span>Click Monitor to Learn, Scan &amp; Compare • Drag 3D Globe to inspect latitudes • Click ? for Roster</span>
       </div>
     </footer>
 
     <!-- Responsive 2D Workbench Host for Mobile / Compact Viewports (<= 760px) -->
     <section id="mobile-workbench-dock" class="mobile-workbench-dock" aria-label="EarthTune Challenge Workbench" hidden></section>
 
-    <!-- Editable Team & Mission Credits Modal (Triggered by clicking the 3D '? TEAM' Keycap on the Desk) -->
+    <!-- Editable Team & Mission Credits Modal (Triggered by '?' buttons or 3D '? TEAM' Keycap on the Desk) -->
     <div id="team-modal" class="studio-modal-overlay team-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="team-modal-title" hidden>
-      <div class="team-modal-card">
-        <header class="team-modal-header">
-          <div>
-            <span class="team-modal-kicker">NASA SPACE APPS CHALLENGE · THE EARTH INFORMATION JUKEBOX</span>
-            <h2 id="team-modal-title">EarthTune Studio Team</h2>
+      <div class="team-modal-card roster-modal-card">
+        <header class="roster-modal-header">
+          <div class="roster-modal-meta">
+            <div class="roster-badge-row">
+              <span class="roster-category-badge" aria-hidden="true">
+                <img src="assets/earthtune-icon.png" width="16" height="16" alt="">
+                <span>NASA SPACE APPS CHALLENGE</span>
+              </span>
+              <span class="roster-sub-kicker">THE EARTH INFORMATION JUKEBOX · NASA EIC SVS #5450</span>
+            </div>
+            <h2 id="team-modal-title" class="roster-title">EARTHTUNE STUDIO</h2>
+            <p class="roster-lead">
+              We built <strong>EarthTune Studio</strong> to turn 46 years of NASA Earth Information Center temperature records (1980–2025) into an accessible, geographic sound and 3D hologram experience.
+            </p>
           </div>
-          <button type="button" id="team-modal-close" class="team-modal-close" aria-label="Close team modal">✕</button>
+
+          <div class="roster-header-brand">
+            <!-- Dynamic Gold Geometric Emblem matching the Counter-Strike reference crest -->
+            <div class="roster-emblem-wrap" aria-hidden="true">
+              <svg class="roster-gold-emblem" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fff2c2"/>
+                    <stop offset="30%" stop-color="#e6be65"/>
+                    <stop offset="70%" stop-color="#af822b"/>
+                    <stop offset="100%" stop-color="#694b11"/>
+                  </linearGradient>
+                  <linearGradient id="goldGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#ffd57c"/>
+                    <stop offset="50%" stop-color="#c59938"/>
+                    <stop offset="100%" stop-color="#4d3509"/>
+                  </linearGradient>
+                  <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                  </filter>
+                </defs>
+                <polygon points="68,14 112,50 82,50 96,62 38,62 58,46 32,46" fill="url(#goldGrad1)" filter="url(#goldGlow)"/>
+                <polygon points="52,106 8,70 38,70 24,58 82,58 62,74 88,74" fill="url(#goldGrad2)" filter="url(#goldGlow)"/>
+              </svg>
+            </div>
+            <button type="button" id="team-modal-close" class="team-modal-close roster-close-btn" aria-label="Close roster modal">✕</button>
+          </div>
         </header>
 
-        <p class="team-modal-lead">
-          We built <strong>EarthTune Studio</strong> to turn 45 years of NASA Earth Information Center temperature records (1980–2024) into an accessible, geographic sound and 3D hologram experience.
-        </p>
+        <div class="roster-section-divider">
+          <h3 class="roster-section-label">ROSTER</h3>
+        </div>
 
-        <!-- EDITABLE TEAM MEMBER CARDS: Customize names, roles, and bios below -->
-        <div class="team-cards-grid">
-          <article class="team-member-card">
-            <div class="team-member-avatar" aria-hidden="true">01</div>
-            <div class="team-member-info">
-              <span class="team-member-role">PROJECT LEAD &amp; 3D ARCHITECT</span>
-              <h3 class="team-member-name">Justin</h3>
-              <p class="team-member-bio">3D studio environment, Blender spatial design, and interactive WebGL / CSS3D integration.</p>
+        <!-- 5 TEAM MEMBERS IN A CLEAN HORIZONTAL ROW (Matching reference image) -->
+        <div class="roster-cards-grid">
+          <!-- MEMBER 1 -->
+          <article class="roster-member-card">
+            <div class="roster-avatar-frame">
+              <div class="roster-avatar-swoop" aria-hidden="true">
+                <svg viewBox="0 0 160 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M-20,110 Q40,60 180,95 L180,120 Q30,85 -20,135 Z" fill="#e6be65" opacity="0.85"/>
+                  <path d="M-20,140 Q60,90 180,125 L180,142 Q50,110 -20,160 Z" fill="#9d7426" opacity="0.6"/>
+                </svg>
+              </div>
+              <div class="roster-avatar-figure" aria-hidden="true">
+                <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="38" r="22" fill="#1b2a3a" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M18,98 C18,72 32,64 50,64 C68,64 82,72 82,98 Z" fill="#15222f" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M38,36 Q50,46 62,36" stroke="#4df3ff" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="roster-card-num">01</span>
+            </div>
+            <div class="roster-card-body">
+              <h4 class="roster-member-name">JUSTIN</h4>
+              <span class="roster-member-role">PROJECT LEAD &amp; 3D</span>
+              <p class="roster-member-desc">3D studio environment, Blender spatial layout, WebGL &amp; CSS3D integration.</p>
             </div>
           </article>
 
-          <article class="team-member-card">
-            <div class="team-member-avatar" aria-hidden="true">02</div>
-            <div class="team-member-info">
-              <span class="team-member-role">AUDIO &amp; SONIFICATION ENGINEER</span>
-              <h3 class="team-member-name">Team Member 02</h3>
-              <p class="team-member-bio">Web Audio synthesizer, latitude-band acoustic mapping, and NASA SVS 5450 pixel analysis.</p>
+          <!-- MEMBER 2 -->
+          <article class="roster-member-card">
+            <div class="roster-avatar-frame">
+              <div class="roster-avatar-swoop" aria-hidden="true">
+                <svg viewBox="0 0 160 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M-20,110 Q40,60 180,95 L180,120 Q30,85 -20,135 Z" fill="#e6be65" opacity="0.85"/>
+                  <path d="M-20,140 Q60,90 180,125 L180,142 Q50,110 -20,160 Z" fill="#9d7426" opacity="0.6"/>
+                </svg>
+              </div>
+              <div class="roster-avatar-figure" aria-hidden="true">
+                <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="38" r="22" fill="#1b2a3a" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M18,98 C18,72 32,64 50,64 C68,64 82,72 82,98 Z" fill="#15222f" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M36,36 Q50,26 64,36" stroke="#ffd27d" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="roster-card-num">02</span>
+            </div>
+            <div class="roster-card-body">
+              <h4 class="roster-member-name">TEAM MEMBER 02</h4>
+              <span class="roster-member-role">AUDIO &amp; SONIFICATION</span>
+              <p class="roster-member-desc">Web Audio synthesizer, NASA SVS 5450 acoustic mapping, and harmonic tuning.</p>
             </div>
           </article>
 
-          <article class="team-member-card">
-            <div class="team-member-avatar" aria-hidden="true">03</div>
-            <div class="team-member-info">
-              <span class="team-member-role">FRONTEND &amp; ACCESSIBILITY LEAD</span>
-              <h3 class="team-member-name">Team Member 03</h3>
-              <p class="team-member-bio">Monitor Workbench UI, responsive mobile dock, keyboard navigation, and screen-reader support.</p>
+          <!-- MEMBER 3 -->
+          <article class="roster-member-card">
+            <div class="roster-avatar-frame">
+              <div class="roster-avatar-swoop" aria-hidden="true">
+                <svg viewBox="0 0 160 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M-20,110 Q40,60 180,95 L180,120 Q30,85 -20,135 Z" fill="#e6be65" opacity="0.85"/>
+                  <path d="M-20,140 Q60,90 180,125 L180,142 Q50,110 -20,160 Z" fill="#9d7426" opacity="0.6"/>
+                </svg>
+              </div>
+              <div class="roster-avatar-figure" aria-hidden="true">
+                <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="38" r="22" fill="#1b2a3a" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M18,98 C18,72 32,64 50,64 C68,64 82,72 82,98 Z" fill="#15222f" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M35,42 Q50,48 65,42" stroke="#4df3ff" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="roster-card-num">03</span>
+            </div>
+            <div class="roster-card-body">
+              <h4 class="roster-member-name">TEAM MEMBER 03</h4>
+              <span class="roster-member-role">FRONTEND &amp; UI</span>
+              <p class="roster-member-desc">Monitor Workbench UI, responsive mobile dock, and keyboard navigation.</p>
             </div>
           </article>
 
-          <article class="team-member-card">
-            <div class="team-member-avatar" aria-hidden="true">04</div>
-            <div class="team-member-info">
-              <span class="team-member-role">EARTH DATA &amp; RESEARCH</span>
-              <h3 class="team-member-name">Team Member 04</h3>
-              <p class="team-member-bio">NASA GISTEMP v4 data curation, verification ledger, and learning comprehension design.</p>
+          <!-- MEMBER 4 -->
+          <article class="roster-member-card">
+            <div class="roster-avatar-frame">
+              <div class="roster-avatar-swoop" aria-hidden="true">
+                <svg viewBox="0 0 160 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M-20,110 Q40,60 180,95 L180,120 Q30,85 -20,135 Z" fill="#e6be65" opacity="0.85"/>
+                  <path d="M-20,140 Q60,90 180,125 L180,142 Q50,110 -20,160 Z" fill="#9d7426" opacity="0.6"/>
+                </svg>
+              </div>
+              <div class="roster-avatar-figure" aria-hidden="true">
+                <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="38" r="22" fill="#1b2a3a" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M18,98 C18,72 32,64 50,64 C68,64 82,72 82,98 Z" fill="#15222f" stroke="#dcb059" stroke-width="2"/>
+                  <circle cx="50" cy="38" r="8" fill="#dcb059" opacity="0.4"/>
+                </svg>
+              </div>
+              <span class="roster-card-num">04</span>
+            </div>
+            <div class="roster-card-body">
+              <h4 class="roster-member-name">TEAM MEMBER 04</h4>
+              <span class="roster-member-role">EARTH DATA &amp; RESEARCH</span>
+              <p class="roster-member-desc">NASA GISTEMP v4 records, latitude band verification, and climate proof receipt.</p>
+            </div>
+          </article>
+
+          <!-- MEMBER 5 -->
+          <article class="roster-member-card">
+            <div class="roster-avatar-frame">
+              <div class="roster-avatar-swoop" aria-hidden="true">
+                <svg viewBox="0 0 160 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M-20,110 Q40,60 180,95 L180,120 Q30,85 -20,135 Z" fill="#e6be65" opacity="0.85"/>
+                  <path d="M-20,140 Q60,90 180,125 L180,142 Q50,110 -20,160 Z" fill="#9d7426" opacity="0.6"/>
+                </svg>
+              </div>
+              <div class="roster-avatar-figure" aria-hidden="true">
+                <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="38" r="22" fill="#1b2a3a" stroke="#dcb059" stroke-width="2"/>
+                  <path d="M18,98 C18,72 32,64 50,64 C68,64 82,72 82,98 Z" fill="#15222f" stroke="#dcb059" stroke-width="2"/>
+                  <polygon points="50,28 55,42 45,42" fill="#ffd27d"/>
+                </svg>
+              </div>
+              <span class="roster-card-num">05</span>
+            </div>
+            <div class="roster-card-body">
+              <h4 class="roster-member-name">TEAM MEMBER 05</h4>
+              <span class="roster-member-role">CHALLENGE STRATEGY</span>
+              <p class="roster-member-desc">Space Apps storytelling, listening comprehension curriculum, and quality assurance.</p>
             </div>
           </article>
         </div>
 
-        <footer class="team-modal-footer">
-          <span class="team-modal-source">Data: NASA SVS #5450 &amp; GISTEMP v4 (1980–2024)</span>
-          <button type="button" id="team-modal-done" class="team-modal-action">Back to Studio</button>
+        <footer class="roster-modal-footer">
+          <span class="roster-source-note">NASA SVS #5450 &amp; GISTEMP v4 (1980–2025) · NASA Space Apps Challenge</span>
+          <button type="button" id="team-modal-done" class="roster-action-btn">Back to Studio</button>
         </footer>
       </div>
     </div>

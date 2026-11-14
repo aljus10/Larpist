@@ -1007,7 +1007,7 @@ function bindEvents(){
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
   // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle
-  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  const noFocusSelector = '#workbench-team-trigger, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1111,6 +1111,18 @@ function bindEvents(){
   const exitBtn=$('#exit-to-studio');
   if(exitBtn){
     exitBtn.addEventListener('click',returnToStudio);
+  }
+
+  const teamBtn = $('#workbench-team-trigger');
+  if (teamBtn) {
+    teamBtn.addEventListener('click', () => {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'OPEN_TEAM_MODAL' }, '*');
+        if (window.parent.earthtoneStudio?.openTeamModal) {
+          window.parent.earthtoneStudio.openTeamModal();
+        }
+      }
+    });
   }
 
   window.addEventListener('message',event=>{
