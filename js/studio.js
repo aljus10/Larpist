@@ -783,6 +783,7 @@ const teamModalDoneBtn = $('#team-modal-done');
 
 export function openTeamModal() {
   if (!teamModalEl) return;
+  updateKeycapFloatingTag(false);
   teamModalEl.hidden = false;
   announce('Meet the Team panel opened.');
   setTimeout(() => {
@@ -798,8 +799,34 @@ export function closeTeamModal() {
 
 teamModalCloseBtn?.addEventListener('click', closeTeamModal);
 teamModalDoneBtn?.addEventListener('click', closeTeamModal);
-const headerTeamTrigger = $('#header-team-trigger');
-headerTeamTrigger?.addEventListener('click', openTeamModal);
+const keycapTagEl = $('#keycap-floating-tag');
+const tempKeycapVec = new THREE.Vector3();
+
+function updateKeycapFloatingTag(visible) {
+  if (!keycapTagEl) return;
+  if (!visible || !deskTeamKeycapObj || !camera || (teamModalEl && !teamModalEl.hidden)) {
+    keycapTagEl.style.display = 'none';
+    return;
+  }
+  deskTeamKeycapObj.getWorldPosition(tempKeycapVec);
+  tempKeycapVec.y += 0.07;
+  tempKeycapVec.project(camera);
+  if (tempKeycapVec.z > 1) {
+    keycapTagEl.style.display = 'none';
+    return;
+  }
+  const x = (tempKeycapVec.x * 0.5 + 0.5) * window.innerWidth;
+  const y = (-(tempKeycapVec.y * 0.5) + 0.5) * window.innerHeight;
+  keycapTagEl.style.left = `${x}px`;
+  keycapTagEl.style.top = `${y}px`;
+  keycapTagEl.style.display = 'flex';
+}
+
+keycapTagEl?.addEventListener('click', () => {
+  playRelaySwitchSound();
+  if (deskTeamKeycapObj) animateDeskPropPress(deskTeamKeycapObj, 0.04, 175);
+  openTeamModal();
+});
 teamModalEl?.addEventListener('click', (e) => {
   if (e.target === teamModalEl) {
     closeTeamModal();
@@ -1134,6 +1161,8 @@ if (renderer) {
     // 4. Cursor hover feedback
     if (!isDraggingGlobe) {
       const hits = raycastInteractive(e.clientX, e.clientY);
+      const isTeamHit = deskTeamKeycapObj && hits.some(h => isDescendantOf(h.object, deskTeamKeycapObj));
+      updateKeycapFloatingTag(isTeamHit);
       if (hits.length > 0) {
         const isGlobeHit = hits[0].object === globeSphere || hits[0].object.parent === globeSphere;
         canvas.style.cursor = isGlobeHit ? 'grab' : 'pointer';
