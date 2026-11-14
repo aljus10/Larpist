@@ -32,7 +32,6 @@ async function playStudioLaunch() {
   const options = { once: true, signal: controller.signal };
   window.addEventListener('pointerdown', cleanup, { ...options, capture: true });
   window.addEventListener('keydown', cleanup, { ...options, capture: true });
-  window.addEventListener('resize', cleanup, options);
   motion.addEventListener('change', cleanup, options);
 
   try {
@@ -58,12 +57,12 @@ async function playStudioLaunch() {
     caption.append(title, subtitle);
     overlay.append(mark, caption);
 
-    // Give the preloaded icon a short window to decode before starting the intro.
+    // Let slower local copies decode the artwork while keeping startup bounded.
     let decodeTimer;
     try {
       await Promise.race([
         icon.decode(),
-        new Promise((_, reject) => { decodeTimer = setTimeout(reject, 150); })
+        new Promise((_, reject) => { decodeTimer = setTimeout(reject, 1500); })
       ]);
     } finally {
       clearTimeout(decodeTimer);
@@ -93,6 +92,8 @@ async function playStudioLaunch() {
     const x = to.left + to.width / 2 - from.left - from.width / 2;
     const y = to.top + to.height / 2 - from.top - from.height / 2;
     const scale = to.width / from.width;
+    // The destination is measured after startup. Cancel only if it moves mid-flight.
+    window.addEventListener('resize', cleanup, options);
     await Promise.all([
       animate(mark, [
         { transform: 'translate(0, 0) scale(1)', opacity: 1 },
