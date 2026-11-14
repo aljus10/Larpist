@@ -586,17 +586,69 @@ function setMode(mode){
   }
 }
 
+const SECTION_METADATA = {
+  workbench: { num: '1', label: 'Atlas & Scan' },
+  compare: { num: '2', label: 'Compare A/B' },
+  method: { num: '3', label: 'Method & Sources' }
+};
+
+function openSectionDrawer() {
+  const toggle = $('#section-drawer-toggle');
+  const menu = $('#section-drawer-menu');
+  if (!toggle || !menu) return;
+  menu.classList.add('is-open');
+  toggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeSectionDrawer() {
+  const toggle = $('#section-drawer-toggle');
+  const menu = $('#section-drawer-menu');
+  if (!toggle || !menu) return;
+  menu.classList.remove('is-open');
+  toggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleSectionDrawer() {
+  const toggle = $('#section-drawer-toggle');
+  const isOpen = toggle?.getAttribute('aria-expanded') === 'true';
+  if (isOpen) {
+    closeSectionDrawer();
+  } else {
+    openSectionDrawer();
+  }
+}
+
 function setSection(sectionName){
   stopAudio(false);
   state.section = sectionName;
-  $$('[data-section]').forEach(sec => {
+  $('[data-section]').forEach(sec => {
     sec.hidden = sec.dataset.section !== sectionName;
   });
-  $$('.section-tab[data-section-target]').forEach(btn => {
+
+  // Update Drawer Header Pill
+  const meta = SECTION_METADATA[sectionName] || { num: '1', label: 'Atlas & Scan' };
+  const numEl = $('#drawer-active-num');
+  const labelEl = $('#drawer-active-label');
+  if (numEl) numEl.textContent = meta.num;
+  if (labelEl) labelEl.textContent = meta.label;
+
+  // Update Drawer Menu Items
+  $('.drawer-item[data-section-target]').forEach(item => {
+    const isSelected = item.dataset.sectionTarget === sectionName;
+    item.classList.toggle('active', isSelected);
+    item.setAttribute('aria-selected', String(isSelected));
+    const check = item.querySelector('.drawer-item-check');
+    if (check) check.textContent = isSelected ? '✓' : '';
+  });
+
+  // Legacy tab compatibility if any remain
+  $('.section-tab[data-section-target]').forEach(btn => {
     const isSelected = btn.dataset.sectionTarget === sectionName;
     btn.setAttribute('aria-selected', String(isSelected));
     btn.tabIndex = isSelected ? 0 : -1;
   });
+
+  closeSectionDrawer();
 }
 
 const yearOptions = points => points.map(({year}) => `<option value="${year}">${year}</option>`).join('');
@@ -1131,18 +1183,47 @@ function bindEvents(){
     });
   });
 
-  $$('.section-tabs [role="tab"]').forEach((tab, index, tabs) => {
-    tab.addEventListener('keydown', (event) => {
-      let next = index;
-      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-      else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
-      else if (event.key === 'Home') next = 0;
-      else if (event.key === 'End') next = tabs.length - 1;
-      else return;
+  const drawerToggle = $('#section-drawer-toggle');
+  if (drawerToggle) {
+    drawerToggle.addEventListener('click', (event) => {
       event.preventDefault();
-      tabs[next].click();
-      tabs[next].focus();
+      event.stopPropagation();
+      toggleSectionDrawer();
     });
+
+    drawerToggle.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openSectionDrawer();
+        const activeItem = $('.drawer-item.active') || $('.drawer-item');
+        activeItem?.focus();
+      }
+    });
+  }
+
+  $('.drawer-item').forEach((item, index, items) => {
+    item.addEventListener('keydown', (event) => {
+      let next = index;
+      if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+      else if (event.key === 'ArrowUp') next = (index - 1 + items.length) % items.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = items.length - 1;
+      else if (event.key === 'Escape') {
+        closeSectionDrawer();
+        drawerToggle?.focus();
+        return;
+      } else return;
+      event.preventDefault();
+      items[next].focus();
+    });
+  });
+
+  // Close drawer when clicking outside
+  document.addEventListener('click', (event) => {
+    const drawer = $('#section-drawer');
+    if (drawer && !drawer.contains(event.target)) {
+      closeSectionDrawer();
+    }
   });
 
   $$('[data-mode-target]').forEach(btn => {
@@ -1178,7 +1259,7 @@ function bindEvents(){
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
   // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle / Stories
-  const noFocusSelector = '#stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  const noFocusSelector = '#section-drawer, #section-drawer-toggle, #section-drawer-menu, .drawer-item, #stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1350,6 +1431,12 @@ function bindEvents(){
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      const drawerMenu = $('#section-drawer-menu');
+      if (drawerMenu && drawerMenu.classList.contains('is-open')) {
+        closeSectionDrawer();
+        $('#section-drawer-toggle')?.focus();
+        return;
+      }
       if (storiesModal && !storiesModal.hidden) {
         closeStories();
       } else if (activeStory) {

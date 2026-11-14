@@ -19,17 +19,32 @@
       </span>
     </a>
 
-    <nav class="section-tabs" role="tablist" aria-label="Monitor views">
-      <button type="button" role="tab" id="section-tab-workbench" class="section-tab" data-section-target="workbench" aria-controls="workbench" aria-selected="true" tabindex="0">
-        <span>1 · Atlas &amp; Scan</span>
+    <!-- Single Tap-to-Pull-Down Section Drawer -->
+    <div class="section-drawer" id="section-drawer">
+      <button type="button" class="section-drawer-toggle" id="section-drawer-toggle" aria-expanded="false" aria-haspopup="true" aria-label="Select workbench section">
+        <span class="drawer-active-num" id="drawer-active-num">1</span>
+        <span class="drawer-active-label" id="drawer-active-label">Atlas &amp; Scan</span>
+        <span class="drawer-caret" aria-hidden="true">▾</span>
       </button>
-      <button type="button" role="tab" id="section-tab-compare" class="section-tab" data-section-target="compare" aria-controls="compare" aria-selected="false" tabindex="-1">
-        <span>2 · Compare A/B</span>
-      </button>
-      <button type="button" role="tab" id="section-tab-method" class="section-tab" data-section-target="method" aria-controls="method" aria-selected="false" tabindex="-1">
-        <span>3 · Method &amp; Sources</span>
-      </button>
-    </nav>
+
+      <div class="section-drawer-menu" id="section-drawer-menu" role="menu" aria-label="Workbench sections">
+        <button type="button" role="menuitem" class="drawer-item active" data-section-target="workbench" id="section-tab-workbench" aria-selected="true">
+          <span class="drawer-item-num">1</span>
+          <span class="drawer-item-text">Atlas &amp; Scan</span>
+          <span class="drawer-item-check" aria-hidden="true">✓</span>
+        </button>
+        <button type="button" role="menuitem" class="drawer-item" data-section-target="compare" id="section-tab-compare" aria-selected="false">
+          <span class="drawer-item-num">2</span>
+          <span class="drawer-item-text">Compare A/B</span>
+          <span class="drawer-item-check" aria-hidden="true"></span>
+        </button>
+        <button type="button" role="menuitem" class="drawer-item" data-section-target="method" id="section-tab-method" aria-selected="false">
+          <span class="drawer-item-num">3</span>
+          <span class="drawer-item-text">Method &amp; Sources</span>
+          <span class="drawer-item-check" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
 
     <div class="header-actions">
       <button class="action-pill stories-btn" id="stories-open" type="button" aria-label="Open NASA Climate Stories" aria-haspopup="dialog" title="Curated NASA Climate Expeditions with Voice Narration">

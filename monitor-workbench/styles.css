@@ -159,34 +159,153 @@ h1, h2, h3, p {
 }
 
 /* Section View Switcher Tabs */
-.section-tabs {
-  display: flex;
+/* Pull-down Drawer for Sections (Replaces wide 1, 2, 3 tabs to fit right header buttons) */
+.section-drawer {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 0.38rem;
 }
 
-.section-tab {
-  border: 1.5px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  padding: 0.4rem 0.72rem;
-  border-radius: 9px;
-  font-size: 0.9rem;
+.section-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(14, 25, 36, 0.9);
+  border: 1.5px solid rgba(77, 243, 255, 0.4);
+  border-radius: 8px;
+  color: #ecf3f8;
+  font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
   white-space: nowrap;
-  transition: all 0.15s ease;
 }
 
-.section-tab:hover {
-  border-color: var(--ocean);
-  background: var(--ocean-soft);
+.section-drawer-toggle:hover,
+.section-drawer-toggle[aria-expanded="true"] {
+  background: rgba(77, 243, 255, 0.18);
+  border-color: var(--ocean, #4df3ff);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(77, 243, 255, 0.3);
 }
 
-.section-tab[aria-selected="true"] {
-  background: var(--ocean);
+.drawer-active-num {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ocean, #4df3ff);
   color: #061018;
-  border-color: var(--ocean);
+  font-weight: 900;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.drawer-active-label {
+  letter-spacing: -0.01em;
+}
+
+.drawer-caret {
+  font-size: 10px;
+  color: var(--ocean, #4df3ff);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: 2px;
+}
+
+.section-drawer-toggle[aria-expanded="true"] .drawer-caret {
+  transform: rotate(180deg);
+}
+
+/* Subtle Animated Pull-down Menu */
+.section-drawer-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 215px;
+  background: rgba(11, 23, 34, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(77, 243, 255, 0.4);
+  border-radius: 10px;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85), 0 0 24px rgba(77, 243, 255, 0.18);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  transform-origin: top left;
+}
+
+.section-drawer-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #c0d8e8;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.drawer-item:hover {
+  background: rgba(77, 243, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(77, 243, 255, 0.3);
+}
+
+.drawer-item.active {
+  background: rgba(77, 243, 255, 0.2);
+  color: var(--ocean, #4df3ff);
+  border-color: rgba(77, 243, 255, 0.45);
+}
+
+.drawer-item-num {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(130, 175, 210, 0.25);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 850;
+}
+
+.drawer-item.active .drawer-item-num {
+  background: var(--ocean, #4df3ff);
+  color: #061018;
+}
+
+.drawer-item-text {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.drawer-item-check {
+  font-size: 12px;
+  color: var(--ocean, #4df3ff);
+  font-weight: 900;
 }
 
 /* Right Header Action Pills */
