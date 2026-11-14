@@ -832,7 +832,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
     grid-template-columns: 1fr;
   }
   .roster-header-brand {
-    display: none;
+    display: flex;
+    justify-content: flex-end;
   }
 }
 .wordmark:has(.wordmark-icon) {
