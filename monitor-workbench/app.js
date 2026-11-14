@@ -46,6 +46,56 @@ function setStatus(message){
   if (el) el.textContent = message;
 }
 
+let lastAnnounceTime = 0;
+function announceA11y(message, { assertive = false, throttleMs = 0 } = {}) {
+  const now = performance.now();
+  if (throttleMs > 0 && now - lastAnnounceTime < throttleMs) return;
+  lastAnnounceTime = now;
+
+  const targetId = assertive ? '#a11y-alert-region' : '#a11y-live-region';
+  const el = $(targetId) || $('#live-status');
+  if (el) {
+    el.textContent = '';
+    setTimeout(() => {
+      el.textContent = message;
+    }, 40);
+  }
+}
+
+function setHighContrast(enabled, save = true) {
+  state.highContrast = Boolean(enabled);
+  document.documentElement.setAttribute('data-high-contrast', String(state.highContrast));
+  document.body.setAttribute('data-high-contrast', String(state.highContrast));
+  const btn = $('#contrast-toggle');
+  if (btn) {
+    btn.setAttribute('aria-pressed', String(state.highContrast));
+    btn.title = state.highContrast ? 'High Contrast Mode: Active (H)' : 'High Contrast Mode (H)';
+  }
+  if (save) {
+    try {
+      localStorage.setItem('earthtune-contrast', state.highContrast ? 'true' : 'false');
+    } catch {}
+  }
+  announceA11y(`High contrast mode ${state.highContrast ? 'enabled' : 'disabled'}.`);
+
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'TOGGLE_HIGH_CONTRAST',
+      enabled: state.highContrast
+    }, '*');
+  }
+}
+
+function initHighContrast() {
+  let saved = false;
+  try {
+    saved = localStorage.getItem('earthtune-contrast') === 'true';
+  } catch {}
+  if (saved) {
+    setHighContrast(true, false);
+  }
+}
+
 function notifyParentScan(scanning, bandIndex = state.bandIndex, customLatRatio = null) {
   if (window.parent && window.parent !== window) {
     const band = bands[bandIndex] || bands[0];
@@ -406,7 +456,7 @@ async function updateFrameAnalysis(){
   }
 }
 
-function updateYear(index,{play=false}={}){
+function updateYear(index,{play=false, announce=false, throttleMs=0}={}){
   state.yearIndex=clamp(index,0,temperaturePoints.length-1);
   const point=currentPoint();
   const regionalAvailable=isRegionalAvailable(point.year);
@@ -436,6 +486,13 @@ function updateYear(index,{play=false}={}){
   updateFrameAnalysis();
   renderGlobe();
   if(play) playHistoryTone(point.value);
+
+  if(announce){
+    const qual = point.value >= 0.5 ? 'significantly warmer than baseline' : (point.value > 0 ? 'warmer than baseline' : (point.value < 0 ? 'cooler than baseline' : 'near baseline normal'));
+    const freqHz = Math.round(historyFrequency(point.value));
+    const textValue = `${point.value >= 0 ? 'plus ' : 'minus '}${Math.abs(point.value).toFixed(2)} degrees Celsius`;
+    announceA11y(`Year ${point.year}: Anomaly ${textValue}, ${freqHz} Hertz, ${qual}.`, { throttleMs });
+  }
 
   // Sync the 3D studio globe in the parent window
   if(window.parent && window.parent !== window){
@@ -469,10 +526,14 @@ async function playHistory(){
     state.yearIndex = 0;
   }
 
+  announceA11y(`Playing climate history sonification from ${temperaturePoints[state.yearIndex].year} to 2025.`);
+
   for(let index=state.yearIndex;index<temperaturePoints.length;index++){
     if(token!==state.token) return;
-    updateYear(index);
-    await playHistoryTone(temperaturePoints[index].value, .30);
+    const pt = temperaturePoints[index];
+    const isMilestone = index === 0 || index === temperaturePoints.length - 1 || pt.year % 5 === 0 || pt.year === 2016 || pt.year === 2024;
+    updateYear(index, { announce: isMilestone, throttleMs: 1100 });
+    await playHistoryTone(pt.value, .30);
     await sleep(360);
   }
   if(token===state.token){
@@ -482,7 +543,7 @@ async function playHistory(){
   }
 }
 
-function selectBand(index,{focus=false, showHighlight=(state.mode==='frame')}={}){
+function selectBand(index,{focus=false, showHighlight=(state.mode==='frame'), announce=false}={}){
   if(!isRegionalAvailable(currentPoint().year)) return;
   state.bandIndex=clamp(index,0,bands.length-1);
   $$('[data-band]').forEach(button=>{
@@ -493,6 +554,9 @@ function selectBand(index,{focus=false, showHighlight=(state.mode==='frame')}={}
   if(focus) $$('#latitude-bands button')[state.bandIndex].focus();
   updateFrameAnalysis();
   renderGlobe();
+  if(announce){
+    announceA11y(`Selected latitude band: ${bands[state.bandIndex].name} (${bands[state.bandIndex].range}).`);
+  }
 }
 
 function renderBandVector(vector){
@@ -538,6 +602,7 @@ async function playSelectedBand(){
 
 async function scanFrame(){
   if(!isRegionalAvailable(currentPoint().year)){setStatus(`Frame Scan is available only through ${LAST_REGIONAL_YEAR}.`);return;}
+  announceA11y(`Scanning ${currentPoint().year} latitude bands from North to South.`);
   stopAudio(false);const token=state.token;document.body.classList.add('busy');
   if(state.view!=='flat') setEarthView('flat');
   $('#scan-rule').classList.add('scanning');
@@ -1259,7 +1324,7 @@ function bindEvents(){
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
   // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle / Stories
-  const noFocusSelector = '#section-drawer, #section-drawer-toggle, #section-drawer-menu, .drawer-item, #stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  const noFocusSelector = '#contrast-toggle, #section-drawer, #section-drawer-toggle, #section-drawer-menu, .drawer-item, #stories-open, #stories-close, #stories-modal, #story-hud, .story-ctrl-btn, .story-launch-btn, [data-launch], #help-open, #help-close, #help-modal, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1299,8 +1364,14 @@ function bindEvents(){
   $('#frame-image').addEventListener('load',()=>{
     delete $('#frame-image').dataset.retried;
   });
-  $('#year-slider').addEventListener('input',event=>{stopAudio(false);updateYear(Number(event.target.value));});
-  $('#year-slider').addEventListener('change',()=>playHistoryTone(currentPoint().value,.42));
+  $('#year-slider').addEventListener('input',event=>{
+    stopAudio(false);
+    updateYear(Number(event.target.value), { play: true, announce: true, throttleMs: 140 });
+  });
+  $('#year-slider').addEventListener('change',()=>{
+    playHistoryTone(currentPoint().value,.42);
+    updateYear(state.yearIndex, { announce: true });
+  });
   $('#frame-year-select').addEventListener('change',event=>{
     stopAudio(false);
     const index=temperaturePoints.findIndex(point=>point.year===Number(event.target.value));
@@ -1429,19 +1500,186 @@ function bindEvents(){
     });
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
+  // High Contrast toggle button
+  const contrastBtn = $('#contrast-toggle');
+  if (contrastBtn) {
+    contrastBtn.addEventListener('click', () => {
+      setHighContrast(!state.highContrast);
+    });
+  }
+
+  // COMPREHENSIVE KEYBOARD NAVIGATION & ASSISTIVE SHORTCUTS (WCAG 2.1 & Universal Design)
+  window.addEventListener('keydown', (event) => {
+    // Let native select, input, and textarea handle their own typing & arrow events
+    if (event.target && event.target.matches && event.target.matches('select, input[type="text"], textarea')) {
+      return;
+    }
+
+    const modalOpen = (storiesModal && !storiesModal.hidden) || (helpModal && !helpModal.hidden);
+
+    // Escape closes modals, drawers, stops audio, or returns to studio
+    if (event.key === 'Escape') {
       const drawerMenu = $('#section-drawer-menu');
       if (drawerMenu && drawerMenu.classList.contains('is-open')) {
         closeSectionDrawer();
         $('#section-drawer-toggle')?.focus();
+        event.preventDefault();
         return;
       }
       if (storiesModal && !storiesModal.hidden) {
         closeStories();
-      } else if (activeStory) {
-        stopClimateStory();
+        event.preventDefault();
+        return;
       }
+      if (helpModal && !helpModal.hidden) {
+        closeHelp();
+        event.preventDefault();
+        return;
+      }
+      if (activeStory) {
+        stopClimateStory();
+        event.preventDefault();
+        return;
+      }
+      stopAudio(false);
+      returnToStudio();
+      return;
+    }
+
+    // Do not trigger global workbench shortcuts when modal dialog is open
+    if (modalOpen) return;
+
+    // Space: Play / Pause sonification
+    if (event.key === ' ' || event.code === 'Space') {
+      // Don't hijack space if focused directly on a native button
+      if (event.target && event.target.tagName === 'BUTTON') {
+        return;
+      }
+      event.preventDefault();
+      if (activeStory) {
+        stopClimateStory();
+      } else if (state.playing) {
+        stopAudio();
+      } else {
+        playHistory();
+      }
+      return;
+    }
+
+    // ArrowLeft / ArrowRight: Scrub years
+    if (event.key === 'ArrowLeft') {
+      if (event.target && event.target.id === 'year-slider') return; // native range handles
+      event.preventDefault();
+      stopAudio(false);
+      const step = event.shiftKey ? 5 : 1;
+      updateYear(state.yearIndex - step, { play: true, announce: true });
+      return;
+    }
+    if (event.key === 'ArrowRight') {
+      if (event.target && event.target.id === 'year-slider') return; // native range handles
+      event.preventDefault();
+      stopAudio(false);
+      const step = event.shiftKey ? 5 : 1;
+      updateYear(state.yearIndex + step, { play: true, announce: true });
+      return;
+    }
+
+    // Home / End: First year (1980) or latest year (2025)
+    if (event.key === 'Home') {
+      event.preventDefault();
+      stopAudio(false);
+      updateYear(0, { play: true, announce: true });
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      stopAudio(false);
+      updateYear(temperaturePoints.length - 1, { play: true, announce: true });
+      return;
+    }
+
+    // ArrowUp / ArrowDown: Cycle latitude bands (North to South)
+    if (event.key === 'ArrowUp') {
+      if (event.target && event.target.matches('.drawer-item, select, input[type="range"]')) return;
+      event.preventDefault();
+      stopAudio(false);
+      if (state.mode !== 'frame') setMode('frame');
+      const nextBand = clamp(state.bandIndex - 1, 0, bands.length - 1);
+      selectBand(nextBand, { showHighlight: true, announce: true });
+      playSelectedBand();
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      if (event.target && event.target.matches('.drawer-item, select, input[type="range"]')) return;
+      event.preventDefault();
+      stopAudio(false);
+      if (state.mode !== 'frame') setMode('frame');
+      const nextBand = clamp(state.bandIndex + 1, 0, bands.length - 1);
+      selectBand(nextBand, { showHighlight: true, announce: true });
+      playSelectedBand();
+      return;
+    }
+
+    // Key 'p' / 'P': Play tone for active year or band
+    if (event.key === 'p' || event.key === 'P') {
+      event.preventDefault();
+      if (state.mode === 'frame') {
+        playSelectedBand();
+      } else {
+        playHistoryTone(currentPoint().value, 0.6);
+        const pt = currentPoint();
+        announceA11y(`Playing tone for year ${pt.year}: ${signed(pt.value)} degrees Celsius, ${Math.round(historyFrequency(pt.value))} Hertz.`);
+      }
+      return;
+    }
+
+    // Key 's' / 'S': Trigger North-to-South frame scan
+    if (event.key === 's' || event.key === 'S') {
+      event.preventDefault();
+      if (state.mode !== 'frame') setMode('frame');
+      scanFrame();
+      return;
+    }
+
+    // Key 'h' / 'H': Toggle High-Contrast Accessibility Mode
+    if (event.key === 'h' || event.key === 'H') {
+      event.preventDefault();
+      setHighContrast(!state.highContrast);
+      return;
+    }
+
+    // Key 'm' / 'M': Toggle Mute
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault();
+      $('#mute-toggle')?.click();
+      return;
+    }
+
+    // Keys 1, 2, 3: Jump between workbench sections
+    if (event.key === '1') {
+      event.preventDefault();
+      setSection('workbench');
+      announceA11y('Switched to Section 1: Atlas and Scan Workbench.');
+      return;
+    }
+    if (event.key === '2') {
+      event.preventDefault();
+      setSection('compare');
+      announceA11y('Switched to Section 2: Compare A/B.');
+      return;
+    }
+    if (event.key === '3') {
+      event.preventDefault();
+      setSection('method');
+      announceA11y('Switched to Section 3: Method and Sources.');
+      return;
+    }
+
+    // Key '?': Open Guide & Accessibility cheat sheet
+    if (event.key === '?' || (event.key === '/' && event.shiftKey)) {
+      event.preventDefault();
+      openHelp();
+      return;
     }
   });
 
@@ -1450,24 +1688,16 @@ function bindEvents(){
       stopAudio(false);
       stopClimateStory();
     } else if (event.data && event.data.type === 'FOCUS_FIRST_CONTROL') {
-      const firstControl = $('#play-history') || $('#section-tab-workbench');
+      const firstControl = $('#play-history') || $('#section-drawer-toggle');
       firstControl?.focus();
-    }
-  });
-
-  document.addEventListener('keydown',event=>{
-    if(event.key==='Escape'){
-      stopAudio(false);
-      stopClimateStory();
-      if(window.self!==window.top){
-        returnToStudio();
-      }
+    } else if (event.data && event.data.type === 'TOGGLE_HIGH_CONTRAST') {
+      setHighContrast(event.data.enabled, false);
     }
   });
 }
 
 function initialize(){
-  
+  initHighContrast();
   populateSelects();bindEvents();selectBand(0);updateYear(0);updateComparison();
   if(new URLSearchParams(location.search).get('view')==='globe')setEarthView('globe');
 }

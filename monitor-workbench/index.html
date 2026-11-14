@@ -47,19 +47,23 @@
     </div>
 
     <div class="header-actions">
+      <button class="action-pill contrast-btn" id="contrast-toggle" type="button" aria-pressed="false" aria-label="Toggle high contrast accessibility mode (Shortcut: H)" title="High Contrast Mode (H)">
+        <span class="contrast-icon" aria-hidden="true">◐</span>
+        <span>Contrast</span>
+      </button>
       <button class="action-pill stories-btn" id="stories-open" type="button" aria-label="Open NASA Climate Stories" aria-haspopup="dialog" title="Curated NASA Climate Expeditions with Voice Narration">
         <span class="stories-icon" aria-hidden="true">📖</span>
         <span>Stories</span>
       </button>
-      <button class="action-pill help-btn" id="help-open" type="button" aria-label="Open beginner help guide" aria-haspopup="dialog" title="Beginner Guide &amp; How EarthTune Works">
+      <button class="action-pill help-btn" id="help-open" type="button" aria-label="Open beginner and accessibility guide" aria-haspopup="dialog" title="Beginner &amp; Accessibility Guide (Shortcut: ?)">
         <span class="help-q-badge" aria-hidden="true">?</span>
         <span>Guide</span>
       </button>
-      <button class="action-pill" id="mute-toggle" type="button" aria-pressed="false" aria-label="Mute audio">
+      <button class="action-pill" id="mute-toggle" type="button" aria-pressed="false" aria-label="Mute audio (Shortcut: M)">
         <span class="sound-icon" aria-hidden="true"></span>
         <span>Audio on</span>
       </button>
-      <button class="action-pill exit-to-studio" id="exit-to-studio" type="button" aria-label="Return to 3D studio room">
+      <button class="action-pill exit-to-studio" id="exit-to-studio" type="button" aria-label="Return to 3D studio room (Shortcut: Esc)">
         <span aria-hidden="true">←</span>
         <span>Studio</span>
       </button>
@@ -260,6 +264,9 @@
         </section>
 
         <div class="live-status sr-only" id="live-status" role="status" aria-live="polite">Ready.</div>
+        <!-- Screen-Reader Live Regions for Assistive Technology & BVI Accessibility -->
+        <div id="a11y-live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true">EarthTune Studio ready. Press Space to play sonification, left and right arrows to scrub years, H for high contrast, and question mark for keyboard shortcuts.</div>
+        <div id="a11y-alert-region" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
       </aside>
     </section>
 
@@ -337,6 +344,54 @@
       </div>
 
       <div class="help-modal-body">
+        <!-- ASSISTIVE SONIFICATION & UNIVERSAL DESIGN (DEIA) -->
+        <section class="help-section help-section-a11y">
+          <div class="help-badge-row">
+            <span class="help-a11y-badge">♿ ASSISTIVE TECHNOLOGY &amp; UNIVERSAL DESIGN</span>
+            <span class="help-deia-badge">NASA DEIA INITIATIVE</span>
+          </div>
+          <h3 class="help-section-title">🔊 Climate Sonification for the Blind &amp; Low-Vision (BVI) Community</h3>
+          <p class="help-text">
+            Standard climate datasets rely heavily on visual heatmaps and 2D charts, creating a barrier for blind and visually impaired researchers, students, and citizens.
+            <strong>EarthTune Studio</strong> transforms NASA GISTEMP temperature anomalies into calibrated acoustic frequencies (180–850 Hz), enabling users to <strong>hear</strong> 46 years of planetary thermal change with spatial and chronological precision.
+          </p>
+          <div class="a11y-feature-grid">
+            <div class="a11y-feature-card">
+              <h4>🎯 Mathematical Pitch Sonification</h4>
+              <p>Frequency formula: <code>f = 180 × 4^((T + 0.8) / 3) Hz</code>. Baseline normal (0.0°C) sounds at <strong>330 Hz</strong>, cooler anomalies dip to <strong>180–300 Hz</strong>, and extreme warming climbs past <strong>680 Hz</strong>.</p>
+            </div>
+            <div class="a11y-feature-card">
+              <h4>🗣️ Screen-Reader Live Speech</h4>
+              <p>As years and latitude bands change, live ARIA regions announce the exact numerical anomaly, acoustic pitch in Hertz, and qualitative category in real time.</p>
+            </div>
+            <div class="a11y-feature-card">
+              <h4>◐ High-Contrast Assistive Mode</h4>
+              <p>WCAG AAA compliant pure black theme (<code>#000000</code>), 3px bright yellow focus rings, and explicit text tokens so data is never conveyed by color alone.</p>
+            </div>
+          </div>
+
+          <h4 class="help-subsection-title">⌨️ Keyboard Navigation &amp; Shortcuts Cheat Sheet</h4>
+          <table class="help-table a11y-shortcuts-table">
+            <thead>
+              <tr><th scope="col">Shortcut</th><th scope="col">Action</th><th scope="col">Assistive Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><kbd>Space</kbd></td><td>Play / Pause history</td><td>Start or stop continuous 1980–2025 acoustic sonification</td></tr>
+              <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Step 1 year backward / forward</td><td>Scrub through climate record with instant pitch &amp; spoken readout</td></tr>
+              <tr><td><kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>Jump 5 years</td><td>Rapid navigation across decades (e.g. 1980 → 1985 → 1990)</td></tr>
+              <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>First year (1980) / Latest (2025)</td><td>Instantly jump to baseline or modern peak era</td></tr>
+              <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Cycle latitude bands (N ⇄ S)</td><td>Move between Arctic, N. Mid, Tropics, S. Mid, and Antarctic</td></tr>
+              <tr><td><kbd>P</kbd></td><td>Play current tone / band</td><td>Acoustically re-sample the selected year or latitude band</td></tr>
+              <tr><td><kbd>S</kbd></td><td>Scan North to South</td><td>Trigger automatic multi-band latitude acoustic scan</td></tr>
+              <tr><td><kbd>H</kbd></td><td>Toggle High-Contrast mode</td><td>Switch to high-visibility pure black / yellow palette</td></tr>
+              <tr><td><kbd>M</kbd></td><td>Toggle Mute</td><td>Turn audio output on or off</td></tr>
+              <tr><td><kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd></td><td>Switch Workbench sections</td><td>Jump to 1 · Atlas, 2 · Compare A/B, or 3 · Method &amp; Sources</td></tr>
+              <tr><td><kbd>?</kbd></td><td>Open Guide &amp; Accessibility</td><td>View this Universal Design &amp; keyboard guide</td></tr>
+              <tr><td><kbd>Esc</kbd></td><td>Close dialog / Back to room</td><td>Dismiss open drawer or modal; exit to studio overview</td></tr>
+            </tbody>
+          </table>
+        </section>
+
         <!-- QUICK START -->
         <section class="help-section">
           <h3 class="help-section-title">⚡ 30-Second Quick Start</h3>
