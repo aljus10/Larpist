@@ -40,6 +40,21 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 ---
 
+## Meet the Team (NASA Space Apps Challenge)
+
+**EarthTune Studio** was created by a dedicated team of six:
+
+1. **Al Justin** — *3D & Web Development* (3D studio scene, spatial layout, and interactive web interface)
+2. **Harvey** — *Audio & Sonification* (Audio synthesizer and latitude temperature pitch mapping)
+3. **Roger** — *Frontend & UI* (Monitor workbench layout, responsive controls, and accessibility)
+4. **Micah** — *Earth Data & Research* (NASA temperature data review, latitude bands, and reference notes)
+5. **Kenneth** — *Quiz & Content* (Interactive listening questions, explanations, and learning flow)
+6. **Eddie** — *Testing & Coordination* (Application testing, design feedback, and team project support)
+
+*Explore the team roster directly in the 3D studio by clicking the desk keycap or via the workbench interface.*
+
+---
+
 ## Scientific Scope & Limitations
 
 - **Playable Archive:** `1980–2025` (46 annual frames from NASA SVS #5450 / GISTEMP v4 relative to the `1951–1980` baseline).
