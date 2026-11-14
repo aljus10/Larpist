@@ -29,7 +29,7 @@ November 14, 2026 · `mics-dev` · Base commit `53fbeaa`
 ## Studio launch follow-up
 
 - The main 3D studio now preloads the cyan globe icon and displays it in the header at 36 px on desktop and 30 px on mobile. The existing home link retains its accessible name.
-- On a normal launch, the icon and title appear over a backdrop, then the icon moves into the header. Reduced-motion preferences and direct desk or globe links use a short fade. Pointer or keyboard input, resizing, or an animation failure dismisses the intro and leaves the header usable.
+- On a normal launch, the icon pops in over a navy backdrop with a cyan glow. “EarthTune Studio” and “NASA Space Apps Challenge” appear beneath it, then fade as the icon lands on the measured header position. The final setting is 0.5× speed, about 2.4 seconds. Reduced-motion preferences and direct desk or globe links use a 180 ms fade. Pointer or keyboard input, resizing, or an animation failure dismisses the intro and leaves the header usable.
 - The follow-up changes `index.html` and `css/studio.css` and adds `js/studio-launch.js`. The six `jmo-skills` installed during the session are local Codex tools. EarthTune runs independently of them.
 - Local Edge checks verified the completed desktop animation, keyboard interruption at mobile width, reduced motion, and a direct globe link. Each case restored the visible header icon.
 
