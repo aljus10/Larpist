@@ -17,12 +17,27 @@ November 14, 2026 · `mics-dev` · Base commit `53fbeaa`
 - The first quiz answer counts toward the score. Immediate proof shows the correct answer, the measured warm- or cool-colored shares of valid pixels, and percentage-point differences or changes. Grading uses the same one-decimal precision as the displayed shares. Questions 9 and 10 include evidence for two bands. Results support review, replay and retake. Missing or invalid frames trigger nearby-year recovery when possible, and the results list unavailable questions.
 - **Header.** Replaced the striped mark with a transparent crop of the supplied cyan globe, headphones, and waveform icon. The workbench uses a 36 px desktop mark and 30 px mobile mark with preserved proportions and empty alt text beside the visible title. The brand link returns to the workbench. [Icon](../assets/earthtune-icon.png)
 
+## Team popup
+
+The EarthTune Studio Team popup uses the following roster. Each card contains only its badge, role, and full name.
+
+| Badge | Role | Name |
+| --- | --- | --- |
+| 01 | UI/UX Designer | Roger Santiago Aguilar |
+| 02 | Pitch Lead | John Kenneth Enaje |
+| 03 | Backend Developer | Al Justin Marollano |
+| 04 | DevOps | Micah Ella Masilang |
+| 05 | Frontend Developer | Harvey Mirabel |
+| 06 | Project Manager | Eddie Mendoza |
+
+The existing card styling, popup title, introduction, source footer, and navigation remain in place. The cards use two columns on desktop and one on mobile, with wrapping names. On short screens, the popup scrolls within the viewport to keep all six cards and **Back to Studio** reachable.
+
 ## Files changed
 
 | Area | Files |
 | --- | --- |
 | Data and assets | `data/GLB.Ts+dSST.csv`, `data/manifest.json`, `js/data.js`, `js/regional-data.js`, `assets/eic/2025.webp`, `assets/earthtune-icon.png` |
-| Studio and observatory | `index.html`, `observatory.html`, `js/studio.js`, `js/core/JukeboxStore.js`, `js/components/DeskWorkbenchBridge.js` |
+| Studio and observatory | `index.html`, `css/studio.css`, `observatory.html`, `js/studio.js`, `js/studio-launch.js`, `js/core/JukeboxStore.js`, `js/components/DeskWorkbenchBridge.js` |
 | Workbench | `monitor-workbench/app.js`, `monitor-workbench/index.html`, `monitor-workbench/styles.css` |
 | Documentation | `README.md`, `DESIGN.md`, `docs/DATA-NOTES.md`, this handoff |
 
@@ -43,6 +58,7 @@ From the repository root, run `node tools/server.mjs 8765` or launch `START-WIND
 - Session checks compared all 46 annual values with the NASA CSV. Local Edge smoke tests covered historical playback, 2024/2025 switching, the 2025 map and regional audio, and the embedded jukebox.
 - Workbench Edge checks covered source-link and ledger reachability at 960 × 540 and 390 × 844, Flat Map label fit from 280 to 960 px, and icon alignment and brand navigation on desktop and mobile.
 - After the source update, both SVS links and the Live Frame Ledger remained reachable at 960 × 540 and 390 × 844. NASA SVS 5603 returned HTTP 200.
+- Team popup checks in Edge verified all six names, roles, and badges, two columns at 960 × 650, and one column at 320 × 420. The mobile popup scrolled to the last card and **Back to Studio** closed the popup at both sizes.
 - Quiz checks covered desktop and mobile layouts, correct, incorrect and tied answers, playback, score review and practice, and missing-frame recovery.
 - Handoff verification reran `node --check` on the changed JavaScript files and local server, and `git diff --check`. The browser results above come from the implementation sessions.
 
