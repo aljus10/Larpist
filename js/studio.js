@@ -784,7 +784,7 @@ const teamModalDoneBtn = $('#team-modal-done');
 export function openTeamModal() {
   if (!teamModalEl) return;
   teamModalEl.hidden = false;
-  announce('EarthTune Studio Team modal opened.');
+  announce('Meet the Team panel opened.');
   setTimeout(() => {
     teamModalCloseBtn?.focus();
   }, 40);
@@ -793,15 +793,13 @@ export function openTeamModal() {
 export function closeTeamModal() {
   if (!teamModalEl || teamModalEl.hidden) return;
   teamModalEl.hidden = true;
-  announce('Closed Team modal. Returned to EarthTune Studio.');
+  announce('Closed Meet the Team panel. Returned to EarthTune Studio.');
 }
 
 teamModalCloseBtn?.addEventListener('click', closeTeamModal);
 teamModalDoneBtn?.addEventListener('click', closeTeamModal);
 const headerTeamTrigger = $('#header-team-trigger');
-const footerTeamTrigger = $('#footer-team-trigger');
 headerTeamTrigger?.addEventListener('click', openTeamModal);
-footerTeamTrigger?.addEventListener('click', openTeamModal);
 teamModalEl?.addEventListener('click', (e) => {
   if (e.target === teamModalEl) {
     closeTeamModal();
