@@ -877,8 +877,9 @@ body.compact-mobile .mobile-workbench-dock iframe {
   position: fixed;
   inset: 0;
   z-index: 200;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   animation: studioLaunchSafety 0.35s 8s forwards;
 }
@@ -896,50 +897,110 @@ body.compact-mobile .mobile-workbench-dock iframe {
   background: #101b27;
 }
 
-.studio-launch-mark {
+.studio-launch-stage {
   position: relative;
-  width: min(184px, 48vw);
-  aspect-ratio: 1;
-  opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(12px, 1.2vw, 18px);
+  z-index: 1;
+  will-change: transform;
 }
 
-.studio-launch-mark > img {
-  position: absolute;
-  inset: 0;
+.studio-launch-mark {
+  position: relative;
+  width: clamp(56px, 5.2vw, 76px);
+  height: clamp(56px, 5.2vw, 76px);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2;
+  opacity: 0;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.studio-launch-mark > img,
+.studio-launch-icon {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  display: block;
 }
 
-.studio-launch-glow {
+.studio-launch-wordmark {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.studio-launch-title-wrap,
+.studio-launch-sub-wrap {
+  display: block;
+  /* Leave paint room for serif ascenders/descenders inside the reveal mask. */
+  padding: 0.18em 0.12em 0.18em 0;
+  margin: -0.18em -0.12em -0.18em 0;
+  overflow: visible;
+  clip-path: inset(0 100% 0 0);
   opacity: 0;
-  filter: drop-shadow(0 0 15px #39deff);
+  will-change: clip-path, transform, opacity;
 }
 
-.studio-launch-caption {
-  position: absolute;
-  top: calc(50% + min(92px, 24vw));
-  inset-inline: 16px;
-  display: grid;
-  gap: 6px;
-  text-align: center;
-  opacity: 0;
+.studio-launch-title {
+  font: italic 400 clamp(38px, 3.2vw, 48px)/0.92 "Studio Serif", Georgia, serif;
+  letter-spacing: -0.01em;
+  color: #f7f2e7;
+  display: block;
+  white-space: nowrap;
 }
 
-.studio-launch-caption-centered {
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.studio-launch-caption strong {
-  font: 750 clamp(24px, 5vw, 38px)/1.1 Studio Sans, sans-serif;
-}
-
-.studio-launch-caption span {
-  color: var(--cyan);
-  font: 650 11px/1.3 Studio Sans, sans-serif;
-  letter-spacing: 0.18em;
+.studio-launch-sub {
+  font: 650 clamp(10.5px, 0.8vw, 12px)/1 "Studio Sans", sans-serif;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
+  color: #dfd4c2;
+  padding-left: 3px;
+  opacity: 0.92;
+  display: block;
+  white-space: nowrap;
+}
+
+.studio-launch-badge {
+  color: #dfd4c2;
+  opacity: 0.8;
+}
+
+@media (max-width: 760px) {
+  .studio-launch-mark {
+    width: 48px;
+    height: 48px;
+  }
+  .studio-launch-stage {
+    gap: 10px;
+  }
+  .studio-launch-title {
+    font-size: 28px;
+  }
+  .studio-launch-sub {
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-launch-mark,
+  .studio-launch-title-wrap,
+  .studio-launch-sub-wrap,
+  .studio-launch-stage {
+    will-change: auto;
+  }
 }
 
 @media (max-width: 760px) {
