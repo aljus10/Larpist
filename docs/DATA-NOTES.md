@@ -1,10 +1,10 @@
-# v0.1 data boundary
+# Temperature and rainfall data
 
-The UI overhaul preserves the inherited data engine. It is not a new scientific validation of those datasets.
+The 1980–2025 global temperature chart and jukebox use the annual January–December (`J-D`) column in NASA GISS GISTEMP v4’s [GLB.Ts+dSST.csv](https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv), downloaded November 14, 2026. The bundled CSV includes 1880–2025. Anomalies are in °C relative to the 1951–1980 average. The 2024 and 2025 values are +1.28 °C and +1.19 °C.
 
-Release inspection found identical SHA-256 hashes for the 2024, 2025 and 2026 temperature map files, and likewise for the rainfall map files. Decoding each regional binary grid also found that the 2025 and 2026 slices equal 2024 for both tracks. The playable `years` array is therefore limited to 1980–2024. Original bundled source files are preserved, including a global-temperature 2026 value marked preliminary in the inherited manifest. That value does not make the duplicated regional fields valid 2026 observations.
+The 1980–2024 maps are running-mean visuals from [NASA’s Scientific Visualization Studio](https://svs.gsfc.nasa.gov/5450/). The 2025 map and observatory grid use the 2° × 2° [NASA GISS land–ocean temperature grid](https://data.giss.nasa.gov/pub/gistemp/gistemp1200_GHCNv4_ERSSTv5.nc.gz), created November 10, 2026. Each cell is the mean of available 2025 monthly anomalies, with at least seven valid months required. The equirectangular map uses the workbench’s existing temperature palette and clips it at ±2 °C. The numeric grid retains the full anomaly range.
 
-The global GISTEMP snapshot and frame metadata are in `data/manifest.json`. Temperature map frames originate from NASA SVS 5450, a visualization of regional running means. The observatory calculates selected-area series from bundled regional grids. Those series require their own provenance and aggregation audit; they should not automatically be described as the original GISTEMP global annual table.
+Selected-area values use area-weighted grid cells. Historical regional grids have inherited provenance and aggregation. Running-mean maps and annual grid means describe different time windows, which can affect regional comparisons. The rainfall archive ends in 2024.
 
 Rainfall is converted to a designed noise/drop texture. Relative normalization can make small year-to-year differences sound subtle; a listening study and calibrated scale are still needed. Do not describe synthesized storms as actual observed local weather or as an audio recording.
 
