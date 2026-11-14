@@ -32,9 +32,9 @@
     </nav>
 
     <div class="header-actions">
-      <button class="action-pill team-modal-trigger" id="workbench-team-trigger" type="button" aria-label="Meet the Team" title="Meet the Team">
-        <span class="team-q-badge" aria-hidden="true">?</span>
-        <span>Meet the Team</span>
+      <button class="action-pill help-btn" id="help-open" type="button" aria-label="Open beginner help guide" aria-haspopup="dialog">
+        <span aria-hidden="true">?</span>
+        <span>Guide</span>
       </button>
       <button class="action-pill" id="mute-toggle" type="button" aria-pressed="false" aria-label="Mute audio">
         <span class="sound-icon" aria-hidden="true"></span>
@@ -57,10 +57,6 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h17v13h-17zM8 5.5v13m8-13v13M3.5 10h17m-17 4h17"/></svg>
               <span>Flat Map</span>
             </button>
-            <button id="temperature-view" type="button" aria-pressed="false">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14.4V5a3 3 0 0 1 6 0v9.4a5 5 0 1 1-6 0ZM12 7v9"/></svg>
-              <span>Temperature</span>
-            </button>
           </div>
 
           <div class="toolbar-meta">
@@ -75,7 +71,7 @@
         </div>
         <p id="view-description" class="sr-only">Flat view shows the complete source frame and all five latitude bands at once.</p>
 
-        <figure class="map-stage" id="map-stage" data-view="flat" data-temperature="false" aria-label="NASA Blue Marble world map">
+        <figure class="map-stage" id="map-stage" data-view="flat" aria-label="NASA global temperature anomaly map">
           <img class="map-base-earth" src="../assets/earth-blue-marble.jpg" alt="" aria-hidden="true">
           <img id="frame-image" src="../assets/eic/1980.webp" alt="NASA global temperature anomaly visualization for 1980">
           <div class="regional-unavailable" id="regional-unavailable" role="status" aria-live="polite" hidden>
@@ -111,7 +107,7 @@
               </div>
               <div class="readout-metrics">
                 <div class="metric-pill">
-                  <span>ANOMALY · VS. 1951–1980</span>
+                  <span title="Global surface temperature anomaly relative to the 1951–1980 average">ANOMALY</span>
                   <strong id="history-value">+0.26 °C</strong>
                 </div>
                 <div class="metric-pill">
@@ -158,22 +154,10 @@
             </button>
           </div>
 
-          <div class="frame-context-row">
-            <div class="frame-year-control">
-              <div class="frame-year-label-row">
-                <span>FRAME YEAR</span>
-                <div class="frame-year-steppers">
-                  <button type="button" id="frame-prev-year" aria-label="Previous year" title="Previous year">←</button>
-                  <button type="button" id="frame-next-year" aria-label="Next year" title="Next year">→</button>
-                </div>
-              </div>
-              <select id="frame-year-select" aria-label="Select frame year"></select>
-            </div>
-            <div class="selected-band" id="selected-band-summary">
-              <span>ACTIVE LATITUDE BAND</span>
-              <strong>Arctic · 60°–90°N</strong>
-              <p class="sr-only">Sampled image points classified.</p>
-            </div>
+          <div class="selected-band" id="selected-band-summary">
+            <span>ACTIVE LATITUDE BAND</span>
+            <strong>Arctic · 60°–90°N</strong>
+            <p class="sr-only">Sampled image points classified.</p>
           </div>
 
           <div class="category-bars" id="category-bars" aria-label="Selected region category coverage"></div>
@@ -204,11 +188,11 @@
             <div class="quiz-maps">
               <figure class="quiz-map" id="quiz-map-a">
                 <figcaption>Frame A · <span></span></figcaption>
-                <div class="quiz-map-image"><img src="../assets/eic/1980.webp" width="720" height="360" alt="1980 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+                <div class="quiz-map-image"><img width="720" height="360" alt=""><div class="quiz-band-highlight" aria-hidden="true"></div></div>
               </figure>
               <figure class="quiz-map" id="quiz-map-b">
                 <figcaption>Frame B · <span></span></figcaption>
-                <div class="quiz-map-image"><img src="../assets/eic/2025.webp" width="720" height="360" alt="2025 temperature anomaly map with the Arctic latitude band highlighted"><div class="quiz-band-highlight" aria-hidden="true"></div></div>
+                <div class="quiz-map-image"><img width="720" height="360" alt=""><div class="quiz-band-highlight" aria-hidden="true"></div></div>
               </figure>
             </div>
             <ul class="quiz-legend" aria-label="Shared map color legend">
@@ -308,6 +292,120 @@
       </div>
     </section>
   </main>
+
+  <div id="help-modal" class="help-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" hidden>
+    <div class="help-modal-box">
+      <div class="help-modal-header">
+        <h2 id="help-modal-title">🌍 Beginner's Guide to EarthTune Studio</h2>
+        <button class="help-close-btn" id="help-close" type="button" aria-label="Close guide">✕</button>
+      </div>
+
+      <div class="help-modal-body">
+        <!-- QUICK START -->
+        <section class="help-section">
+          <h3 class="help-section-title">⚡ 30-Second Quick Start</h3>
+          <ol class="help-steps">
+            <li><strong>Click the monitor</strong> on the left desk to zoom in</li>
+            <li>Go to <strong>Tab 2 · Frame Scan</strong> in the right panel</li>
+            <li>Click the 3 coloured sound buttons to <strong>learn the sounds</strong></li>
+            <li>Press <strong>▶ Scan N → S</strong> — hear each region of Earth</li>
+            <li>Check <strong>Tab 3 · Quiz &amp; Proof</strong> to test your ears!</li>
+          </ol>
+        </section>
+
+        <!-- THE ROOM -->
+        <section class="help-section">
+          <h3 class="help-section-title">🏛️ Navigating the 3D Room</h3>
+          <table class="help-table">
+            <tr><td>🖱️ Click the <strong>monitor</strong> (left desk)</td><td>Zoom into the control panel</td></tr>
+            <tr><td>🌍 Click the <strong>blue globe</strong> (right desk)</td><td>Zoom into the spinning Earth</td></tr>
+            <tr><td>⌨️ Press <strong>Escape</strong></td><td>Zoom back out to the full room</td></tr>
+            <tr><td>🖱️ Click &amp; drag the <strong>globe</strong></td><td>Spin it left or right</td></tr>
+            <tr><td>💡 Glowing ring on the globe</td><td>Shows which latitude band is being scanned</td></tr>
+          </table>
+        </section>
+
+        <!-- TOP MENU TABS -->
+        <section class="help-section">
+          <h3 class="help-section-title">📂 Top Menu Tabs</h3>
+          <table class="help-table">
+            <tr><td><strong>1 · Atlas &amp; Scan</strong></td><td>Main explorer — maps + sound controls <em>(start here!)</em></td></tr>
+            <tr><td><strong>2 · Compare A/B</strong></td><td>Listen to two different years side-by-side</td></tr>
+            <tr><td><strong>3 · Method &amp; Sources</strong></td><td>Where the data comes from and how sounds are made</td></tr>
+          </table>
+        </section>
+
+        <!-- MAP COLOURS -->
+        <section class="help-section">
+          <h3 class="help-section-title">🗺️ Map Colours</h3>
+          <table class="help-table">
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Blues &amp; purples</strong></td><td>That area was <strong>cooler</strong> than average</td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>White / pale yellow</strong></td><td>That area was <strong>about normal</strong></td></tr>
+            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Oranges &amp; reds</strong></td><td>That area was <strong>warmer</strong> than average</td></tr>
+          </table>
+        </section>
+
+        <!-- LATITUDE BANDS -->
+        <section class="help-section">
+          <h3 class="help-section-title">🌐 The 5 Latitude Bands (Strips on the Map)</h3>
+          <table class="help-table">
+            <tr><td><strong>Arctic</strong> 60°–90°N</td><td>Very top — North Pole area</td></tr>
+            <tr><td><strong>N. Mid</strong> 30°–60°N</td><td>Europe, USA, Canada, China</td></tr>
+            <tr><td><strong>Tropics</strong> 30°S–30°N</td><td>Africa, South America, Southeast Asia</td></tr>
+            <tr><td><strong>S. Mid</strong> 30°–60°S</td><td>Southern South America, South Africa</td></tr>
+            <tr><td><strong>Antarctic</strong> 60°–90°S</td><td>Very bottom — South Pole area</td></tr>
+          </table>
+          <p class="help-tip">💡 Click any band label on the map to hear just that region.</p>
+        </section>
+
+        <!-- THE 3 SOUNDS -->
+        <section class="help-section">
+          <h3 class="help-section-title">🎵 The 3 Sounds (Learn These First!)</h3>
+          <table class="help-table">
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Cool · 196 Hz</strong></td><td>Airy, low, watery tone → that region is <strong>cooler</strong></td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Baseline · 330 Hz</strong></td><td>Steady middle tone → that region is <strong>normal</strong></td></tr>
+            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Warm · 540 Hz</strong></td><td>Bright, urgent, plucked tone → that region is <strong>warmer</strong></td></tr>
+          </table>
+          <p class="help-tip">💡 Higher pitch = warmer temperature. Lower pitch = cooler temperature.</p>
+        </section>
+
+        <!-- CONTROLS -->
+        <section class="help-section">
+          <h3 class="help-section-title">🎛️ Control Panel (Right Side)</h3>
+          <table class="help-table">
+            <tr><td><strong>1 · History tab</strong></td><td>Hear all 46 years as a rising tone — press ▶ Play history</td></tr>
+            <tr><td><strong>ANOMALY +X.XX °C</strong></td><td>How much warmer/cooler than the 1951–1980 average</td></tr>
+            <tr><td><strong>PITCH XXX Hz</strong></td><td>The musical note being played right now</td></tr>
+            <tr><td><strong>Year slider</strong></td><td>Drag to jump to any year from 1980 to 2025</td></tr>
+            <tr><td><strong>← → arrows</strong></td><td>Go back or forward one year at a time</td></tr>
+            <tr><td><strong>♪ button</strong></td><td>Play just the current year's tone once</td></tr>
+            <tr><td><strong>2 · Frame Scan tab</strong></td><td>Hear each latitude band of the current year's map</td></tr>
+            <tr><td><strong>▶ Scan N → S</strong></td><td>Auto-scans all 5 bands top to bottom</td></tr>
+            <tr><td><strong>3 · Quiz &amp; Proof</strong></td><td>Test your ear — can you tell which year is warmer?</td></tr>
+          </table>
+        </section>
+
+        <!-- GLOSSARY -->
+        <section class="help-section">
+          <h3 class="help-section-title">📖 Word Glossary</h3>
+          <table class="help-table">
+            <tr><td><strong>EIC</strong></td><td>Earth Information Center — NASA's hub for Earth climate visuals</td></tr>
+            <tr><td><strong>SVS #5450 / 5603</strong></td><td>The annual NASA temperature visualizations we use</td></tr>
+            <tr><td><strong>GISTEMP v4</strong></td><td>NASA's global temperature dataset — the numbers behind the maps</td></tr>
+            <tr><td><strong>Anomaly</strong></td><td>How much hotter or cooler a year is vs the 1951–1980 normal</td></tr>
+            <tr><td><strong>Sonification</strong></td><td>Turning data into sound instead of a chart or graph</td></tr>
+            <tr><td><strong>Baseline</strong></td><td>The average temperature from 1951–1980 — our "zero" point</td></tr>
+            <tr><td><strong>Hz (Hertz)</strong></td><td>Unit for musical pitch. Higher Hz = higher note = warmer</td></tr>
+            <tr><td><strong>Pixel</strong></td><td>A tiny dot on the image — the app reads thousands to decide the sound</td></tr>
+            <tr><td><strong>A/B Compare</strong></td><td>Listening to two years back-to-back to hear the difference</td></tr>
+          </table>
+        </section>
+
+        <p class="help-footer">EarthTune Studio · The Larpers · NASA Space Apps 2026 · Legazpi City, Philippines<br>
+        Data: NASA SVS #5450 · GISTEMP v4 · 1951–1980 baseline</p>
+      </div>
+    </div>
+  </div>
 
   <canvas id="analysis-canvas" width="1024" height="512" hidden></canvas>
   <script src="../js/data.js"></script>
