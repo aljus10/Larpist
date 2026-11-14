@@ -489,12 +489,12 @@ body.compact-mobile .mobile-workbench-dock iframe {
   max-height: 90vh;
   overflow-y: auto;
   margin: auto;
-  background: linear-gradient(180deg, #0e1722 0%, #080e15 100%);
-  border: 1.5px solid rgba(220, 180, 90, 0.45);
-  border-top: 3.5px solid #ffd074;
+  background: linear-gradient(180deg, #101c28 0%, #0c141e 100%);
+  border: 1.5px solid rgba(77, 243, 255, 0.32);
+  border-top: 3.5px solid #4df3ff;
   border-radius: 14px;
   padding: 28px 32px;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.92), 0 0 50px rgba(220, 180, 90, 0.20);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.92), 0 0 50px rgba(77, 243, 255, 0.16);
   color: #f2f6fa;
   animation: zoomInCenter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -503,8 +503,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
   position: absolute;
   transform: translate(-50%, -100%);
   margin-top: -14px;
-  background: rgba(8, 14, 22, 0.94);
-  border: 1.5px solid #ffd074;
+  background: rgba(10, 18, 27, 0.94);
+  border: 1.5px solid #4df3ff;
   border-radius: 20px;
   padding: 5px 12px;
   color: #ffffff;
@@ -518,7 +518,7 @@ body.compact-mobile .mobile-workbench-dock iframe {
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 208, 116, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 16px rgba(77, 243, 255, 0.35);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: opacity 0.15s ease;
@@ -530,8 +530,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd074 0%, #c59736 100%);
-  color: #0c141d;
+  background: #4df3ff;
+  color: #061018;
   font-weight: 900;
   font-size: 10px;
 }
@@ -556,14 +556,14 @@ body.compact-mobile .mobile-workbench-dock iframe {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 208, 116, 0.12);
-  border: 1px solid rgba(255, 208, 116, 0.4);
+  background: rgba(77, 243, 255, 0.12);
+  border: 1px solid rgba(77, 243, 255, 0.45);
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #ffd074;
+  color: #4df3ff;
   text-transform: uppercase;
 }
 
@@ -571,7 +571,7 @@ body.compact-mobile .mobile-workbench-dock iframe {
   font-size: 10.5px;
   font-weight: 750;
   letter-spacing: 0.15em;
-  color: #d1ad65;
+  color: #8ccad8;
   text-transform: uppercase;
 }
 
@@ -600,12 +600,12 @@ body.compact-mobile .mobile-workbench-dock iframe {
 .roster-gold-emblem {
   width: 82px;
   height: 82px;
-  filter: drop-shadow(0 0 18px rgba(230, 190, 101, 0.35));
+  filter: drop-shadow(0 0 18px rgba(77, 243, 255, 0.40));
 }
 
 .roster-close-btn {
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(77, 243, 255, 0.25);
   color: #c8d6e0;
   width: 36px;
   height: 36px;
@@ -618,13 +618,13 @@ body.compact-mobile .mobile-workbench-dock iframe {
 }
 
 .roster-close-btn:hover {
-  background: #ffd074;
-  border-color: #ffd074;
-  color: #0c141d;
+  background: #4df3ff;
+  border-color: #4df3ff;
+  color: #061018;
 }
 
 .roster-section-divider {
-  border-top: 1px solid rgba(160, 185, 205, 0.15);
+  border-top: 1px solid rgba(130, 175, 210, 0.20);
   padding-top: 18px;
   margin-bottom: 16px;
 }
@@ -632,7 +632,7 @@ body.compact-mobile .mobile-workbench-dock iframe {
 .roster-section-label {
   font: 900 22px/1 Studio Sans, -apple-system, sans-serif;
   letter-spacing: 0.08em;
-  color: #ffffff;
+  color: #ecf3f8;
   text-transform: uppercase;
   margin: 0;
 }
@@ -645,8 +645,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
 }
 
 .roster-member-card {
-  background: rgba(12, 20, 30, 0.95);
-  border: 1px solid rgba(220, 180, 90, 0.35);
+  background: rgba(16, 27, 39, 0.95);
+  border: 1px solid rgba(130, 175, 210, 0.24);
   border-radius: 10px;
   padding: 10px;
   display: flex;
@@ -656,18 +656,18 @@ body.compact-mobile .mobile-workbench-dock iframe {
 }
 
 .roster-member-card:hover {
-  border-color: #ffd074;
+  border-color: #4df3ff;
   transform: translateY(-4px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7), 0 0 24px rgba(255, 208, 116, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.8), 0 0 26px rgba(77, 243, 255, 0.35);
 }
 
 .roster-avatar-frame {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1.12;
-  background: radial-gradient(circle at 50% 40%, #1a2a3c 0%, #091018 100%);
+  background: radial-gradient(circle at 50% 35%, #182a3a 0%, #0a131c 100%);
   border-radius: 7px;
-  border: 1px solid rgba(255, 208, 116, 0.25);
+  border: 1px solid rgba(77, 243, 255, 0.28);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -704,8 +704,8 @@ body.compact-mobile .mobile-workbench-dock iframe {
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #ffd074;
-  opacity: 0.7;
+  color: #4df3ff;
+  opacity: 0.85;
   z-index: 2;
 }
 
@@ -728,14 +728,14 @@ body.compact-mobile .mobile-workbench-dock iframe {
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #ffd074;
+  color: #4df3ff;
   text-transform: uppercase;
 }
 
 .roster-member-desc {
   font-size: 11px;
-  line-height: 1.4;
-  color: #8da2b3;
+  line-height: 1.45;
+  color: #9ab0c2;
   margin: 4px 0 0;
 }
 
@@ -744,7 +744,7 @@ body.compact-mobile .mobile-workbench-dock iframe {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border-top: 1px solid rgba(160, 185, 205, 0.15);
+  border-top: 1px solid rgba(130, 175, 210, 0.20);
   padding-top: 16px;
 }
 
@@ -754,19 +754,21 @@ body.compact-mobile .mobile-workbench-dock iframe {
 }
 
 .roster-action-btn {
-  background: linear-gradient(135deg, #ffd074 0%, #d49f39 100%);
-  color: #0c141d;
+  background: #4df3ff;
+  color: #061018;
   font-size: 12.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   padding: 9px 20px;
-  border-radius: 7px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: filter 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 16px rgba(77, 243, 255, 0.35);
+  transition: all 0.15s ease;
 }
 .roster-action-btn:hover {
-  filter: brightness(1.12);
+  background: #ffffff;
+  box-shadow: 0 6px 22px rgba(77, 243, 255, 0.6);
   transform: translateY(-1px);
 }
 

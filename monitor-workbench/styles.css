@@ -228,15 +228,15 @@ h1, h2, h3, p {
 }
 
 .action-pill.team-modal-trigger {
-  background: rgba(255, 208, 116, 0.12);
-  color: #ffd074;
-  border-color: rgba(255, 208, 116, 0.45);
+  background: rgba(77, 243, 255, 0.12);
+  color: var(--ocean);
+  border-color: rgba(77, 243, 255, 0.45);
 }
 
 .action-pill.team-modal-trigger:hover {
-  background: #ffd074;
-  color: #0c141d;
-  border-color: #ffd074;
+  background: var(--ocean);
+  color: #061018;
+  border-color: var(--ocean);
 }
 
 .action-pill .team-q-badge {
@@ -245,16 +245,16 @@ h1, h2, h3, p {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #ffd074;
-  color: #0c141d;
+  background: var(--ocean);
+  color: #061018;
   font-weight: 900;
   font-size: 11px;
   line-height: 1;
 }
 
 .action-pill.team-modal-trigger:hover .team-q-badge {
-  background: #0c141d;
-  color: #ffd074;
+  background: #061018;
+  color: var(--ocean);
 }
 
 .sound-icon {
