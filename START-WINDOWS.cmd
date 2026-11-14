@@ -7,5 +7,11 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+echo Starting EarthTune Studio...
+echo Your browser will open when the server is ready.
+echo Keep this window open while using the app. You can minimize it.
+echo.
 node tools\server.mjs
+echo.
+echo The server has stopped. See any error above.
 pause
