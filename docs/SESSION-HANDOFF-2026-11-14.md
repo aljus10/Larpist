@@ -11,7 +11,7 @@ November 14, 2026 · `mics-dev` · Base commit `53fbeaa`
 
 ## Workbench improvements
 
-- **Method & Sources.** Moved the NASA CSV and SVS Archive links directly below their card headings and made the embedded panel scrollable so the source text and Live Frame Ledger remain reachable.
+- **Method & Sources.** Moved the NASA links directly below their card headings and made the embedded panel scrollable. The panel now cites NASA Scientific Visualization Studio’s *Global Temperature Anomalies from 1880 to 2025* (SVS ID 5603). It distinguishes the visualization’s 1880–2025 span from EarthTune’s 1980–2025 range, credits NASA GISS GISTEMP v4 for numeric data, and preserves the provenance of the bundled maps. Methods explain the 1951–1980 baseline, annual anomalies mapped to pitch, and latitude-band color shares mapped to sound durations. [NASA SVS 5603](https://svs.gsfc.nasa.gov/5603/)
 - **Flat Map.** Preserved the button label and allowed the toolbar to wrap at narrow widths.
 - **Quiz & Proof.** The initial free-form A/B exercise evolved into ten questions with preset year pairs and latitude bands. Use **Compare A/B** for custom year-pair comparisons. Quiz maps highlight the active band, share a legend, and support Play A, Play B, and Play A → B. The active map is highlighted during playback.
 - The first quiz answer counts toward the score. Immediate proof shows the correct answer, the measured warm- or cool-colored shares of valid pixels, and percentage-point differences or changes. Grading uses the same one-decimal precision as the displayed shares. Questions 9 and 10 include evidence for two bands. Results support review, replay and retake. Missing or invalid frames trigger nearby-year recovery when possible, and the results list unavailable questions.
@@ -29,9 +29,12 @@ November 14, 2026 · `mics-dev` · Base commit `53fbeaa`
 ## Studio launch follow-up
 
 - The main 3D studio now preloads the cyan globe icon and displays it in the header at 36 px on desktop and 30 px on mobile. The existing home link retains its accessible name.
-- On a normal launch, the icon pops in over a navy backdrop with a cyan glow. “EarthTune Studio” and “NASA Space Apps Challenge” appear beneath it, then fade as the icon lands on the measured header position. The final setting is 0.5× speed, about 2.4 seconds. Reduced-motion preferences and direct desk or globe links use a 180 ms fade. Pointer or keyboard input, resizing, or an animation failure dismisses the intro and leaves the header usable.
+- On a normal launch, the icon pops in over a navy backdrop with a cyan glow. “EarthTune Studio” and “NASA Space Apps Challenge” appear beneath it, then fade as the icon lands on the measured header position. The final setting is 0.5× speed, about 2.4 seconds.
+- Local ZIP users reported that the intro sometimes failed to appear. The launch now allows up to 1.5 seconds for logo decoding and tolerates startup resizes until the logo begins moving toward the header. Pointer or keyboard input, a resize during that movement, or an animation failure dismisses the intro.
+- Reduced-motion preferences and direct desk or globe links use a stationary EarthTune Studio splash. It holds for 360 ms and fades over 240 ms.
 - The follow-up changes `index.html` and `css/studio.css` and adds `js/studio-launch.js`. The six `jmo-skills` installed during the session are local Codex tools. EarthTune runs independently of them.
 - Local Edge checks verified the completed desktop animation, keyboard interruption at mobile width, reduced motion, and a direct globe link. Each case restored the visible header icon.
+- Follow-up Edge checks simulated a 400 ms image decode and startup resize, and verified the reduced-motion splash timing. For local distribution, download a fresh ZIP from GitHub’s `main` branch, fully extract it, and run `START-WINDOWS.cmd` from the extracted folder.
 
 ## Run and verify
 
@@ -39,6 +42,7 @@ From the repository root, run `node tools/server.mjs 8765` or launch `START-WIND
 
 - Session checks compared all 46 annual values with the NASA CSV. Local Edge smoke tests covered historical playback, 2024/2025 switching, the 2025 map and regional audio, and the embedded jukebox.
 - Workbench Edge checks covered source-link and ledger reachability at 960 × 540 and 390 × 844, Flat Map label fit from 280 to 960 px, and icon alignment and brand navigation on desktop and mobile.
+- After the source update, both SVS links and the Live Frame Ledger remained reachable at 960 × 540 and 390 × 844. NASA SVS 5603 returned HTTP 200.
 - Quiz checks covered desktop and mobile layouts, correct, incorrect and tied answers, playback, score review and practice, and missing-frame recovery.
 - Handoff verification reran `node --check` on the changed JavaScript files and local server, and `git diff --check`. The browser results above come from the implementation sessions.
 

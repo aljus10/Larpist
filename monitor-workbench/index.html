@@ -252,10 +252,13 @@
             <span class="challenge-badge">CHALLENGE 1 · EARTHTUNE STUDIO</span>
             <h2 id="method-title">Hear time change. <em>Then hear where.</em></h2>
           </div>
-          <a class="source-pill-link" href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA SVS 5450 ↗</a>
+          <a class="source-pill-link" href="https://svs.gsfc.nasa.gov/5603/" target="_blank" rel="noreferrer">NASA SVS 5603 ↗</a>
         </div>
         <p class="challenge-lead">
-          This interactive sonification maps NASA global temperature history (1980–2025) to pitch, and uses regional temperature maps (1980–2025) for five latitude-band scans by color share.
+          NASA’s GISTEMP v4 analysis estimates changes in global surface temperature. A temperature anomaly shows how much warmer or cooler a period was compared with the 1951–1980 average.
+        </p>
+        <p class="challenge-lead">
+          EarthTune covers 1980–2025. History maps annual global anomalies in °C to pitch. Frame Scan samples valid map pixels in five latitude bands. The cooler, baseline, and warmer color shares determine how long each corresponding sound plays.
         </p>
         <ol class="method-flow">
           <li><strong>1. Frame</strong><span>Temperature map</span></li>
@@ -270,12 +273,12 @@
         <article>
           <h3>NASA GISS GISTEMP v4</h3>
           <a href="https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv" target="_blank" rel="noreferrer">GISTEMP v4 annual data (CSV) ↗</a>
-          <p>Global annual anomalies (1980–2025) are in °C relative to the 1951–1980 average. A temperature anomaly shows how much warmer or cooler a period was compared with the average from 1951 to 1980.</p>
+          <p>NASA GISS GISTEMP v4 provides the numerical temperature data. History uses the January–December global mean from the CSV. EarthTune’s 2025 map uses annual means from the NASA GISS 2° × 2° land–ocean grid.</p>
         </article>
         <article>
           <h3>Regional temperature maps</h3>
-          <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">SVS Archive ↗</a>
-          <p>NASA’s Scientific Visualization Studio supplied the 1980–2024 running-mean maps. The 2025 map uses NASA GISS GISTEMP v4 annual grid-cell means. The latitude scan plays cooler, baseline, and warmer tones based on map colors.</p>
+          <a href="https://svs.gsfc.nasa.gov/5603/" target="_blank" rel="noreferrer">Global Temperature Anomalies from 1880 to 2025 ↗</a>
+          <p>NASA Scientific Visualization Studio (SVS ID 5603). The reference visualization covers 1880–2025. EarthTune displays 1980–2025, with historical running-mean frames from the earlier SVS release and a 2025 map rendered from the GISTEMP grid. See the bundled <a href="../docs/DATA-NOTES.md">data notes</a> for map provenance.</p>
         </article>
         <article>
           <h3>Live Frame Ledger</h3>
