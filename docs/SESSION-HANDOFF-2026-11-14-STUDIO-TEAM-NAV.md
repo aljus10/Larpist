@@ -37,4 +37,4 @@ The implementation was committed locally as `64a54e1` (`feat: add Studio Team bu
 
 ## Git destination
 
-The requested destination is `https://github.com/aljus10/Larpist.git`. It is separate from the workspace's configured `origin` (`https://github.com/mixlowf1/Earth-Information-Jukebox-V2.git`). Publish this session on a new branch so the destination's existing `main` history remains untouched.
+The requested destination is `https://github.com/mixlowf1/Earth-Information-Jukebox-V2.git`, which is also the workspace's configured `origin`. The session feature and documentation commits are intended for the repository's `main` branch.
