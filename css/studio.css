@@ -60,6 +60,7 @@
 .room-caption{left:35%;bottom:72px}.room-caption h1{font-size:32px;margin-bottom:0}.room-caption br{display:none}.room-caption p{display:none}
 .jukebox-face .jukebox-name{font-size:19px}
 @media(min-width:1051px){.wordmark{margin-left:0}}
+@media(min-width:1051px) and (max-width:1300px){.studio-footer{flex-wrap:wrap;align-items:flex-end;gap:8px 14px}.object-nav{flex-wrap:wrap;gap:6px}.object-nav button{padding-inline:12px}.interaction-hint{display:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media(max-width:1050px){.interaction-hint{display:none}.room-caption{bottom:90px}.room-caption h1{font-size:28px}.room-caption p{font-size:11px}.wordmark{font-size:26px}}
 /* The same live surfaces reflow for touch. Never detach the observatory iframe. */
@@ -414,7 +415,7 @@ body.compact-mobile .object-nav {
 
 body.compact-mobile .object-nav {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
 }
 
