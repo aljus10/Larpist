@@ -1,4 +1,4 @@
-const temperaturePoints = EARTH_DATA.points.filter(point => point.year <= 2025).map((point, index) => ({
+const temperaturePoints = EARTH_DATA.points.map((point, index) => ({
   ...point,
   frame: point.year < 2025 ? 594 + index * 6 : null
 }));
@@ -21,7 +21,6 @@ const state = {
   mode:'history',
   section:'workbench',
   view:'flat',
-  temperature:false,
   globeRotation:0,
   muted:false,
   playing:false,
@@ -91,7 +90,7 @@ function setPlayHistoryButtonState(playing){
   const spans = btn.querySelectorAll('span');
   if (spans.length >= 2) {
     spans[0].textContent = playing ? '■' : '▶';
-    spans[1].textContent = playing ? ' Stop' : 'Play history';
+    spans[1].textContent = playing ? 'Stop' : 'Play history';
   } else {
     btn.textContent = playing ? '■ Stop' : '▶ Play history';
   }
@@ -283,29 +282,6 @@ function setEarthView(){
   if($('#flat-view')) $('#flat-view').setAttribute('aria-pressed','true');
 }
 
-function setTemperatureMode(enabled){
-  state.temperature=Boolean(enabled);
-  const mapStage=$('#map-stage');
-  const button=$('#temperature-view');
-  if(mapStage){
-    mapStage.dataset.temperature=String(state.temperature);
-    mapStage.setAttribute('aria-label',state.temperature
-      ? `NASA global temperature anomaly map for ${currentPoint().year}`
-      : 'NASA Blue Marble world map');
-  }
-  if(button) button.setAttribute('aria-pressed',String(state.temperature));
-  if(window.parent&&window.parent!==window){
-    window.parent.postMessage({
-      type:'MONITOR_TEMPERATURE_MODE',
-      enabled:state.temperature,
-      year:currentPoint().year
-    },'*');
-  }
-  setStatus(state.temperature
-    ? `Temperature layer on for ${currentPoint().year}.`
-    : 'Temperature layer off. Showing the natural-color Earth.');
-}
-
 function rotateGlobe(delta){state.globeRotation=(state.globeRotation+delta)%(Math.PI*2);scheduleGlobeRender();}
 
 async function analyzeYear(year){
@@ -427,11 +403,6 @@ function updateYear(index,{play=false}={}){
   $('#year-slider').value=state.yearIndex;
   $('#year-slider').setAttribute('aria-valuetext',`${point.year}, ${signed(point.value)} degrees Celsius relative to the 1951–1980 average`);
   $('#year-output').textContent=point.year;
-  if($('#frame-year-select')) $('#frame-year-select').value=String(point.year);
-  if($('#frame-year-slider')) {
-    $('#frame-year-slider').value=state.yearIndex;
-    $('#frame-year-slider').setAttribute('aria-valuetext',`${point.year}, ${signed(point.value)} degrees Celsius relative to the 1951–1980 average`);
-  }
   applyRegionalAvailability(point.year);
   updateFrameAnalysis();
   renderGlobe();
@@ -605,8 +576,6 @@ const bandOptions = () => bands.map((band,index) => `<option value="${index}">${
 function populateSelects(){
   const regionalPoints=temperaturePoints.filter(point=>isRegionalAvailable(point.year));
   const years=yearOptions(regionalPoints);
-  $('#frame-year-select').innerHTML=years;
-  if($('#frame-year-slider')) $('#frame-year-slider').max=String(regionalPoints.length-1);
   $('#compare-year-a').innerHTML=years;$('#compare-year-b').innerHTML=years;$('#compare-year-b').value=String(LAST_REGIONAL_YEAR);
   $('#compare-band').innerHTML=bandOptions();
   $('#year-slider').max=String(temperaturePoints.length-1);
@@ -1006,8 +975,8 @@ function bindEvents(){
   }, { passive: true });
 
   // Clicking on the monitor screen focuses the monitor (Telemetry Desk),
-  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls / temperature view toggle
-  const noFocusSelector = '#workbench-team-trigger, #play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, #frame-year-select, #frame-prev-year, #frame-next-year, .frame-context-row, .frame-year-control, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio, #temperature-view, #flat-view, .view-switch, [data-legend]';
+  // EXCEPT when clicking Play History / transport / scrubber / Frame Scan / audio controls
+  const noFocusSelector = '#play-history, .transport, #previous-year, #next-year, #play-selected, #year-slider, .slider-block, #scan-frame, #play-band, .frame-actions, #history-tab, #frame-tab, #learn-tab, [data-band], [data-mode-target], [data-section-target], #mute-toggle, #exit-to-studio';
   document.addEventListener('click', (event) => {
     if (!window.parent || window.parent === window) return;
     if (event.target.closest && event.target.closest(noFocusSelector)) {
@@ -1049,36 +1018,12 @@ function bindEvents(){
   });
   $('#year-slider').addEventListener('input',event=>{stopAudio(false);updateYear(Number(event.target.value));});
   $('#year-slider').addEventListener('change',()=>playHistoryTone(currentPoint().value,.42));
-  $('#frame-year-select').addEventListener('change',event=>{
-    stopAudio(false);
-    const index=temperaturePoints.findIndex(point=>point.year===Number(event.target.value));
-    if(index>=0) updateYear(index);
-  });
-  if($('#frame-year-slider')){
-    $('#frame-year-slider').addEventListener('input',event=>{
-      stopAudio(false);
-      updateYear(Number(event.target.value));
-    });
-  }
-  if($('#frame-prev-year')){
-    $('#frame-prev-year').addEventListener('click',()=>{
-      stopAudio(false);
-      updateYear(state.yearIndex-1);
-    });
-  }
-  if($('#frame-next-year')){
-    $('#frame-next-year').addEventListener('click',()=>{
-      stopAudio(false);
-      updateYear(state.yearIndex+1);
-    });
-  }
   $('#previous-year').addEventListener('click',()=>{stopAudio(false);updateYear(state.yearIndex-1,{play:true});});
   $('#next-year').addEventListener('click',()=>{stopAudio(false);updateYear(state.yearIndex+1,{play:true});});
   $('#play-selected').addEventListener('click',()=>playHistoryTone(currentPoint().value,.6));
   $('#play-history').addEventListener('click',(event)=>{event.stopPropagation();playHistory();});
   $$('[data-band]').forEach(button=>button.addEventListener('click',()=>{stopAudio(false);if(state.mode!=='frame')setMode('frame');selectBand(Number(button.dataset.band),{showHighlight:true});notifyParentScan(true,Number(button.dataset.band));}));
-  if($('#flat-view')) $('#flat-view').addEventListener('click',(event)=>{event.stopPropagation();setEarthView('flat');});
-  if($('#temperature-view')) $('#temperature-view').addEventListener('click',(event)=>{event.stopPropagation();setTemperatureMode(!state.temperature);});
+  if($('#flat-view')) $('#flat-view').addEventListener('click',()=>setEarthView('flat'));
   $$('[data-legend]').forEach(button=>button.addEventListener('click',()=>playCategory(button.dataset.legend,1)));
   $('#scan-frame').addEventListener('click',scanFrame);$('#play-band').addEventListener('click',playSelectedBand);
   ['compare-year-a','compare-year-b','compare-band'].forEach(id=>$(`#${id}`).addEventListener('change',updateComparison));
@@ -1113,18 +1058,6 @@ function bindEvents(){
     exitBtn.addEventListener('click',returnToStudio);
   }
 
-  const teamBtn = $('#workbench-team-trigger');
-  if (teamBtn) {
-    teamBtn.addEventListener('click', () => {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'OPEN_TEAM_MODAL' }, '*');
-        if (window.parent.earthtoneStudio?.openTeamModal) {
-          window.parent.earthtoneStudio.openTeamModal();
-        }
-      }
-    });
-  }
-
   window.addEventListener('message',event=>{
     if(event.data&&(event.data.type==='SUSPEND_WORKSTATION'||event.data.type==='PAUSE_ALL_AUDIO')){
       stopAudio(false);
@@ -1134,8 +1067,38 @@ function bindEvents(){
     }
   });
 
+  /* ---- Help Guide Modal ---- */
+  const helpModal = document.getElementById('help-modal');
+  const helpOpen  = document.getElementById('help-open');
+  const helpClose = document.getElementById('help-close');
+
+  function openHelp() {
+    if (helpModal) {
+      helpModal.hidden = false;
+      helpClose?.focus();
+    }
+  }
+
+  function closeHelp() {
+    if (helpModal) {
+      helpModal.hidden = true;
+      helpOpen?.focus();
+    }
+  }
+
+  if (helpOpen)  helpOpen.addEventListener('click', openHelp);
+  if (helpClose) helpClose.addEventListener('click', closeHelp);
+  if (helpModal) helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) closeHelp();
+  });
+
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
+      if (helpModal && !helpModal.hidden) {
+        event.stopPropagation();
+        closeHelp();
+        return;
+      }
       stopAudio(false);
       if(window.self!==window.top){
         returnToStudio();
