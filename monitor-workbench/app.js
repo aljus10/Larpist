@@ -621,7 +621,7 @@ function toggleSectionDrawer() {
 function setSection(sectionName){
   stopAudio(false);
   state.section = sectionName;
-  $('[data-section]').forEach(sec => {
+  $$('[data-section]').forEach(sec => {
     sec.hidden = sec.dataset.section !== sectionName;
   });
 
@@ -633,7 +633,7 @@ function setSection(sectionName){
   if (labelEl) labelEl.textContent = meta.label;
 
   // Update Drawer Menu Items
-  $('.drawer-item[data-section-target]').forEach(item => {
+  $$('.drawer-item[data-section-target]').forEach(item => {
     const isSelected = item.dataset.sectionTarget === sectionName;
     item.classList.toggle('active', isSelected);
     item.setAttribute('aria-selected', String(isSelected));
@@ -642,7 +642,7 @@ function setSection(sectionName){
   });
 
   // Legacy tab compatibility if any remain
-  $('.section-tab[data-section-target]').forEach(btn => {
+  $$('.section-tab[data-section-target]').forEach(btn => {
     const isSelected = btn.dataset.sectionTarget === sectionName;
     btn.setAttribute('aria-selected', String(isSelected));
     btn.tabIndex = isSelected ? 0 : -1;
@@ -1201,7 +1201,7 @@ function bindEvents(){
     });
   }
 
-  $('.drawer-item').forEach((item, index, items) => {
+  $$('.drawer-item').forEach((item, index, items) => {
     item.addEventListener('keydown', (event) => {
       let next = index;
       if (event.key === 'ArrowDown') next = (index + 1) % items.length;
