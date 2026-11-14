@@ -1445,7 +1445,7 @@
     <button type="button" class="er-spatial-badge" id="focus-badge" title="Click to reset back to Whole Earth view">
       <i data-lucide="crosshair" aria-hidden="true"></i>
       <span id="focus-name">Whole Earth</span>
-      <span class="er-badge-meta" id="focus-meta">· Global · 16200 cells</span>
+      <span class="er-badge-meta" id="focus-meta">· Global · NASA GISS GISTEMP v4</span>
     </button>
 
     <!-- Color Legend Card -->
@@ -1467,7 +1467,7 @@
           <span>12+ mm/d</span>
         </div>
       </div>
-      <p class="er-legend-note">Temperature reference: 1951–1980</p>
+      <p class="er-legend-note">Temperature anomalies in °C relative to the 1951–1980 average</p>
     </div>
   </div>
     <div class="er-top-tools-pod">
@@ -1574,7 +1574,7 @@
             <div class="er-findings-hero-card">
               <div class="er-findings-stat-row">
                 <span class="er-findings-jump-num" id="evidence-jump-val">+1.02 °C</span>
-                <span class="er-findings-jump-label">Selected-track change (1980 → 2024)</span>
+                <span class="er-findings-jump-label">Selected-track change (1980 → 2025)</span>
               </div>
               <p class="er-findings-summary" id="evidence-summary-text">
                 Calculating the selected series…
@@ -1603,8 +1603,8 @@
                 <span class="er-evidence-tag">Historical observation</span>
                 <span class="er-evidence-val" style="color:var(--er-hot)">+1.01 °C</span>
               </button>
-              <button type="button" class="er-evidence-item" data-jump="44">
-                <span class="er-evidence-yr">2024</span>
+              <button type="button" class="er-evidence-item" data-jump="45" data-final-year>
+                <span class="er-evidence-yr">2025</span>
                 <span class="er-evidence-tag">Latest playable year</span>
                 <span class="er-evidence-val" style="color:var(--er-extreme)">+1.28 °C</span>
               </button>
@@ -1619,7 +1619,7 @@
                 <span>Temperature maps &amp; measurements</span>
               </div>
               <p class="er-report-desc">
-                Temperature visuals come from NASA SVS 5450. Selected-area values are calculated from the bundled regional grids. The playable archive ends in 2024.
+                Whole Earth temperature values come from NASA GISS GISTEMP v4. Selected-area values use regional grids. Temperature runs through 2025 and rainfall through 2024.
               </p>
             </div>
 
@@ -1668,13 +1668,13 @@
 
       <!-- Spark Chart -->
       <div class="er-chart-container">
-        <svg class="er-chart" role="img" aria-label="Interactive annual observations from 1980 to 2024. Click any bar to hear."></svg>
+        <svg class="er-chart" role="img" aria-label="Interactive annual observations from 1980 to 2025. Click any bar to hear."></svg>
         <div class="er-chart-tooltip" hidden></div>
       </div>
 
       <!-- Scrubber Slider -->
       <div class="er-slider-box">
-        <input id="er-year-slider" class="er-scrubber" type="range" min="0" max="44" value="0" aria-label="Timeline scrubber 1980 to 2024">
+        <input id="er-year-slider" class="er-scrubber" type="range" min="0" max="45" value="0" aria-label="Timeline scrubber 1980 to 2025">
         <div class="er-hazard-ticks" id="er-hazard-ticks" aria-hidden="true"></div>
         <div class="er-milestones" aria-hidden="true">
           <span>1980</span>
@@ -1682,7 +1682,7 @@
           <span>2000</span>
           <span>2010</span>
           <span>2020</span>
-          <span>2024</span>
+          <span id="er-timeline-end">2025</span>
         </div>
       </div>
 
@@ -1700,16 +1700,16 @@
         <i data-lucide="volume-2" aria-hidden="true"></i>
         <span class="mute-status-text">Audio On</span>
       </button>
-        <button class="primary er-play-btn-large" type="button" data-action="play-start" aria-label="Play timeline sequence from 1980 to 2024">
+        <button class="primary er-play-btn-large" type="button" data-action="play-start" aria-label="Play timeline sequence from 1980 to 2025">
           <i data-lucide="play" class="er-opt-play-icon" aria-hidden="true"></i>
-          <span class="play-btn-text">Play (1980–2024)</span>
+          <span class="play-btn-text">Play (1980–2025)</span>
         </button>
 
         <button type="button" data-action="restart" aria-label="Reset timeline to 1980" title="Reset timeline to 1980">
           <i data-lucide="rotate-ccw" aria-hidden="true"></i> 1980
         </button>
 
-        <button type="button" data-action="compare" aria-label="Compare 1980 vs 2024">
+        <button type="button" data-action="compare" aria-label="Compare 1980 vs 2025">
           <i data-lucide="git-compare" aria-hidden="true"></i> Compare
         </button>
 
@@ -1792,12 +1792,13 @@
       </div>
       <div class="er-modal-body">
         <h3>Temperature: maps and values</h3>
-        <p>The bundled <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA SVS temperature maps</a> show regional running means. The project also includes a <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noreferrer">GISTEMP v4</a> global snapshot and source metadata. The interactive series is calculated from bundled regional grids; it must not be confused with an individual map pixel or automatically equated to the global annual table.</p>
+        <p>A temperature anomaly shows how much warmer or cooler a period was compared with the average from 1951 to 1980. Whole Earth uses the annual global values from <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noreferrer">NASA GISS GISTEMP v4</a>. Selected-area values come from the regional grids.</p>
+        <p>Historical maps show running means from <a href="https://svs.gsfc.nasa.gov/5450/" target="_blank" rel="noreferrer">NASA’s Scientific Visualization Studio</a>. The 2025 map and selected-area values use January–December means from the official NASA GISS 2° × 2° grid.</p>
         <p>Temperature sets a synthesized note's frequency: <code>f = clamp(180 × 4^((anomaly + 0.8) / 3), 150, 850) Hz</code>. Higher values produce higher notes.</p>
         <h3>Rainfall: a designed rain texture</h3>
         <p>The inherited rainfall grid is labelled GPCP in this project. Its provenance and processing still need a scientific audit. The selected value and its range shape filtered noise and scheduled droplets. Relative scaling can make small differences subtle. This is synthesized sound, not a weather recording.</p>
         <h3>Regions and years</h3>
-        <p>Geographic bounds select a rectangle. Grid cells are weighted by their overlap and latitude area. The playable period is 1980–2024 (45 years). Later bundled regional grids and images repeat 2024 and are excluded. This is a historical archive, not a live feed or a forecast.</p>
+        <p>Geographic bounds select a rectangle. Grid cells are weighted by their overlap and latitude area. The annual temperature archive covers 1980–2025. The rainfall archive covers 1980–2024.</p>
         <h3>The guide</h3>
         <p>Dr. Jo is fictional and scripted. Responses are not Joanne Simpson's words. No live LLM or future-climate model is connected.</p>
       </div>
@@ -1825,8 +1826,11 @@
 
     // Decode Regional Data
     const rawRegional = window.EARTH_REGIONAL_DATA;
-    const years = rawRegional.years.filter(year => year <= 2024); // Later bundled maps/grids repeat 2024; do not play them as new observations.
-    const lastYearIndex = years.length - 1;
+    const globalTemperature = window.EARTH_DATA.points;
+    const temperatureYears = globalTemperature.map(point => point.year);
+    const rainYears = rawRegional.years.filter(year => year <= 2024);
+    let years = temperatureYears;
+    let lastYearIndex = years.length - 1;
 
     function decodeBinary(encoded) {
       const bytes = atob(encoded);
@@ -1890,7 +1894,11 @@
       return cells;
     }
 
-    function seriesFor(grid, area) {
+    function seriesFor(track, area) {
+      if (track === 'temperature' && area.global) {
+        return { series: globalTemperature.map(point => point.value) };
+      }
+      const grid = grids[track];
       const cells = cellWeights(grid, area), size = grid.width * grid.height;
       const series = years.map((_, yearIndex) => {
         let sum = 0, weight = 0;
@@ -1922,7 +1930,7 @@
       consoleMode: 'ai' // 'ai' or 'evidence'
     };
 
-    let currentSeries = seriesFor(grids[state.track], state.area);
+    let currentSeries = seriesFor(state.track, state.area);
 
     const signed = value => (value >= 0 ? '+' : '') + value.toFixed(2);
     const formatValue = val => {
@@ -2377,7 +2385,7 @@
 
     // Historical Climate Insights for Dr. Jo
     const climateNotes = {
-      1980: "The beginning of our 47-year observation window. Baseline satellite and surface temperature tracking.",
+      1980: "The beginning of the observation window. Baseline satellite and surface temperature tracking.",
       1982: "Volcanic dust from El Chichón caused noticeable hemispheric dimming and temporary cooling.",
       1991: "Mount Pinatubo erupted violently, injecting 20M tons of SO2 and dropping global temperatures by ~0.5 °C.",
       1992: "Post-Pinatubo aerosol veil cooled tropical oceans and altered worldwide monsoonal rainfall.",
@@ -2387,8 +2395,7 @@
       2020: "Tied for record warmth at +1.01 °C despite pandemic-era industrial emission slowdowns.",
       2023: "Historic marine heatwaves pushed North Atlantic and Pacific ocean temperatures off historical charts.",
       2024: "Record high global anomalies (+1.28 °C), with intense tropical cyclone activity across the globe.",
-      2025: "Continuing high baseline warmth with elevated tropical rainfall and shifted atmospheric rivers.",
-      2024: "Last playable year in this historical archive. This is not a forecast."
+      2025: "The global annual temperature anomaly was +1.19 °C relative to the 1951–1980 average."
     };
 
 // Included inside the observatory closure by tools/upgrade-layout.py.
@@ -2399,7 +2406,7 @@ let lessonHasListened = false;
 let lessonSession = 0;
 let lessonTimer = null;
 let lessonWaiting = null;
-const lessonEnd = years.includes(2024) ? years.indexOf(2024) : lastYearIndex;
+const lessonEnd = years.indexOf(2024);
 function updateLearningContext() {
   const context = qs('#er-view-context');
   if (context) context.textContent = `${state.area.name} · ${state.track === 'temperature' ? 'Temperature' : 'Rain'} · ${years[state.index]}`;
@@ -2531,6 +2538,15 @@ function initializeLearningLayout() {
     function render() {
       const yr = years[state.index];
       const val = currentSeries.series[state.index];
+      const firstYear = years[0], lastYear = years[lastYearIndex];
+      qs('#focus-meta').textContent = state.area.global
+        ? (state.track === 'temperature' ? '· Global · NASA GISS GISTEMP v4' : `· Global · ${currentSeries.cells} cells`)
+        : `· ${state.area.south.toFixed(1)}° to ${state.area.north.toFixed(1)}° Lat · ${currentSeries.cells} cells`;
+      qs('.er-findings-jump-label').textContent = `Selected-track change (${firstYear} → ${lastYear})`;
+      qs('#er-timeline-end').textContent = lastYear;
+      qs('.er-chart').setAttribute('aria-label', `Interactive annual observations from ${firstYear} to ${lastYear}. Click any bar to hear.`);
+      qs('[data-action=play-start]').setAttribute('aria-label', `Play timeline sequence from ${firstYear} to ${lastYear}`);
+      qs('[data-action=compare]').setAttribute('aria-label', `Compare ${firstYear} vs ${lastYear}`);
 
       qs('#readout-year').textContent = yr;
       const valEl = qs('#readout-value');
@@ -2565,6 +2581,8 @@ function initializeLearningLayout() {
         : `Between ${years[0]} and ${years[lastYearIndex]}, the selected rainfall series for ${state.area.name} changed by ${signed(totalJump)} mm/day across ${currentSeries.cells} grid cells.`;
 
       const slider = qs('#er-year-slider');
+      slider.max = lastYearIndex;
+      slider.setAttribute('aria-label', `Timeline scrubber ${firstYear} to ${lastYear}`);
       slider.value = state.index;
       slider.setAttribute('aria-valuenow', state.index);
       slider.setAttribute('aria-valuetext', `${yr}: ${formatValue(val)}`);
@@ -2605,7 +2623,7 @@ function initializeLearningLayout() {
       }
 
       const viewSummary = state.track === 'temperature'
-        ? `The selected temperature difference is ${formatValue(val)}. Blue means cooler and red means warmer than the map’s reference average. Higher values produce a higher note.`
+        ? `The selected temperature difference is ${formatValue(val)}. Map colors show differences from the 1951–1980 average. Higher values produce a higher note.`
         : `The selected rainfall value is ${formatValue(val)}. The map colors follow the rain scale. Higher values produce a denser rain texture.`;
       qs('#er-guide-answer').textContent = viewSummary;
       if (activeHazards.length > 0 && state.showHazards) {
@@ -2626,7 +2644,9 @@ function initializeLearningLayout() {
       qs('#layer-toggle-text').textContent = state.showData ? 'Satellite' : 'Show data';
 
       qsa('.er-evidence-item').forEach(item => {
-        const index = Math.min(lastYearIndex, Number(item.dataset.jump));
+        const index = item.hasAttribute('data-final-year') ? lastYearIndex : Number(item.dataset.jump);
+        item.dataset.jump = index;
+        item.querySelector('.er-evidence-yr').textContent = years[index];
         item.querySelector('.er-evidence-val').textContent = formatValue(currentSeries.series[index]);
       });
       drawChart();
@@ -2810,7 +2830,7 @@ function initializeLearningLayout() {
         {
           yearIndex: lastYearIndex,
           track: 'temperature',
-          text: "This is 2024, the last playable year. Compare this note with 1980 and read the two values. A higher note represents a higher temperature anomaly."
+          text: "This is 2025, the latest temperature year. Compare this note with 1980 and read the two values. A higher note represents a higher temperature anomaly."
         },
         {
           yearIndex: lastYearIndex,
@@ -2873,7 +2893,7 @@ function initializeLearningLayout() {
       } else if (q.includes('el nino') || q.includes('nino') || q.includes('1998')) {
         answer = "The 1998 Super El Niño unleashed unprecedented equatorial heat (+0.61 °C), marking the steepest modern single-year warming surge.";
       } else if (q.includes('rain') || q.includes('precip') || q.includes('weather') || q.includes('satellite')) {
-        answer = "Precipitation data comes from the NASA GPCP v2.3 satellite microwave sounder grid, capturing 47 years of regional rain rates.";
+        answer = "Precipitation data comes from the NASA GPCP v2.3 satellite microwave sounder grid, with regional rain rates through 2024.";
       } else if (q.includes('frame') || q.includes('bound') || q.includes('region') || q.includes('area')) {
         answer = "Click 'Frame area' in the top bar and drag a bounding box on the 3D globe to isolate and sonify any country or ocean basin!";
       } else if (q.includes('nasa') || q.includes('space') || q.includes('challenge')) {
@@ -2978,7 +2998,11 @@ function initializeLearningLayout() {
       if (track === state.track) return;
       stopPlayback();
       state.track = track;
-      currentSeries = seriesFor(grids[track], state.area);
+      years = track === 'temperature' ? temperatureYears : rainYears;
+      lastYearIndex = years.length - 1;
+      state.index = Math.min(state.index, lastYearIndex);
+      currentSeries = seriesFor(track, state.area);
+      initHazardTicks();
 
       qsa('.er-track-tab').forEach(tab => {
         const isActive = tab.dataset.track === track;
@@ -3002,14 +3026,10 @@ function initializeLearningLayout() {
       }
       stopPlayback();
       state.area = area;
-      currentSeries = seriesFor(grids[state.track], area);
+      currentSeries = seriesFor(state.track, area);
       resetLesson();
 
       qs('#focus-name').textContent = area.name;
-      qs('#focus-meta').textContent = area.global
-        ? `· Global · ${currentSeries.cells} cells`
-        : `· ${area.south.toFixed(1)}° to ${area.north.toFixed(1)}° Lat · ${currentSeries.cells} cells`;
-
       qs('#focus-badge')?.classList.toggle('framed', !area.global);
 
       render();
@@ -3099,7 +3119,7 @@ function initializeLearningLayout() {
       if (await initAudio()) playActiveSound(0.55);
     });
 
-    // Compare 1980 vs 2024
+    // Compare the first and last years of the active track
     const compareBtn = qs('[data-action=compare]');
     compareBtn.addEventListener('click', async () => {
       if (state.comparing) {
@@ -3505,7 +3525,7 @@ function initializeLearningLayout() {
       });
 
       // Data Overlay Texture Updater
-      let visualPath = '';
+      let requestedPath = '';
       let loadToken = 0;
       updateVisual = () => {
         const yr = years[state.index];
@@ -3513,7 +3533,8 @@ function initializeLearningLayout() {
           ? `assets/eic/${yr}.webp`
           : `assets/rain/${yr}.webp`;
 
-        if (path === visualPath) return;
+        if (path === requestedPath) return;
+        requestedPath = path;
         const token = ++loadToken;
 
         loader.load(path, tex => {
@@ -3523,9 +3544,10 @@ function initializeLearningLayout() {
           overlayMat.map = tex;
           overlayMat.opacity = state.track === 'temperature' ? 0.52 : 0.88;
           overlayMat.needsUpdate = true;
-          visualPath = path;
           draw();
           if (old) old.dispose();
+        }, undefined, () => {
+          if (token === loadToken) requestedPath = '';
         });
       };
 
@@ -4013,9 +4035,7 @@ function initializeLearningLayout() {
             cancelLessonSound();
             state.index = targetIdx;
             render();
-            renderScrubberProgress();
-            updateYearReadout();
-            if (state.playing) playStepSound();
+            if (state.playing) playActiveSound(0.45);
           }
         }
         else if (action === 'mode' && ['listen','explore'].includes(value)) {

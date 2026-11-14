@@ -1,7 +1,7 @@
 {
   "title": "Global surface temperature",
   "source": "NASA GISS GISTEMP v4",
-  "retrieved": "2026-11-02",
+  "retrieved": "2026-11-14",
   "baseline": "1951–1980",
   "points": [
     {
@@ -66,7 +66,7 @@
     },
     {
       "year": 1995,
-      "value": 0.45
+      "value": 0.44
     },
     {
       "year": 1996,
@@ -74,7 +74,7 @@
     },
     {
       "year": 1997,
-      "value": 0.47
+      "value": 0.46
     },
     {
       "year": 1998,
@@ -98,7 +98,7 @@
     },
     {
       "year": 2003,
-      "value": 0.62
+      "value": 0.61
     },
     {
       "year": 2004,
@@ -134,7 +134,7 @@
     },
     {
       "year": 2012,
-      "value": 0.65
+      "value": 0.64
     },
     {
       "year": 2013,
@@ -146,7 +146,7 @@
     },
     {
       "year": 2015,
-      "value": 0.89
+      "value": 0.9
     },
     {
       "year": 2016,
@@ -186,12 +186,7 @@
     },
     {
       "year": 2025,
-      "value": 1.18
-    },
-    {
-      "year": 2026,
-      "value": 1.24,
-      "isPreliminary": true
+      "value": 1.19
     }
   ],
   "mapping": {
@@ -473,19 +468,19 @@
     },
     {
       "year": 2025,
-      "nasaFrameIndex": 858,
-      "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS858.png",
-      "localPath": "assets/eic/2025.webp",
-      "note": "NASA SVS reference heat distribution calibrated to 2025 GISTEMP v4"
+      "sourceUrl": "https://data.giss.nasa.gov/pub/gistemp/gistemp1200_GHCNv4_ERSSTv5.nc.gz",
+      "localPath": "assets/eic/2025.webp"
     },
     {
       "year": 2026,
       "nasaFrameIndex": 858,
       "sourceUrl": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005450/frames/4096x2048_2x1_30p/2024GISTEMP_SOS858.png",
       "localPath": "assets/eic/2026.webp",
-      "note": "NASA SVS reference heat distribution calibrated to 2026 GISTEMP v4 (Jan-Sep YTD)"
+      "playable": false,
+      "note": "Duplicate of the 2024 regional frame."
     }
   ],
-  "visualAggregation": "NASA maps use running regional means; 2025-2026 calibrate against latest available NASA SVS heat distributions.",
-  "soundAggregation": "Annual global land-ocean mean, J-D column. 2026 reflects recorded Jan-Sep YTD average (+1.24 °C)."
+  "visualAggregation": "1980–2024: NASA Scientific Visualization Studio #5450 regional running means. 2025: January–December grid-cell means from NASA GISS GISTEMP v4, with at least seven valid months per cell.",
+  "soundAggregation": "Annual global land-ocean mean from the J-D column.",
+  "sourceUrl": "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv"
 }

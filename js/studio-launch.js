@@ -38,25 +38,29 @@ async function playStudioLaunch() {
   const options = { once: true, signal: controller.signal };
   window.addEventListener('pointerdown', cleanup, { ...options, capture: true });
   window.addEventListener('keydown', cleanup, { ...options, capture: true });
-  window.addEventListener('resize', cleanup, options);
   motion.addEventListener('change', cleanup, options);
 
   try {
     if (motion.matches || ['desk', 'globe'].includes(new URLSearchParams(location.search).get('view'))) {
-      // Preview surfaces commonly request reduced motion. Keep the branded
-      // opening visible there, but use a calm hold-and-fade with no travel.
-      mark.style.opacity = '1';
+      caption.classList.add('studio-launch-caption-centered');
       caption.style.opacity = '1';
-      await new Promise(resolve => setTimeout(resolve, 900));
-      await animate(overlay, [{ opacity: 1 }, { opacity: 0 }], { duration: 320, easing: easeOut }, 1);
+      await animate(overlay, [
+        { opacity: 1, offset: 0 },
+        { opacity: 1, offset: 0.6, easing: easeOut },
+        { opacity: 0, offset: 1 }
+      ], { duration: 600 }, 1);
       return;
     }
 
-    // Give the preloaded icon a short window to decode before starting the intro.
-    await Promise.race([
-      icon.decode().catch(() => undefined),
-      new Promise(resolve => setTimeout(resolve, 150))
-    ]);
+    let decodeTimer;
+    try {
+      await Promise.race([
+        icon.decode(),
+        new Promise((_, reject) => { decodeTimer = setTimeout(reject, 1500); })
+      ]);
+    } finally {
+      clearTimeout(decodeTimer);
+    }
     if (!overlay.isConnected) return;
     target.style.visibility = 'hidden';
     await Promise.all([
@@ -82,6 +86,7 @@ async function playStudioLaunch() {
     const x = to.left + to.width / 2 - from.left - from.width / 2;
     const y = to.top + to.height / 2 - from.top - from.height / 2;
     const scale = to.width / from.width;
+    window.addEventListener('resize', cleanup, options);
     await Promise.all([
       animate(mark, [
         { transform: 'translate(0, 0) scale(1)', opacity: 1 },
@@ -99,4 +104,3 @@ async function playStudioLaunch() {
 }
 
 playStudioLaunch();
-
