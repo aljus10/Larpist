@@ -46,10 +46,10 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 1. **Al Justin** — *3D & Web Development* (3D studio scene, spatial layout, and interactive web interface)
 2. **Harvey** — *Audio & Sonification* (Audio synthesizer and latitude temperature pitch mapping)
-3. **Roger** — *Frontend & UI* (Monitor workbench layout, responsive controls, and accessibility)
-4. **Micah** — *Earth Data & Research* (NASA temperature data review, latitude bands, and reference notes)
-5. **Kenneth** — *Quiz & Content* (Interactive listening questions, explanations, and learning flow)
-6. **Eddie** — *Testing & Coordination* (Application testing, design feedback, and team project support)
+3. **Micah** — *Frontend & UI* (Monitor workbench layout, responsive controls, and interface accessibility)
+4. **Roger** — *Testing & Coordination* (Application testing, design feedback, and team project support)
+5. **Kenneth** — *Earth Data & Research* (NASA temperature data review, latitude bands, and reference notes)
+6. **Eddie** — *QA & Content* (Interactive listening questions, explanations, and quality assurance)
 
 *Explore the team roster directly in the 3D studio by clicking the desk keycap or via the workbench interface.*
 
