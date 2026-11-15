@@ -163,22 +163,22 @@
 
         <section class="mode-panel" id="frame-panel" role="tabpanel" aria-labelledby="frame-tab" hidden>
           <div class="sound-legend" aria-label="Thermal psychoacoustic sound legend">
-            <button type="button" data-legend="cold" title="Play Cold acoustic voice (1.5–4 kHz)">
+            <button type="button" data-legend="cold" aria-pressed="false" title="Toggle looping Cold acoustic voice (1.5–4 kHz)">
               <span class="legend-swatch cold"></span>
               <strong>Cold</strong>
               <small>1.5–4 kHz</small>
             </button>
-            <button type="button" data-legend="normal" title="Play Normal ambient voice (400–900 Hz)">
+            <button type="button" data-legend="normal" aria-pressed="false" title="Toggle looping Normal ambient voice (400–900 Hz)">
               <span class="legend-swatch normal"></span>
               <strong>Normal</strong>
               <small>400–900 Hz</small>
             </button>
-            <button type="button" data-legend="warm" title="Play Warm acoustic voice (150–450 Hz)">
+            <button type="button" data-legend="warm" aria-pressed="false" title="Toggle looping Warm acoustic voice (150–450 Hz)">
               <span class="legend-swatch warm"></span>
               <strong>Warm</strong>
               <small>150–450 Hz</small>
             </button>
-            <button type="button" data-legend="hot" title="Play Hot scalding voice (2–8 kHz Sizzle)">
+            <button type="button" data-legend="hot" aria-pressed="false" title="Toggle looping Hot scalding voice (2–8 kHz Sizzle)">
               <span class="legend-swatch hot"></span>
               <strong>Hot</strong>
               <small>2–8 kHz</small>
@@ -303,9 +303,9 @@
           <div class="dsp-label-row">
             <span class="dsp-label-icon" aria-hidden="true">⏱</span>
             <label for="compare-duration-slider">Duration / Tail Scale</label>
-            <output id="compare-duration-val" for="compare-duration-slider" class="dsp-value-badge">1.00x</output>
+            <output id="compare-duration-val" for="compare-duration-slider" class="dsp-value-badge">1.0s</output>
           </div>
-          <input type="range" id="compare-duration-slider" min="0.50" max="1.80" step="0.05" value="1.00" aria-label="Duration and Tail Scale">
+          <input type="range" id="compare-duration-slider" min="0.50" max="5.00" step="0.10" value="1.00" aria-label="Duration and Tail Scale (0.5 to 5.0 seconds)">
         </div>
 
         <div class="dsp-toggle-group">
@@ -336,25 +336,29 @@
         </div>
 
         <div class="analyser-thermal-legend" aria-label="Thermal audio cues">
-          <button type="button" class="analyser-legend-chip chip-cold" data-preview-thermal="cold" title="Audition Cold cue (1.5–4 kHz)">
+          <button type="button" class="analyser-legend-chip chip-cold" data-preview-thermal="cold" aria-pressed="false" title="Toggle looping Cold cue (1.5–4 kHz)">
             <span class="chip-swatch cold" aria-hidden="true"></span>
             <strong>Cold</strong>
             <small>1.5–4 kHz</small>
+            <span class="chip-loop-badge" aria-hidden="true"></span>
           </button>
-          <button type="button" class="analyser-legend-chip chip-normal" data-preview-thermal="normal" title="Audition Normal cue (400–900 Hz)">
+          <button type="button" class="analyser-legend-chip chip-normal" data-preview-thermal="normal" aria-pressed="false" title="Toggle looping Normal cue (400–900 Hz)">
             <span class="chip-swatch normal" aria-hidden="true"></span>
             <strong>Normal</strong>
             <small>400–900 Hz</small>
+            <span class="chip-loop-badge" aria-hidden="true"></span>
           </button>
-          <button type="button" class="analyser-legend-chip chip-warm" data-preview-thermal="warm" title="Audition Warm cue (150–450 Hz)">
+          <button type="button" class="analyser-legend-chip chip-warm" data-preview-thermal="warm" aria-pressed="false" title="Toggle looping Warm cue (150–450 Hz)">
             <span class="chip-swatch warm" aria-hidden="true"></span>
             <strong>Warm</strong>
             <small>150–450 Hz</small>
+            <span class="chip-loop-badge" aria-hidden="true"></span>
           </button>
-          <button type="button" class="analyser-legend-chip chip-hot" data-preview-thermal="hot" title="Audition Hot cue (2–8 kHz)">
+          <button type="button" class="analyser-legend-chip chip-hot" data-preview-thermal="hot" aria-pressed="false" title="Toggle looping Hot cue (2–8 kHz)">
             <span class="chip-swatch hot" aria-hidden="true"></span>
             <strong>Hot</strong>
             <small>2–8 kHz Sizzle</small>
+            <span class="chip-loop-badge" aria-hidden="true"></span>
           </button>
         </div>
       </div>
@@ -380,12 +384,12 @@
           NASA’s GISTEMP v4 analysis estimates changes in global surface temperature. A temperature anomaly shows how much warmer or cooler a period was compared with the 1951–1980 average.
         </p>
         <p class="challenge-lead">
-          EarthTune covers 1980–2025. History maps annual global anomalies in °C to pitch. Frame Scan samples valid map pixels in five latitude bands. The cooler, baseline, and warmer color shares determine how long each corresponding sound plays.
+          EarthTune covers 1980–2025. History maps annual global anomalies in °C to pitch. Frame Scan samples valid map pixels in five latitude bands. The four thermal psychoacoustic color shares (cold, normal, warm, and hot) determine how long each corresponding sound plays.
         </p>
         <ol class="method-flow">
           <li><strong>1. Frame</strong><span>Temperature map</span></li>
           <li><strong>2. Region</strong><span>5 latitude bands</span></li>
-          <li><strong>3. Vector</strong><span>3 color shares</span></li>
+          <li><strong>3. Vector</strong><span>4 thermal shares</span></li>
           <li><strong>4. Sound</strong><span>Audible phrase</span></li>
           <li><strong>5. Compare</strong><span>A/B verification</span></li>
         </ol>
@@ -494,11 +498,12 @@
         <!-- MAP COLORS -->
         <section class="help-section">
           <h3 class="help-section-title">🗺️ What the Map Colors Mean</h3>
-          <p class="help-text">The map displays temperature anomalies compared to the 1951–1980 baseline:</p>
+          <p class="help-text">The map displays temperature anomalies compared to the 1951–1980 baseline across four distinct thermal categories:</p>
           <table class="help-table">
-            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Blues &amp; whites</strong></td><td>That area was <strong>cooler</strong> than average</td></tr>
-            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Neutral / beige</strong></td><td>Near normal baseline temperature</td></tr>
-            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Oranges &amp; reds</strong></td><td>That area was <strong>warmer</strong> than average</td></tr>
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Deep &amp; light blues</strong></td><td><strong>Cold</strong> (&lt; -0.10°C) — cooler than the historical baseline</td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Off-white &amp; beige</strong></td><td><strong>Normal</strong> (-0.10°C to +0.25°C) — near 1951–1980 normal baseline</td></tr>
+            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Amber &amp; golden yellow</strong></td><td><strong>Warm</strong> (+0.25°C to +0.70°C) — elevated positive anomaly</td></tr>
+            <tr><td><span class="help-swatch hot-swatch"></span> <strong>Orange &amp; deep crimson</strong></td><td><strong>Hot / Scalding</strong> (&gt; +0.70°C) — extreme planetary heating</td></tr>
           </table>
         </section>
 
@@ -515,15 +520,16 @@
           <p class="help-tip">💡 Click any band label on the map to hear just that region.</p>
         </section>
 
-        <!-- THE 3 SOUNDS -->
+        <!-- THE 4 SOUNDS -->
         <section class="help-section">
-          <h3 class="help-section-title">🎵 The 3 Sounds (Learn These First!)</h3>
+          <h3 class="help-section-title">🎵 The 4 Thermal Psychoacoustic Sounds (Learn These First!)</h3>
           <table class="help-table">
-            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Cool · 196 Hz</strong></td><td>Airy, low, watery tone → that region is <strong>cooler</strong></td></tr>
-            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Baseline · 330 Hz</strong></td><td>Steady middle tone → that region is <strong>normal</strong></td></tr>
-            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Warm · 540 Hz</strong></td><td>Bright, urgent, plucked tone → that region is <strong>warmer</strong></td></tr>
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Cold · 1.5–4 kHz</strong></td><td>Crystalline bell chimes, icy click transient &amp; shimmer reverb → <strong>cold anomalies</strong></td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Normal · 400–900 Hz</strong></td><td>Uncolored, dry organic woodblock/marimba pluck (587 Hz) → <strong>normal baseline</strong></td></tr>
+            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Warm · 150–450 Hz</strong></td><td>Rich low-mid Rhodes electric piano chord swell &amp; tube warmth → <strong>warm anomalies</strong></td></tr>
+            <tr><td><span class="help-swatch hot-swatch"></span> <strong>Hot · 2–8 kHz Sizzle</strong></td><td>Broadband turbulent steam sizzle &amp; urgent staccato alarm pulses → <strong>severe heat</strong></td></tr>
           </table>
-          <p class="help-tip">💡 Higher pitch = warmer temperature. Lower pitch = cooler temperature.</p>
+          <p class="help-tip">💡 Click any sound button to toggle it into a continuous listening loop; click again to stop.</p>
         </section>
 
         <!-- CONTROLS -->

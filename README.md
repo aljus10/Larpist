@@ -31,7 +31,7 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 
 2. **Monitor Workbench (`monitor-workbench/`)**
    - **`1 · History` (1980–2025):** Scrub or play annual global temperature anomalies in °C relative to 1951–1980, including `+1.28 °C` in 2024 and `+1.19 °C` in 2025 mapped to pitch (`150–850 Hz`), synchronized live with the 3D Hologram Globe.
-   - **`2 · Frame Scan` (5 Latitude Bands):** Samples map pixels across five geographic bands (`Arctic 60°–90°N`, `N. Mid 30°–60°N`, `Tropics 30°S–30°N`, `S. Mid 30°–60°S`, `Antarctic 60°–90°S`) into **Cooler (`196–204 Hz`)**, **Baseline (`330 Hz`)**, and **Warmer (`540–660 Hz`)** category coverage.
+   - **`2 · Frame Scan` (5 Latitude Bands):** Samples map pixels across five geographic bands (`Arctic 60°–90°N`, `N. Mid 30°–60°N`, `Tropics 30°S–30°N`, `S. Mid 30°–60°S`, `Antarctic 60°–90°S`) into four distinct thermal psychoacoustic categories: **Cold (`1.5–4 kHz`)**, **Normal (`400–900 Hz`)**, **Warm (`150–450 Hz`)**, and **Hot (`2–8 kHz Sizzle`)** with live looping audition.
    - **`3 · Quiz & Proof`:** Compare two map frames in each of ten questions, switch latitude bands and listen, then check the warm- or cool-colored pixel shares behind the answer. Review the evidence and replay the comparisons after seeing your score.
    - **`2 · Compare A/B` & `3 · Method & Sources`:** Side-by-side acoustic and numerical comparison for any two years and latitude bands, plus full provenance and a copyable Live Frame Ledger.
 
@@ -58,7 +58,7 @@ Then open **`http://127.0.0.1:8765/`** in your browser.
 ## Scientific Scope & Limitations
 
 - **Playable Archive:** `1980–2025` for temperature, with annual GISTEMP v4 values relative to the `1951–1980` baseline.
-- **Designed Sonification:** Pixel color classification communicates visual category share (`Cooler`, `Baseline`, `Warmer`) within each latitude band rather than raw physical sensor inversion.
+- **Designed Sonification:** Pixel color classification communicates visual category share across four distinct thermal categories (`Cold`, `Normal`, `Warm`, `Hot`) within each latitude band rather than raw physical sensor inversion.
 
 ---
 

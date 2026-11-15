@@ -1892,6 +1892,37 @@ input[type="range"] {
 .chip-warm:hover { border-color: #f59e0b; }
 .chip-hot:hover { border-color: #f97316; }
 
+.chip-loop-badge {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--ocean);
+  display: inline-block;
+  margin-left: 2px;
+}
+
+.analyser-legend-chip.is-looping,
+.sound-legend button.is-looping {
+  position: relative;
+  outline: 2px solid var(--ocean);
+  outline-offset: 1px;
+  animation: thermal-chip-pulse 1.3s ease-in-out infinite alternate;
+}
+
+@keyframes thermal-chip-pulse {
+  from { box-shadow: 0 0 6px rgba(77, 243, 255, 0.4); transform: scale(1); }
+  to { box-shadow: 0 0 14px rgba(77, 243, 255, 0.85); transform: scale(1.03); }
+}
+
+.chip-cold.is-looping { outline-color: #38bdf8; }
+.chip-normal.is-looping { outline-color: #cbd5e1; }
+.chip-warm.is-looping { outline-color: #f59e0b; }
+.chip-hot.is-looping { outline-color: #f97316; }
+
+.sound-legend button[data-legend="cold"].is-looping { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+.sound-legend button[data-legend="normal"].is-looping { border-color: #cbd5e1; box-shadow: 0 0 10px rgba(203, 213, 225, 0.5); }
+.sound-legend button[data-legend="warm"].is-looping { border-color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+.sound-legend button[data-legend="hot"].is-looping { border-color: #f97316; box-shadow: 0 0 12px rgba(249, 115, 22, 0.7); }
+
 /* Responsive Adjustments for Compare & Analyser */
 @media (max-width: 860px) {
   .compare-dsp-deck {

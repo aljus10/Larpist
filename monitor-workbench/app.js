@@ -253,6 +253,7 @@ function stopAudio(update=true){
   state.token+=1;
   showQuizPlayback();
   state.playing=false;
+  stopThermalLoop();
   activeSources.forEach(source=>{try{source.stop();}catch{}});
   activeSources.clear();
   setPlayHistoryButtonState(false);
@@ -2726,8 +2727,98 @@ function setupDualAnalyser() {
 }
 
 /* -------------------------------------------------------------
-   DSP CONTROLS & THERMAL PREVIEWS
+   DSP CONTROLS, THERMAL LOOPS & PREVIEWS
    ------------------------------------------------------------- */
+let thermalLoopTimer = null;
+let currentLoopingType = null;
+
+function stopThermalLoop() {
+  if (thermalLoopTimer) {
+    clearTimeout(thermalLoopTimer);
+    thermalLoopTimer = null;
+  }
+  const prevType = currentLoopingType;
+  currentLoopingType = null;
+
+  if (prevType) {
+    activeSources.forEach(source => { try { source.stop(); } catch {} });
+    activeSources.clear();
+  }
+
+  // Clear visual looping state across all chips and legend buttons
+  $$('[data-preview-thermal]').forEach(chip => {
+    chip.classList.remove('is-looping');
+    chip.setAttribute('aria-pressed', 'false');
+    const badge = chip.querySelector('.chip-loop-badge');
+    if (badge) badge.textContent = '';
+  });
+  $$('.sound-legend button[data-legend]').forEach(btn => {
+    btn.classList.remove('is-looping');
+    btn.setAttribute('aria-pressed', 'false');
+  });
+
+  state.activeThemeKey = null;
+  updateVisualizerHeader(null);
+}
+
+async function toggleThermalLoop(type) {
+  let norm = type;
+  if (type === 'cool') norm = 'cold';
+  if (type === 'reference') norm = 'normal';
+
+  if (currentLoopingType === norm) {
+    stopThermalLoop();
+    setStatus(`Stopped ${norm} thermal sound loop.`);
+    return;
+  }
+
+  stopAudio(false);
+  stopThermalLoop();
+
+  if (!await ensureAudio() || state.muted) return;
+
+  currentLoopingType = norm;
+  setStatus(`Playing ${norm} thermal sound (looping — click again to stop)...`);
+
+  // Update UI to show active loop state
+  $$(`[data-preview-thermal="${norm}"]`).forEach(chip => {
+    chip.classList.add('is-looping');
+    chip.setAttribute('aria-pressed', 'true');
+    const badge = chip.querySelector('.chip-loop-badge');
+    if (badge) badge.textContent = ' ⟳';
+  });
+  $$(`.sound-legend button[data-legend="${norm}"]`).forEach(btn => {
+    btn.classList.add('is-looping');
+    btn.setAttribute('aria-pressed', 'true');
+  });
+  if (norm === 'cold') {
+    $$('.sound-legend button[data-legend="cool"]').forEach(btn => {
+      btn.classList.add('is-looping');
+      btn.setAttribute('aria-pressed', 'true');
+    });
+  } else if (norm === 'normal') {
+    $$('.sound-legend button[data-legend="reference"]').forEach(btn => {
+      btn.classList.add('is-looping');
+      btn.setAttribute('aria-pressed', 'true');
+    });
+  }
+
+  async function step() {
+    if (currentLoopingType !== norm) return;
+    const dur = await playThermalVoice(norm, { suppressVisual: false });
+    state.activeThemeUntil = performance.now() + 10000;
+
+    const intervalMs = Math.max(650, Math.round(dur * 1000 * 0.88));
+    thermalLoopTimer = setTimeout(() => {
+      if (currentLoopingType === norm) {
+        step();
+      }
+    }, intervalMs);
+  }
+
+  step();
+}
+
 function setupDspControls() {
   const volSlider = $('#compare-volume-slider');
   const volDb = $('#compare-volume-db');
@@ -2756,7 +2847,7 @@ function setupDspControls() {
     durSlider.value = String(state.durationScale);
     durSlider.addEventListener('input', e => {
       state.durationScale = parseFloat(e.target.value);
-      if (durVal) durVal.textContent = `${state.durationScale.toFixed(2)}x`;
+      if (durVal) durVal.textContent = `${state.durationScale.toFixed(1)}s`;
     });
   }
 
@@ -2781,19 +2872,19 @@ function setupDspControls() {
     });
   }
 
-  // Thermal Preview Chips
+  // Thermal Preview Chips (Looping toggle)
   $$('[data-preview-thermal]').forEach(chip => {
     chip.addEventListener('click', () => {
       const type = chip.dataset.previewThermal;
-      playThermalVoice(type);
+      toggleThermalLoop(type);
     });
   });
 
-  // Sound Legend buttons in Frame mode
+  // Sound Legend buttons in Frame mode (Looping toggle)
   $$('.sound-legend button[data-legend]').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.legend;
-      playCategory(category);
+      toggleThermalLoop(category);
     });
   });
 }
