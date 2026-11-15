@@ -115,9 +115,9 @@
 
       <aside class="control-column" aria-label="Listening controls">
         <div class="mode-tabs" role="tablist" aria-label="Listening mode">
-          <button type="button" role="tab" id="history-tab" aria-controls="history-panel" aria-selected="true" tabindex="0">1 · History</button>
-          <button type="button" role="tab" id="frame-tab" aria-controls="frame-panel" aria-selected="false" tabindex="-1">2 · Frame Scan</button>
-          <button type="button" role="tab" id="learn-tab" aria-controls="learn-panel" aria-selected="false" tabindex="-1">3 · Quiz &amp; Proof</button>
+          <button type="button" role="tab" id="history-tab" aria-controls="history-panel" aria-selected="true" tabindex="0">History</button>
+          <button type="button" role="tab" id="frame-tab" aria-controls="frame-panel" aria-selected="false" tabindex="-1">Frame Scan</button>
+          <button type="button" role="tab" id="learn-tab" aria-controls="learn-panel" aria-selected="false" tabindex="-1">Quiz &amp; Proof</button>
         </div>
 
         <section class="mode-panel" id="history-panel" role="tabpanel" aria-labelledby="history-tab">
@@ -157,7 +157,7 @@
           </div>
 
           <div class="step-footer-row">
-            <button type="button" class="step-next-link" data-mode-target="frame">Next: 2 · Scan 5 Latitude Bands (N → S) →</button>
+            <button type="button" class="step-next-link" data-mode-target="frame">Next: Scan 5 Latitude Bands (N → S) →</button>
           </div>
         </section>
 
@@ -211,7 +211,7 @@
           </div>
 
           <div class="step-footer-row">
-            <button type="button" class="step-next-link" data-mode-target="learn">Next: 3 · Test Your Ear &amp; Proof Receipt →</button>
+            <button type="button" class="step-next-link" data-mode-target="learn">Next: Test Your Ear &amp; Proof Receipt →</button>
           </div>
         </section>
 
@@ -270,7 +270,7 @@
 
         <div class="live-status sr-only" id="live-status" role="status" aria-live="polite">Ready.</div>
         <!-- Screen-Reader Live Regions for Assistive Technology & BVI Accessibility -->
-        <div id="a11y-live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true">EarthTune Studio ready. Press Space to play sonification, left and right arrows to scrub years, H for high contrast, and question mark for keyboard shortcuts.</div>
+        <div id="a11y-live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true">EarthTune Studio ready. Press Space to play sonification, left and right arrows to scrub years, Q for quiz, and question mark for keyboard shortcuts.</div>
         <div id="a11y-alert-region" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
       </aside>
     </section>
@@ -445,8 +445,8 @@
               <p>As years and latitude bands change, live ARIA regions announce the exact numerical anomaly, acoustic pitch in Hertz, and qualitative category in real time.</p>
             </div>
             <div class="a11y-feature-card">
-              <h4>◐ High-Contrast Assistive Mode</h4>
-              <p>WCAG AAA compliant pure black theme (<code>#000000</code>), 3px bright yellow focus rings, and explicit text tokens so data is never conveyed by color alone.</p>
+              <h4>🎛️ Dual Analyser &amp; Multi-Voice Polyphony</h4>
+              <p>Real-time logarithmic FFT spectrum (80 Hz – 12 kHz) + oscilloscope waveform. Audition and toggle individual or simultaneous multi-voice thermal loops (Cold, Normal, Warm, Hot) with DSP gain and tail scale.</p>
             </div>
           </div>
 
@@ -463,9 +463,11 @@
               <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>Cycle latitude bands (N ⇄ S)</td><td>Move between Arctic, N. Mid, Tropics, S. Mid, and Antarctic</td></tr>
               <tr><td><kbd>P</kbd></td><td>Play current tone / band</td><td>Acoustically re-sample the selected year or latitude band</td></tr>
               <tr><td><kbd>S</kbd></td><td>Scan North to South</td><td>Trigger automatic multi-band latitude acoustic scan</td></tr>
-              <tr><td><kbd>H</kbd></td><td>Toggle High-Contrast mode</td><td>Switch to high-visibility pure black / yellow palette</td></tr>
+              <tr><td><kbd>Q</kbd></td><td>Jump to Quiz &amp; Proof</td><td>Instantly switch to the interactive sound-climate challenge</td></tr>
+              <tr><td><kbd>A</kbd> / <kbd>B</kbd></td><td>Play Frame A / B (in Quiz)</td><td>Audition comparison years during active quiz questions</td></tr>
+              <tr><td><kbd>N</kbd></td><td>Next question (in Quiz)</td><td>Advance to next challenge question or view proof results</td></tr>
               <tr><td><kbd>M</kbd></td><td>Toggle Mute</td><td>Turn audio output on or off</td></tr>
-              <tr><td><kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd></td><td>Switch Workbench sections</td><td>Jump to 1 · Atlas, 2 · Compare A/B, or 3 · Method &amp; Sources</td></tr>
+              <tr><td><kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd></td><td>Switch Workbench sections</td><td>Jump to 1 · Atlas &amp; Scan, 2 · Compare A/B, or 3 · Method &amp; Sources</td></tr>
               <tr><td><kbd>?</kbd></td><td>Open Guide &amp; Accessibility</td><td>View this Universal Design &amp; keyboard guide</td></tr>
               <tr><td><kbd>Esc</kbd></td><td>Close dialog / Back to room</td><td>Dismiss open drawer or modal; exit to studio overview</td></tr>
             </tbody>
@@ -477,10 +479,36 @@
           <h3 class="help-section-title">⚡ 30-Second Quick Start</h3>
           <ol class="help-steps">
             <li><strong>Click the monitor</strong> on the left desk to zoom in</li>
-            <li>Go to <strong>Tab 2 · Frame Scan</strong> in the right panel</li>
+            <li>Go to <strong>Frame Scan</strong> in the right panel</li>
             <li>Press the big <strong>▶ Scan N → S</strong> button — you will hear the globe play from top (Arctic) to bottom (Antarctic)</li>
             <li>Watch the cyan scan line move across the map as each latitude sings its temperature!</li>
           </ol>
+        </section>
+
+        <!-- GUIDED CLIMATE STORIES -->
+        <section class="help-section">
+          <h3 class="help-section-title">🎧 Guided Climate Stories (Narrated by Dr. Jo)</h3>
+          <p class="help-text">Click the <strong>📖 Stories</strong> button in the top header rail to open curated audio-visual expeditions through 45+ years of NASA Earth observation data:</p>
+          <ul class="help-steps">
+            <li><strong>Expedition 1: The Global Heat Spike</strong> (~40s) — Follow the +1.18°C warming leap and marine heatwaves.</li>
+            <li><strong>Expedition 2: Arctic Amplification</strong> (~45s) — Explore polar ice melt and runaway albedo feedback.</li>
+            <li><strong>Expedition 3: The 45-Year Satellite Era</strong> (~50s) — Trace continuous space observation from 1980 to 2025.</li>
+          </ul>
+          <p class="help-tip">💡 Subtitles are synchronized live at the bottom of the room, and milestones automatically steer the monitor and globe. Starting an expedition immediately silences background speech.</p>
+        </section>
+
+        <!-- COMPARE A/B & DUAL ANALYSER -->
+        <section class="help-section">
+          <h3 class="help-section-title">🔬 Compare A/B &amp; Dual Analyser Sound Lab</h3>
+          <p class="help-text">Switch to <strong>Section 2 · Compare A/B</strong> using the top drawer or pressing <kbd>2</kbd> to access the scientific sound analysis deck:</p>
+          <table class="help-table">
+            <tr><td><strong>Dual Analyser</strong></td><td>Simultaneous logarithmic FFT spectrum (80 Hz – 12 kHz) + time-domain oscilloscope waveform overlay.</td></tr>
+            <tr><td><strong>Simultaneous Looping</strong></td><td>Click any thermal voice (Cold, Normal, Warm, Hot) to toggle a continuous loop. Click two or more to mix voices simultaneously!</td></tr>
+            <tr><td><strong>Master Volume (dB)</strong></td><td>Calibrated logarithmic gain slider (-36 dB to +6 dB).</td></tr>
+            <tr><td><strong>Tail Scale (0.5s–5.0s)</strong></td><td>Adjust acoustic sustain and decay envelope for both single-shot and comparison playback.</td></tr>
+            <tr><td><strong>Foley Textures</strong></td><td>Toggle procedural environmental crackle, frost noise, and arid sizzle layers.</td></tr>
+            <tr><td><strong>A/B Playback</strong></td><td>Select two years and any latitude band, then click <strong>▶ Play A / B</strong> to hear acoustic differences back-to-back.</td></tr>
+          </table>
         </section>
 
         <!-- 3D NAVIGATION -->
@@ -490,8 +518,9 @@
             <tr><td><strong>Move your mouse</strong></td><td>Camera shifts gently around the room</td></tr>
             <tr><td><strong>Click the monitor</strong></td><td>Zooms in to the temperature workstation</td></tr>
             <tr><td><strong>Click the 3D globe</strong></td><td>Spins the globe and jumps to that latitude</td></tr>
-            <tr><td><strong>Bottom buttons</strong></td><td>Jump between Studio Overview, Monitor, and Globe</td></tr>
-            <tr><td><strong>← Studio button</strong></td><td>Zooms back out to room overview</td></tr>
+            <tr><td><strong>Desk Keycap Box</strong></td><td>Click the 3D <code>? TEAM</code> keycap to view the NASA Space Apps team roster</td></tr>
+            <tr><td><strong>Bottom buttons</strong></td><td>Jump between Studio Overview, Monitor, 3D Earth Globe, and Meet the Team</td></tr>
+            <tr><td><strong>← Studio button (Esc)</strong></td><td>Zooms back out to room overview</td></tr>
           </table>
         </section>
 
@@ -524,27 +553,25 @@
         <section class="help-section">
           <h3 class="help-section-title">🎵 The 4 Thermal Psychoacoustic Sounds (Learn These First!)</h3>
           <table class="help-table">
-            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Cold · 1.5–4 kHz</strong></td><td>Crystalline bell chimes, icy click transient &amp; shimmer reverb → <strong>cold anomalies</strong></td></tr>
-            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Normal · 400–900 Hz</strong></td><td>Uncolored, dry organic woodblock/marimba pluck (587 Hz) → <strong>normal baseline</strong></td></tr>
-            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Warm · 150–450 Hz</strong></td><td>Rich low-mid Rhodes electric piano chord swell &amp; tube warmth → <strong>warm anomalies</strong></td></tr>
-            <tr><td><span class="help-swatch hot-swatch"></span> <strong>Hot · 2–8 kHz Sizzle</strong></td><td>Broadband turbulent steam sizzle &amp; urgent staccato alarm pulses → <strong>severe heat</strong></td></tr>
+            <tr><td><span class="help-swatch cool-swatch"></span> <strong>Cold · 1.5–4 kHz</strong></td><td>Sub-bass drone (45–55 Hz), glacial crystalline shimmer &amp; polar wind noise → <strong>cold anomalies</strong></td></tr>
+            <tr><td><span class="help-swatch ref-swatch"></span> <strong>Normal · 400–900 Hz</strong></td><td>Stable 432 Hz fundamental acoustic harmonic timbre &amp; gentle resonance → <strong>normal baseline</strong></td></tr>
+            <tr><td><span class="help-swatch warm-swatch"></span> <strong>Warm · 150–450 Hz</strong></td><td>Rising brass/sawtooth warmth, soft tube overdrive &amp; heat shimmer sweep → <strong>warm anomalies</strong></td></tr>
+            <tr><td><span class="help-swatch hot-swatch"></span> <strong>Hot · 2–8 kHz Sizzle</strong></td><td>Waveshaper distortion clipping, steam sizzle crackle &amp; urgent distress alarm pulses → <strong>severe heat</strong></td></tr>
           </table>
-          <p class="help-tip">💡 Click any sound button to toggle it into a continuous listening loop; click again to stop.</p>
+          <p class="help-tip">💡 Click any sound button to toggle it into a continuous listening loop. You can activate multiple sounds simultaneously to hear polyphonic thermal combinations!</p>
         </section>
 
         <!-- CONTROLS -->
         <section class="help-section">
-          <h3 class="help-section-title">🎛️ Control Panel (Right Side)</h3>
+          <h3 class="help-section-title">🎛️ Primary Sections &amp; Workbench Controls</h3>
           <table class="help-table">
-            <tr><td><strong>1 · History tab</strong></td><td>Hear all 46 years as a rising tone — press ▶ Play history</td></tr>
-            <tr><td><strong>ANOMALY +X.XX °C</strong></td><td>How much warmer/cooler than the 1951–1980 average</td></tr>
-            <tr><td><strong>PITCH XXX Hz</strong></td><td>The musical note being played right now</td></tr>
-            <tr><td><strong>Year slider</strong></td><td>Drag to jump to any year from 1980 to 2025</td></tr>
-            <tr><td><strong>← → arrows</strong></td><td>Go back or forward one year at a time</td></tr>
-            <tr><td><strong>♪ button</strong></td><td>Play just the current year's tone once</td></tr>
-            <tr><td><strong>2 · Frame Scan tab</strong></td><td>Hear each latitude band of the current year's map</td></tr>
-            <tr><td><strong>▶ Scan N → S</strong></td><td>Auto-scans all 5 bands top to bottom</td></tr>
-            <tr><td><strong>3 · Quiz &amp; Proof</strong></td><td>Test your ear — can you tell which year is warmer?</td></tr>
+            <tr><td><strong>[ 1 · Atlas &amp; Scan ▾ ]</strong></td><td>Pull-down drawer to switch between 1 · Atlas, 2 · Compare A/B, and 3 · Method &amp; Sources</td></tr>
+            <tr><td><strong>History panel</strong></td><td>Hear 46 years of planetary change — press ▶ Play history or scrub the year slider</td></tr>
+            <tr><td><strong>Frame Scan panel</strong></td><td>Hear each latitude band's temperature distribution — press ▶ Scan N → S or click bands</td></tr>
+            <tr><td><strong>Quiz &amp; Proof (Shortcut: Q)</strong></td><td>Interactive auditory proof challenge — compare two historical frames and test your ear</td></tr>
+            <tr><td><strong>2 · Compare A/B</strong></td><td>Full Dual Analyser sound lab, simultaneous thermal looping, and DSP controls</td></tr>
+            <tr><td><strong>3 · Method &amp; Sources</strong></td><td>GISTEMP v4 methodology, 4 thermal shares, and copyable Live Frame Ledger</td></tr>
+            <tr><td><strong>📖 Stories</strong></td><td>Curated audio expeditions with Dr. Jo, synchronized subtitles, and monitor milestones</td></tr>
           </table>
         </section>
 

@@ -225,6 +225,9 @@ async function ensureAudio(){
 
     synthAssets = createSynthAssets(audioContext);
   }
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'STOP_WELCOME_AUDIO' }, '*');
+  }
   if(audioContext.state === 'suspended'){
     audioContext.resume().catch(()=>{});
   }
@@ -281,6 +284,16 @@ function updateVisualizerHeader(key) {
   const dot = $('#vizStateIndicator');
   const label = $('#vizActiveLabel');
   if (!dot || !label) return;
+
+  if (typeof activeThermalLoops !== 'undefined' && activeThermalLoops.size > 1) {
+    const keys = [...activeThermalLoops.keys()];
+    const labels = keys.map(k => THERMAL_META[k]?.shortLabel || k.toUpperCase()).join(' + ');
+    dot.style.backgroundColor = '#4df3ff';
+    dot.style.boxShadow = '0 0 12px rgba(77, 243, 255, 0.9)';
+    label.textContent = `POLYPHONIC MIX: ${labels}`;
+    label.style.color = '#4df3ff';
+    return;
+  }
 
   if (!key) {
     dot.style.backgroundColor = '#64748b';
@@ -1971,6 +1984,11 @@ function startClimateStory(storyId) {
   const story = CLIMATE_STORIES[storyId];
   if (!story) return;
 
+  // Immediately silence any welcome audio from Dr. Jo in parent room
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'STOP_WELCOME_AUDIO' }, '*');
+  }
+
   stopAudio(false);
   stopClimateStory();
 
@@ -2168,7 +2186,6 @@ function bindEvents(){
   $$('[data-band]').forEach(button=>button.addEventListener('click',()=>{stopAudio(false);if(state.mode!=='frame')setMode('frame');selectBand(Number(button.dataset.band),{showHighlight:true});notifyParentScan(true,Number(button.dataset.band));}));
   if($('#flat-view')) $('#flat-view').addEventListener('click',(event)=>{event.stopPropagation();setEarthView('flat');});
   if($('#temperature-view')) $('#temperature-view').addEventListener('click',(event)=>{event.stopPropagation();setTemperatureMode(!state.temperature);});
-  $$('[data-legend]').forEach(button=>button.addEventListener('click',()=>playCategory(button.dataset.legend,1)));
   $('#scan-frame').addEventListener('click',scanFrame);$('#play-band').addEventListener('click',playSelectedBand);
   ['compare-year-a','compare-year-b','compare-band'].forEach(id=>$(`#${id}`).addEventListener('change',updateComparison));
   $('#compare-play').addEventListener('click',playComparison);
@@ -2239,6 +2256,9 @@ function bindEvents(){
 
   function openStories() {
     if (!storiesModal) return;
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'STOP_WELCOME_AUDIO' }, '*');
+    }
     storiesModal.hidden = false;
     document.body.style.overflow = 'hidden';
     storiesClose?.focus();
@@ -2527,7 +2547,12 @@ function drawDualAnalyser() {
   let fillBottom = 'rgba(100, 116, 139, 0.02)';
   let waveColor = 'rgba(148, 163, 184, 0.55)';
 
-  if (state.activeThemeKey && THERMAL_META[state.activeThemeKey]) {
+  if (typeof activeThermalLoops !== 'undefined' && activeThermalLoops.size > 1) {
+    strokeColor = '#4df3ff';
+    fillTop = 'rgba(77, 243, 255, 0.35)';
+    fillBottom = 'rgba(245, 158, 11, 0.06)';
+    waveColor = '#38bdf8';
+  } else if (state.activeThemeKey && THERMAL_META[state.activeThemeKey]) {
     const m = THERMAL_META[state.activeThemeKey];
     strokeColor = m.color;
     fillTop = m.fillTop;
@@ -2727,35 +2752,62 @@ function setupDualAnalyser() {
 }
 
 /* -------------------------------------------------------------
-   DSP CONTROLS, THERMAL LOOPS & PREVIEWS
+   DSP CONTROLS, THERMAL LOOPS & PREVIEWS (POLYPHONIC MULTI-VOICE)
    ------------------------------------------------------------- */
-let thermalLoopTimer = null;
-let currentLoopingType = null;
+const activeThermalLoops = new Map(); // key: 'cold'|'normal'|'warm'|'hot' -> timerId
 
-function stopThermalLoop() {
-  if (thermalLoopTimer) {
-    clearTimeout(thermalLoopTimer);
-    thermalLoopTimer = null;
-  }
-  const prevType = currentLoopingType;
-  currentLoopingType = null;
-
-  if (prevType) {
-    activeSources.forEach(source => { try { source.stop(); } catch {} });
-    activeSources.clear();
-  }
-
-  // Clear visual looping state across all chips and legend buttons
-  $$('[data-preview-thermal]').forEach(chip => {
-    chip.classList.remove('is-looping');
-    chip.setAttribute('aria-pressed', 'false');
+function updateThermalLoopUI(type, isActive) {
+  $$(`[data-preview-thermal="${type}"]`).forEach(chip => {
+    chip.classList.toggle('is-looping', isActive);
+    chip.setAttribute('aria-pressed', String(isActive));
     const badge = chip.querySelector('.chip-loop-badge');
-    if (badge) badge.textContent = '';
+    if (badge) badge.textContent = isActive ? ' ⟳' : '';
   });
-  $$('.sound-legend button[data-legend]').forEach(btn => {
-    btn.classList.remove('is-looping');
-    btn.setAttribute('aria-pressed', 'false');
+  $$(`.sound-legend button[data-legend="${type}"]`).forEach(btn => {
+    btn.classList.toggle('is-looping', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
   });
+  if (type === 'cold') {
+    $$('.sound-legend button[data-legend="cool"]').forEach(btn => {
+      btn.classList.toggle('is-looping', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+  } else if (type === 'normal') {
+    $$('.sound-legend button[data-legend="reference"]').forEach(btn => {
+      btn.classList.toggle('is-looping', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+  }
+}
+
+function stopThermalLoop(specificType = null) {
+  if (specificType) {
+    let norm = specificType;
+    if (norm === 'cool') norm = 'cold';
+    if (norm === 'reference') norm = 'normal';
+
+    const timer = activeThermalLoops.get(norm);
+    if (timer) clearTimeout(timer);
+    activeThermalLoops.delete(norm);
+    updateThermalLoopUI(norm, false);
+
+    if (activeThermalLoops.size === 0) {
+      state.activeThemeKey = null;
+      updateVisualizerHeader(null);
+    } else {
+      const remaining = [...activeThermalLoops.keys()];
+      state.activeThemeKey = remaining[remaining.length - 1];
+      updateVisualizerHeader(state.activeThemeKey);
+    }
+    return;
+  }
+
+  // Stop ALL active thermal loops
+  activeThermalLoops.forEach((timer, type) => {
+    if (timer) clearTimeout(timer);
+    updateThermalLoopUI(type, false);
+  });
+  activeThermalLoops.clear();
 
   state.activeThemeKey = null;
   updateVisualizerHeader(null);
@@ -2766,54 +2818,46 @@ async function toggleThermalLoop(type) {
   if (type === 'cool') norm = 'cold';
   if (type === 'reference') norm = 'normal';
 
-  if (currentLoopingType === norm) {
-    stopThermalLoop();
-    setStatus(`Stopped ${norm} thermal sound loop.`);
+  // If this voice is already looping, turn it off independently
+  if (activeThermalLoops.has(norm)) {
+    stopThermalLoop(norm);
+    const remaining = [...activeThermalLoops.keys()];
+    if (remaining.length > 0) {
+      const remainingNames = remaining.map(k => k.toUpperCase()).join(' + ');
+      setStatus(`Stopped ${norm}. Still playing: ${remainingNames}.`);
+    } else {
+      setStatus(`Stopped ${norm} thermal sound loop.`);
+    }
     return;
   }
 
-  stopAudio(false);
-  stopThermalLoop();
+  // Ensure audio is ready and stop welcome audio if any
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'STOP_WELCOME_AUDIO' }, '*');
+  }
 
   if (!await ensureAudio() || state.muted) return;
 
-  currentLoopingType = norm;
-  setStatus(`Playing ${norm} thermal sound (looping — click again to stop)...`);
+  // Add to active loops map
+  activeThermalLoops.set(norm, null);
+  updateThermalLoopUI(norm, true);
 
-  // Update UI to show active loop state
-  $$(`[data-preview-thermal="${norm}"]`).forEach(chip => {
-    chip.classList.add('is-looping');
-    chip.setAttribute('aria-pressed', 'true');
-    const badge = chip.querySelector('.chip-loop-badge');
-    if (badge) badge.textContent = ' ⟳';
-  });
-  $$(`.sound-legend button[data-legend="${norm}"]`).forEach(btn => {
-    btn.classList.add('is-looping');
-    btn.setAttribute('aria-pressed', 'true');
-  });
-  if (norm === 'cold') {
-    $$('.sound-legend button[data-legend="cool"]').forEach(btn => {
-      btn.classList.add('is-looping');
-      btn.setAttribute('aria-pressed', 'true');
-    });
-  } else if (norm === 'normal') {
-    $$('.sound-legend button[data-legend="reference"]').forEach(btn => {
-      btn.classList.add('is-looping');
-      btn.setAttribute('aria-pressed', 'true');
-    });
-  }
+  const activeNames = [...activeThermalLoops.keys()].map(k => k.toUpperCase()).join(' + ');
+  setStatus(`Playing ${activeNames} thermal sound(s) (looping — click any active sound to stop it)...`);
+  updateVisualizerHeader(norm);
 
   async function step() {
-    if (currentLoopingType !== norm) return;
+    if (!activeThermalLoops.has(norm)) return;
     const dur = await playThermalVoice(norm, { suppressVisual: false });
     state.activeThemeUntil = performance.now() + 10000;
 
     const intervalMs = Math.max(650, Math.round(dur * 1000 * 0.88));
-    thermalLoopTimer = setTimeout(() => {
-      if (currentLoopingType === norm) {
+    const timer = setTimeout(() => {
+      if (activeThermalLoops.has(norm)) {
         step();
       }
     }, intervalMs);
+    activeThermalLoops.set(norm, timer);
   }
 
   step();

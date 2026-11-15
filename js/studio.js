@@ -1604,6 +1604,8 @@ window.addEventListener('message', (e) => {
       y: rect.top + e.data.ratioY * rect.height
     };
     S.mouseMoved = true;
+  } else if (e.data.type === 'STOP_WELCOME_AUDIO' || e.data.type === 'START_STORY' || e.data.type === 'STORIES_OPENED' || e.data.type === 'PAUSE_ALL_AUDIO') {
+    stopSkylarWelcome();
   } else if (e.data.type === 'STORY_SUBTITLE') {
     if (e.data.active && e.data.text) {
       if (subtitleContainer && subtitleTextEl) {
@@ -1755,6 +1757,22 @@ export function triggerSkylarGreeting() {
     skylarAudio.addEventListener('canplay', tryPlay, { once: true });
     skylarAudio.load();
   }
+}
+
+export function stopSkylarWelcome() {
+  skylarSpoken = true;
+  removeUnlockListeners();
+  if (subtitleTimer) {
+    clearInterval(subtitleTimer);
+    subtitleTimer = null;
+  }
+  if (skylarAudio) {
+    try {
+      skylarAudio.pause();
+      skylarAudio.currentTime = 0;
+    } catch (_) {}
+  }
+  hideSkylarSubtitle();
 }
 
 // Automatically start audio when the whole interface has finished loading
