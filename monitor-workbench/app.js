@@ -12,7 +12,14 @@ const bands = [
   {name:'Antarctic',range:'60°–90°S',start:5/6,end:1}
 ];
 
-const categoryLabels = {cool:'Cooler',reference:'Baseline',warm:'Warmer'};
+const categoryLabels = {
+  cold: 'Cold',
+  normal: 'Normal',
+  warm: 'Warm',
+  hot: 'Hot',
+  cool: 'Cold',
+  reference: 'Normal'
+};
 const analysisCache = new Map();
 const globeTextureCache = new Map();
 const state = {
@@ -26,10 +33,58 @@ const state = {
   muted:false,
   playing:false,
   token:0,
-  globeFrame:0
+  globeFrame:0,
+  masterVolume:0.75,
+  durationScale:1.00,
+  foleyEnabled:true,
+  activeThemeKey:null,
+  activeThemeUntil:0
 };
+
+const THERMAL_META = {
+  cold: {
+    label: 'Cold State',
+    shortLabel: 'COLD',
+    band: '1.5–4 kHz',
+    color: '#38bdf8',
+    glow: 'rgba(56, 189, 248, 0.85)',
+    fillTop: 'rgba(56, 189, 248, 0.45)',
+    fillBottom: 'rgba(56, 189, 248, 0.02)',
+  },
+  normal: {
+    label: 'Normal Baseline',
+    shortLabel: 'NORMAL',
+    band: '400–900 Hz',
+    color: '#cbd5e1',
+    glow: 'rgba(203, 213, 225, 0.75)',
+    fillTop: 'rgba(203, 213, 225, 0.35)',
+    fillBottom: 'rgba(203, 213, 225, 0.02)',
+  },
+  warm: {
+    label: 'Warm State',
+    shortLabel: 'WARM',
+    band: '150–450 Hz',
+    color: '#f59e0b',
+    glow: 'rgba(245, 158, 11, 0.85)',
+    fillTop: 'rgba(245, 158, 11, 0.45)',
+    fillBottom: 'rgba(245, 158, 11, 0.02)',
+  },
+  hot: {
+    label: 'Hot / Scalding',
+    shortLabel: 'HOT',
+    band: '2–8 kHz Sizzle',
+    color: '#f97316',
+    glow: 'rgba(249, 115, 22, 0.9)',
+    fillTop: 'rgba(249, 115, 22, 0.5)',
+    fillBottom: 'rgba(249, 115, 22, 0.02)',
+  }
+};
+
 let audioContext = null;
 let masterGain = null;
+let compressor = null;
+let analyser = null;
+let synthAssets = null;
 const activeSources = new Set();
 
 const $ = selector => document.querySelector(selector);
@@ -80,16 +135,97 @@ function notifyParentScan(scanning, bandIndex = state.bandIndex, customLatRatio 
   }
 }
 
+function createSynthAssets(ctx) {
+  const sr = ctx.sampleRate;
+  const noiseLen = Math.floor(sr * 2.5);
+  const whiteBuffer = ctx.createBuffer(2, noiseLen, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = whiteBuffer.getChannelData(ch);
+    for (let i = 0; i < noiseLen; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+  }
+
+  const pinkBuffer = ctx.createBuffer(2, noiseLen, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = pinkBuffer.getChannelData(ch);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < noiseLen; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+      b6 = white * 0.115926;
+    }
+  }
+
+  const irDuration = 1.4;
+  const irLen = Math.floor(sr * irDuration);
+  const coldIrBuffer = ctx.createBuffer(2, irLen, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = coldIrBuffer.getChannelData(ch);
+    let lastSample = 0;
+    for (let i = 0; i < irLen; i++) {
+      const t = i / sr;
+      const env = Math.pow(1 - i / irLen, 3.4) * Math.exp(-t * 3.2);
+      const raw = Math.random() * 2 - 1;
+      const hp = raw - 0.82 * lastSample;
+      lastSample = raw;
+      const shimmer = 0.85 + 0.15 * Math.sin(2 * Math.PI * (ch === 0 ? 1960 : 2890) * t * 0.02);
+      data[i] = hp * env * shimmer * 0.55;
+    }
+    const taps = ch === 0 ? [0.011, 0.024, 0.041] : [0.014, 0.029, 0.047];
+    taps.forEach((tapSec, idx) => {
+      const idxPos = Math.floor(tapSec * sr);
+      if (idxPos < irLen) {
+        data[idxPos] += (0.28 / (idx + 1)) * (idx % 2 === 0 ? 1 : -1);
+      }
+    });
+  }
+
+  const curveSamples = 2048;
+  const warmCurve = new Float32Array(curveSamples);
+  for (let i = 0; i < curveSamples; i++) {
+    const x = (i * 2) / curveSamples - 1;
+    warmCurve[i] = Math.tanh(1.35 * x + 0.18 * x * x) / Math.tanh(1.53);
+  }
+
+  return { whiteBuffer, pinkBuffer, coldIrBuffer, warmCurve };
+}
+
 async function ensureAudio(){
   if(!audioContext){
-    const AudioCtor=window.AudioContext||window.webkitAudioContext;
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
     if(!AudioCtor){ setStatus('Web Audio API unavailable.'); return false; }
-    audioContext=new AudioCtor();
-    masterGain=audioContext.createGain();
-    masterGain.gain.value=state.muted?0:.72;
-    masterGain.connect(audioContext.destination);
+    audioContext = new AudioCtor();
+
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = state.muted ? 0 : state.masterVolume;
+
+    compressor = audioContext.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-10, audioContext.currentTime);
+    compressor.knee.setValueAtTime(14, audioContext.currentTime);
+    compressor.ratio.setValueAtTime(6, audioContext.currentTime);
+    compressor.attack.setValueAtTime(0.003, audioContext.currentTime);
+    compressor.release.setValueAtTime(0.15, audioContext.currentTime);
+
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.78;
+    analyser.minDecibels = -92;
+    analyser.maxDecibels = -12;
+
+    masterGain.connect(compressor);
+    compressor.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    synthAssets = createSynthAssets(audioContext);
   }
-  if(audioContext.state==='suspended'){
+  if(audioContext.state === 'suspended'){
     audioContext.resume().catch(()=>{});
   }
   return true;
@@ -134,21 +270,651 @@ function envelope(gain,start,duration,level=.16){
 
 function historyFrequency(value){ return clamp(180*Math.pow(4,(value+.8)/3),150,850); }
 
-async function playHistoryTone(value,duration=.34){
-  if(!await ensureAudio()||state.muted) return;
-  const now=audioContext.currentTime;
-  const frequency=historyFrequency(value);
-  const gain=audioContext.createGain();
-  const filter=audioContext.createBiquadFilter();
-  filter.type='lowpass'; filter.frequency.value=2200;
-  envelope(gain,now,duration,.18);
-  [1,2].forEach((multiple,index)=>{
-    const osc=trackSource(audioContext.createOscillator());
-    osc.type=index?'sine':'triangle';
-    osc.frequency.value=frequency*multiple;
-    osc.connect(gain); osc.start(now); osc.stop(now+duration+.03);
+function setVisualizerActiveTheme(key, durationMs) {
+  state.activeThemeKey = key;
+  state.activeThemeUntil = performance.now() + durationMs;
+  updateVisualizerHeader(key);
+}
+
+function updateVisualizerHeader(key) {
+  const dot = $('#vizStateIndicator');
+  const label = $('#vizActiveLabel');
+  if (!dot || !label) return;
+
+  if (!key) {
+    dot.style.backgroundColor = '#64748b';
+    dot.style.boxShadow = 'none';
+    label.textContent = 'IDLE MONITOR';
+    label.style.color = '#94a3b8';
+    return;
+  }
+
+  const meta = THERMAL_META[key];
+  if (!meta) return;
+  dot.style.backgroundColor = meta.color;
+  dot.style.boxShadow = `0 0 10px ${meta.glow}`;
+  label.textContent = `${meta.shortLabel} · ${meta.band}`;
+  label.style.color = meta.color;
+}
+
+/* -------------------------------------------------------------
+   THE FOUR THERMAL PSYCHOACOUSTIC SYNTHESIS VOICES
+   ------------------------------------------------------------- */
+
+/**
+ * 1. COLD (1.5–4 kHz, Crystalline / Glassy)
+ */
+function synthesizeCold(ctx, destination, startTime, assets, opts) {
+  const scale = opts.durationScale;
+  const foley = opts.foleyEnabled;
+
+  const voiceBus = ctx.createGain();
+  voiceBus.gain.setValueAtTime(0.85, startTime);
+
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.setValueAtTime(1250, startTime);
+  hpf.Q.setValueAtTime(0.75, startTime);
+
+  const shelf = ctx.createBiquadFilter();
+  shelf.type = 'highshelf';
+  shelf.frequency.setValueAtTime(2800, startTime);
+  shelf.gain.setValueAtTime(2.5, startTime);
+
+  const dryGain = ctx.createGain();
+  dryGain.gain.setValueAtTime(0.78, startTime);
+
+  const convolver = ctx.createConvolver();
+  convolver.buffer = assets.coldIrBuffer;
+
+  const wetGain = ctx.createGain();
+  wetGain.gain.setValueAtTime(0.42, startTime);
+
+  voiceBus.connect(hpf);
+  hpf.connect(shelf);
+  shelf.connect(dryGain);
+  dryGain.connect(destination);
+
+  shelf.connect(convolver);
+  convolver.connect(wetGain);
+  wetGain.connect(destination);
+
+  const partials = [
+    { freq: 1960, amp: 0.34, decay: 0.52 * scale },
+    { freq: 2890, amp: 0.24, decay: 0.42 * scale },
+    { freq: 3920, amp: 0.16, decay: 0.32 * scale },
+    { freq: 5240, amp: 0.06, decay: 0.18 * scale },
+  ];
+
+  partials.forEach((p) => {
+    const osc = trackSource(ctx.createOscillator());
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(p.freq, startTime);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, startTime);
+    g.gain.linearRampToValueAtTime(p.amp, startTime + 0.0025);
+    g.gain.exponentialRampToValueAtTime(0.0001, startTime + p.decay + 0.05);
+
+    osc.connect(g);
+    g.connect(voiceBus);
+    osc.start(startTime);
+    osc.stop(startTime + p.decay + 0.08);
   });
-  gain.connect(filter); filter.connect(masterGain);
+
+  const clickSrc = trackSource(ctx.createBufferSource());
+  clickSrc.buffer = assets.whiteBuffer;
+  const clickBp = ctx.createBiquadFilter();
+  clickBp.type = 'bandpass';
+  clickBp.frequency.setValueAtTime(3400, startTime);
+  clickBp.Q.setValueAtTime(3.2, startTime);
+
+  const clickGain = ctx.createGain();
+  clickGain.gain.setValueAtTime(0.0001, startTime);
+  clickGain.gain.linearRampToValueAtTime(0.45, startTime + 0.0015);
+  clickGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.012);
+
+  clickSrc.connect(clickBp);
+  clickBp.connect(clickGain);
+  clickGain.connect(voiceBus);
+  clickSrc.start(startTime, 0.1, 0.02);
+
+  const pingOsc = trackSource(ctx.createOscillator());
+  pingOsc.type = 'sine';
+  pingOsc.frequency.setValueAtTime(4650, startTime);
+  pingOsc.frequency.exponentialRampToValueAtTime(2400, startTime + 0.011);
+  const pingGain = ctx.createGain();
+  pingGain.gain.setValueAtTime(0.22, startTime);
+  pingGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.014);
+  pingOsc.connect(pingGain);
+  pingGain.connect(voiceBus);
+  pingOsc.start(startTime);
+  pingOsc.stop(startTime + 0.018);
+
+  if (foley) {
+    const clinkOffsets = [0.004, 0.062 * Math.min(scale, 1.25)];
+    const clinkFreqs = [
+      [2580, 3690],
+      [2840, 4120],
+    ];
+    clinkOffsets.forEach((offset, idx) => {
+      const t0 = startTime + offset;
+      const n = trackSource(ctx.createBufferSource());
+      n.buffer = assets.whiteBuffer;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(clinkFreqs[idx][1], t0);
+      bp.Q.setValueAtTime(10.0, t0);
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t0);
+      ng.gain.linearRampToValueAtTime(idx === 0 ? 0.38 : 0.28, t0 + 0.001);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.018);
+      n.connect(bp);
+      bp.connect(ng);
+      ng.connect(voiceBus);
+      n.start(t0, 0.3 + idx * 0.2, 0.025);
+
+      const tick = trackSource(ctx.createOscillator());
+      tick.type = 'sine';
+      tick.frequency.setValueAtTime(clinkFreqs[idx][0], t0);
+      const tg = ctx.createGain();
+      tg.gain.setValueAtTime(0.0001, t0);
+      tg.gain.linearRampToValueAtTime(idx === 0 ? 0.16 : 0.12, t0 + 0.0015);
+      tg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+      tick.connect(tg);
+      tg.connect(voiceBus);
+      tick.start(t0);
+      tick.stop(t0 + 0.055);
+    });
+  }
+
+  return Math.max(0.9, 0.65 * scale + 0.85);
+}
+
+/**
+ * 2. NORMAL (400–900 Hz, Neutral / Dry Baseline)
+ */
+function synthesizeNormal(ctx, destination, startTime, assets, opts) {
+  const scale = opts.durationScale;
+  const foley = opts.foleyEnabled;
+
+  const voiceBus = ctx.createGain();
+  voiceBus.gain.setValueAtTime(0.9, startTime);
+
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.setValueAtTime(300, startTime);
+  hpf.Q.setValueAtTime(0.7, startTime);
+
+  const lpf = ctx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.setValueAtTime(1250, startTime);
+  lpf.Q.setValueAtTime(0.7, startTime);
+
+  voiceBus.connect(hpf);
+  hpf.connect(lpf);
+  lpf.connect(destination);
+
+  const attack = 0.010;
+  const decay = 0.22 * (0.65 + 0.35 * scale);
+
+  const fundOsc = trackSource(ctx.createOscillator());
+  fundOsc.type = 'sine';
+  fundOsc.frequency.setValueAtTime(587.33, startTime);
+
+  const fundGain = ctx.createGain();
+  fundGain.gain.setValueAtTime(0.0001, startTime);
+  fundGain.gain.linearRampToValueAtTime(0.46, startTime + attack);
+  fundGain.gain.exponentialRampToValueAtTime(0.0001, startTime + attack + decay);
+
+  fundOsc.connect(fundGain);
+  fundGain.connect(voiceBus);
+  fundOsc.start(startTime);
+  fundOsc.stop(startTime + attack + decay + 0.03);
+
+  const overOsc = trackSource(ctx.createOscillator());
+  overOsc.type = 'sine';
+  overOsc.frequency.setValueAtTime(880, startTime);
+
+  const overGain = ctx.createGain();
+  overGain.gain.setValueAtTime(0.0001, startTime);
+  overGain.gain.linearRampToValueAtTime(0.11, startTime + 0.006);
+  overGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.065 * scale);
+
+  overOsc.connect(overGain);
+  overGain.connect(voiceBus);
+  overOsc.start(startTime);
+  overOsc.stop(startTime + 0.08 * scale + 0.02);
+
+  const bodyOsc = trackSource(ctx.createOscillator());
+  bodyOsc.type = 'sine';
+  bodyOsc.frequency.setValueAtTime(440, startTime);
+  const bodyGain = ctx.createGain();
+  bodyGain.gain.setValueAtTime(0.0001, startTime);
+  bodyGain.gain.linearRampToValueAtTime(0.08, startTime + attack);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, startTime + attack + decay * 0.7);
+  bodyOsc.connect(bodyGain);
+  bodyGain.connect(voiceBus);
+  bodyOsc.start(startTime);
+  bodyOsc.stop(startTime + attack + decay);
+
+  if (foley) {
+    const knock = trackSource(ctx.createBufferSource());
+    knock.buffer = assets.pinkBuffer;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(640, startTime);
+    bp.Q.setValueAtTime(2.6, startTime);
+
+    const kg = ctx.createGain();
+    kg.gain.setValueAtTime(0.0001, startTime);
+    kg.gain.linearRampToValueAtTime(0.32, startTime + 0.004);
+    kg.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.028);
+
+    knock.connect(bp);
+    bp.connect(kg);
+    kg.connect(voiceBus);
+    knock.start(startTime, 0.2, 0.04);
+  }
+
+  return Math.max(0.45, attack + decay + 0.12);
+}
+
+/**
+ * 3. WARM (150–450 Hz, Rich Rhodes Swell / Tube Warmth)
+ */
+function synthesizeWarm(ctx, destination, startTime, assets, opts) {
+  const scale = opts.durationScale;
+  const foley = opts.foleyEnabled;
+
+  const attack = 0.20 * (0.7 + 0.3 * scale);
+  const decay = 0.90 * scale;
+  const total = attack + decay;
+
+  const voiceBus = ctx.createGain();
+  voiceBus.gain.setValueAtTime(0.92, startTime);
+
+  const shaper = ctx.createWaveShaper();
+  shaper.curve = assets.warmCurve;
+  shaper.oversample = '2x';
+
+  const lpf1 = ctx.createBiquadFilter();
+  lpf1.type = 'lowpass';
+  lpf1.frequency.setValueAtTime(420, startTime);
+  lpf1.frequency.linearRampToValueAtTime(740, startTime + attack);
+  lpf1.frequency.exponentialRampToValueAtTime(360, startTime + total);
+  lpf1.Q.setValueAtTime(0.85, startTime);
+
+  const lpf2 = ctx.createBiquadFilter();
+  lpf2.type = 'lowpass';
+  lpf2.frequency.setValueAtTime(760, startTime);
+  lpf2.Q.setValueAtTime(0.6, startTime);
+
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.setValueAtTime(65, startTime);
+
+  const envGain = ctx.createGain();
+  envGain.gain.setValueAtTime(0.0001, startTime);
+  envGain.gain.linearRampToValueAtTime(0.45, startTime + attack * 0.55);
+  envGain.gain.linearRampToValueAtTime(0.85, startTime + attack);
+  envGain.gain.exponentialRampToValueAtTime(0.0001, startTime + total + 0.08);
+
+  voiceBus.connect(shaper);
+  shaper.connect(lpf1);
+  lpf1.connect(lpf2);
+  lpf2.connect(hpf);
+  hpf.connect(envGain);
+  envGain.connect(destination);
+
+  const chordVoices = [
+    { freq: 174.61, type: 'triangle', amp: 0.34, detune: -3 },
+    { freq: 174.61, type: 'sine', amp: 0.24, detune: 3 },
+    { freq: 261.63, type: 'sine', amp: 0.26, detune: -2 },
+    { freq: 261.63, type: 'triangle', amp: 0.14, detune: 2.5 },
+    { freq: 349.23, type: 'sine', amp: 0.19, detune: 0 },
+    { freq: 440.00, type: 'sine', amp: 0.07, detune: -1.5 },
+  ];
+
+  chordVoices.forEach((v) => {
+    const osc = trackSource(ctx.createOscillator());
+    osc.type = v.type;
+    osc.frequency.setValueAtTime(v.freq, startTime);
+    osc.detune.setValueAtTime(v.detune, startTime);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(v.amp, startTime);
+
+    osc.connect(g);
+    g.connect(voiceBus);
+    osc.start(startTime);
+    osc.stop(startTime + total + 0.12);
+  });
+
+  if (foley) {
+    const thrum = trackSource(ctx.createBufferSource());
+    thrum.buffer = assets.pinkBuffer;
+    const thrumBp = ctx.createBiquadFilter();
+    thrumBp.type = 'bandpass';
+    thrumBp.frequency.setValueAtTime(210, startTime);
+    thrumBp.Q.setValueAtTime(1.6, startTime);
+
+    const thrumGain = ctx.createGain();
+    thrumGain.gain.setValueAtTime(0.0001, startTime);
+    thrumGain.gain.linearRampToValueAtTime(0.42, startTime + attack);
+    thrumGain.gain.exponentialRampToValueAtTime(0.0001, startTime + total);
+
+    thrum.connect(thrumBp);
+    thrumBp.connect(thrumGain);
+    thrumGain.connect(destination);
+    thrum.start(startTime, 0.05, total + 0.05);
+
+    const bubbles = [
+      { offset: 0.09, fStart: 185, fEnd: 295, dur: 0.11, amp: 0.09 },
+      { offset: 0.28 * scale, fStart: 220, fEnd: 340, dur: 0.12, amp: 0.07 },
+    ];
+    bubbles.forEach((b) => {
+      const bt = startTime + b.offset;
+      const bOsc = trackSource(ctx.createOscillator());
+      bOsc.type = 'sine';
+      bOsc.frequency.setValueAtTime(b.fStart, bt);
+      bOsc.frequency.exponentialRampToValueAtTime(b.fEnd, bt + b.dur);
+
+      const bg = ctx.createGain();
+      bg.gain.setValueAtTime(0.0001, bt);
+      bg.gain.linearRampToValueAtTime(b.amp, bt + b.dur * 0.45);
+      bg.gain.exponentialRampToValueAtTime(0.0001, bt + b.dur);
+
+      bOsc.connect(bg);
+      bg.connect(lpf2);
+      bOsc.start(bt);
+      bOsc.stop(bt + b.dur + 0.02);
+    });
+  }
+
+  return total + 0.18;
+}
+
+/**
+ * 4. HOT (2–8 kHz Broadband Turbulence + Sizzle & Urgent Pulse)
+ */
+function synthesizeHot(ctx, destination, startTime, assets, opts) {
+  const scale = opts.durationScale;
+  const foley = opts.foleyEnabled;
+
+  const steamDur = 0.56 * scale;
+
+  const noiseSrc = trackSource(ctx.createBufferSource());
+  noiseSrc.buffer = assets.whiteBuffer;
+
+  const steamHpf = ctx.createBiquadFilter();
+  steamHpf.type = 'highpass';
+  steamHpf.frequency.setValueAtTime(2000, startTime);
+  steamHpf.Q.setValueAtTime(0.8, startTime);
+
+  const steamPeak = ctx.createBiquadFilter();
+  steamPeak.type = 'peaking';
+  steamPeak.frequency.setValueAtTime(4800, startTime);
+  steamPeak.Q.setValueAtTime(0.9, startTime);
+  steamPeak.gain.setValueAtTime(5.5, startTime);
+
+  const steamLpf = ctx.createBiquadFilter();
+  steamLpf.type = 'lowpass';
+  steamLpf.frequency.setValueAtTime(8600, startTime);
+
+  const steamGain = ctx.createGain();
+  steamGain.gain.setValueAtTime(0.0001, startTime);
+  steamGain.gain.linearRampToValueAtTime(0.38, startTime + 0.015);
+
+  const steps = 18;
+  for (let i = 1; i < steps; i++) {
+    const frac = i / steps;
+    const tStep = startTime + 0.015 + frac * (steamDur - 0.05);
+    const envDecay = Math.pow(1 - frac, 0.85);
+    const jitter = 0.5 + 0.65 * Math.abs(Math.sin(i * 4.73 + 0.9) * Math.cos(i * 2.17));
+    steamGain.gain.linearRampToValueAtTime(Math.max(0.001, 0.34 * envDecay * jitter), tStep);
+  }
+  steamGain.gain.exponentialRampToValueAtTime(0.0001, startTime + steamDur);
+
+  noiseSrc.connect(steamHpf);
+  steamHpf.connect(steamPeak);
+  steamPeak.connect(steamLpf);
+  steamLpf.connect(steamGain);
+  steamGain.connect(destination);
+  noiseSrc.start(startTime, 0.0, steamDur + 0.04);
+
+  const pulseSpacing = 0.088 * (0.75 + 0.25 * scale);
+  const pulseLen = 0.052 * (0.8 + 0.2 * scale);
+
+  for (let p = 0; p < 3; p++) {
+    const pt = startTime + 0.01 + p * pulseSpacing;
+    const baseFreq = 1180 + p * 35;
+    const osc1 = trackSource(ctx.createOscillator());
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(baseFreq, pt);
+
+    const osc2 = trackSource(ctx.createOscillator());
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(baseFreq + 155, pt);
+
+    const pulseBp = ctx.createBiquadFilter();
+    pulseBp.type = 'bandpass';
+    pulseBp.frequency.setValueAtTime(1450, pt);
+    pulseBp.Q.setValueAtTime(1.4, pt);
+
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(0.0001, pt);
+    pg.gain.linearRampToValueAtTime(0.32, pt + 0.004);
+    pg.gain.exponentialRampToValueAtTime(0.0001, pt + pulseLen);
+
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0.45, pt);
+
+    osc1.connect(pulseBp);
+    osc2.connect(g2);
+    g2.connect(pulseBp);
+    pulseBp.connect(pg);
+    pg.connect(destination);
+
+    osc1.start(pt);
+    osc2.start(pt);
+    osc1.stop(pt + pulseLen + 0.015);
+    osc2.stop(pt + pulseLen + 0.015);
+  }
+
+  if (foley) {
+    const crackleCount = 14;
+    for (let c = 0; c < crackleCount; c++) {
+      const pseudoRand = Math.abs(Math.sin((c + 1) * 12.9898) * 43758.5453) % 1;
+      const ct = startTime + 0.008 + pseudoRand * (steamDur * 0.85);
+      const popFreq = 3200 + ((c * 617) % 4400);
+
+      const popSrc = trackSource(ctx.createBufferSource());
+      popSrc.buffer = assets.whiteBuffer;
+
+      const popBp = ctx.createBiquadFilter();
+      popBp.type = 'bandpass';
+      popBp.frequency.setValueAtTime(popFreq, ct);
+      popBp.Q.setValueAtTime(6.0, ct);
+
+      const popGain = ctx.createGain();
+      const amp = 0.22 + (c % 3) * 0.1;
+      popGain.gain.setValueAtTime(0.0001, ct);
+      popGain.gain.linearRampToValueAtTime(amp, ct + 0.0012);
+      popGain.gain.exponentialRampToValueAtTime(0.0001, ct + 0.009);
+
+      popSrc.connect(popBp);
+      popBp.connect(popGain);
+      popGain.connect(destination);
+      popSrc.start(ct, (c * 0.13) % 1.8, 0.014);
+    }
+  }
+
+  return Math.max(steamDur + 0.15, 3 * pulseSpacing + 0.25);
+}
+
+async function playThermalVoice(type, { duration = null, suppressVisual = false } = {}) {
+  if (!await ensureAudio() || state.muted) return 0.5;
+  const now = audioContext.currentTime + 0.01;
+  const scale = (duration ? clamp(duration / 0.8, 0.45, 2.0) : 1.0) * state.durationScale;
+  const opts = {
+    durationScale: scale,
+    foleyEnabled: state.foleyEnabled
+  };
+
+  let renderedDuration = 0.6;
+  switch (type) {
+    case 'cold':
+      renderedDuration = synthesizeCold(audioContext, masterGain, now, synthAssets, opts);
+      break;
+    case 'normal':
+      renderedDuration = synthesizeNormal(audioContext, masterGain, now, synthAssets, opts);
+      break;
+    case 'warm':
+      renderedDuration = synthesizeWarm(audioContext, masterGain, now, synthAssets, opts);
+      break;
+    case 'hot':
+      renderedDuration = synthesizeHot(audioContext, masterGain, now, synthAssets, opts);
+      break;
+    default:
+      renderedDuration = synthesizeNormal(audioContext, masterGain, now, synthAssets, opts);
+  }
+
+  if (!suppressVisual) {
+    setVisualizerActiveTheme(type, Math.max(650, renderedDuration * 1000));
+  }
+  return renderedDuration;
+}
+
+async function playHistoryTone(value, duration=.34){
+  if(!await ensureAudio() || state.muted) return;
+  const now = audioContext.currentTime;
+  const frequency = historyFrequency(value);
+  const tier = value < -0.10 ? 'cold' : (value < 0.25 ? 'normal' : (value < 0.70 ? 'warm' : 'hot'));
+  setVisualizerActiveTheme(tier, Math.max(450, duration * 1000));
+
+  const dur = duration * state.durationScale;
+  const gain = audioContext.createGain();
+
+  if (tier === 'cold') {
+    envelope(gain, now, dur, 0.16);
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 1100;
+    gain.connect(filter);
+    filter.connect(masterGain);
+
+    [1, 1.47, 2.01].forEach((mult) => {
+      const osc = trackSource(audioContext.createOscillator());
+      osc.type = 'sine';
+      osc.frequency.value = frequency * mult;
+      osc.connect(gain);
+      osc.start(now);
+      osc.stop(now + dur + 0.05);
+    });
+
+    if (state.foleyEnabled && synthAssets) {
+      const click = trackSource(audioContext.createBufferSource());
+      click.buffer = synthAssets.whiteBuffer;
+      const bp = audioContext.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 3400;
+      bp.Q.value = 3.5;
+      const cg = audioContext.createGain();
+      envelope(cg, now, 0.015, 0.22);
+      click.connect(bp);
+      bp.connect(cg);
+      cg.connect(masterGain);
+      click.start(now, 0.05, 0.02);
+    }
+  } else if (tier === 'normal') {
+    envelope(gain, now, dur, 0.18);
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = frequency;
+    filter.Q.value = 0.9;
+    gain.connect(filter);
+    filter.connect(masterGain);
+
+    const osc = trackSource(audioContext.createOscillator());
+    osc.type = 'sine';
+    osc.frequency.value = frequency;
+    osc.connect(gain);
+    osc.start(now);
+    osc.stop(now + dur + 0.03);
+
+    const over = trackSource(audioContext.createOscillator());
+    over.type = 'sine';
+    over.frequency.value = frequency * 1.5;
+    const og = audioContext.createGain();
+    envelope(og, now, dur * 0.45, 0.08);
+    over.connect(og);
+    og.connect(filter);
+    over.start(now);
+    over.stop(now + dur * 0.5);
+  } else if (tier === 'warm') {
+    envelope(gain, now, dur, 0.20);
+    const shaper = audioContext.createWaveShaper();
+    if (synthAssets) {
+      shaper.curve = synthAssets.warmCurve;
+      shaper.oversample = '2x';
+    }
+    const lpf = audioContext.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = Math.min(1200, frequency * 2.2);
+    gain.connect(shaper);
+    shaper.connect(lpf);
+    lpf.connect(masterGain);
+
+    [0.75, 1, 1.25].forEach((mult, idx) => {
+      const osc = trackSource(audioContext.createOscillator());
+      osc.type = idx === 1 ? 'sine' : 'triangle';
+      osc.frequency.value = frequency * mult;
+      osc.detune.value = (idx - 1) * 3;
+      osc.connect(gain);
+      osc.start(now);
+      osc.stop(now + dur + 0.05);
+    });
+  } else {
+    envelope(gain, now, dur, 0.22);
+    const lpf = audioContext.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 3200;
+    gain.connect(lpf);
+    lpf.connect(masterGain);
+
+    const osc = trackSource(audioContext.createOscillator());
+    osc.type = 'triangle';
+    osc.frequency.value = frequency;
+    osc.connect(gain);
+    osc.start(now);
+    osc.stop(now + dur + 0.04);
+
+    const osc2 = trackSource(audioContext.createOscillator());
+    osc2.type = 'sine';
+    osc2.frequency.value = frequency + 135;
+    const og2 = audioContext.createGain();
+    envelope(og2, now, dur, 0.09);
+    osc2.connect(og2);
+    og2.connect(lpf);
+    osc2.start(now);
+    osc2.stop(now + dur + 0.04);
+
+    if (state.foleyEnabled && synthAssets) {
+      const steam = trackSource(audioContext.createBufferSource());
+      steam.buffer = synthAssets.whiteBuffer;
+      const bp = audioContext.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 4600;
+      bp.Q.value = 1.2;
+      const sg = audioContext.createGain();
+      envelope(sg, now, dur * 0.9, 0.16);
+      steam.connect(bp);
+      bp.connect(sg);
+      sg.connect(masterGain);
+      steam.start(now, 0.1, dur);
+    }
+  }
 }
 
 async function playBoundaryClick(){
@@ -160,34 +926,39 @@ async function playBoundaryClick(){
   envelope(gain,now,.055,.09); osc.connect(gain); gain.connect(masterGain); osc.start(now); osc.stop(now+.07);
 }
 
-async function playCategory(category,duration=.85){
-  if(!await ensureAudio()||state.muted) return;
-  const now=audioContext.currentTime;
-  if(category==='cool'){
-    const gain=audioContext.createGain(); envelope(gain,now,duration,.1);
-    [196,204].forEach(freq=>{const osc=trackSource(audioContext.createOscillator());osc.type='sine';osc.frequency.value=freq;osc.connect(gain);osc.start(now);osc.stop(now+duration+.04)});
-    const filter=audioContext.createBiquadFilter();filter.type='lowpass';filter.frequency.value=820;gain.connect(filter);filter.connect(masterGain);
-  }else if(category==='reference'){
-    const gain=audioContext.createGain(); envelope(gain,now,duration,.13);
-    const osc=trackSource(audioContext.createOscillator());osc.type='triangle';osc.frequency.value=330;osc.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+duration+.04);
-  }else{
-    const count=Math.max(1,Math.floor(duration/.14));
-    for(let i=0;i<count;i++){
-      const start=now+i*(duration/count);const length=Math.min(.12,duration/count*.85);
-      const gain=audioContext.createGain();envelope(gain,start,length,.11);
-      const osc=trackSource(audioContext.createOscillator());osc.type='sine';osc.frequency.value=i%2?660:540;osc.connect(gain);gain.connect(masterGain);osc.start(start);osc.stop(start+length+.02);
-    }
-  }
+async function playCategory(category, duration = 0.85){
+  let mapped = 'normal';
+  if (category === 'cold' || category === 'cool') mapped = 'cold';
+  else if (category === 'normal' || category === 'reference') mapped = 'normal';
+  else if (category === 'hot') mapped = 'hot';
+  else if (category === 'warm') mapped = 'warm';
+
+  return playThermalVoice(mapped, { duration });
 }
 
 function nearestGroup(r,g,b){
   if((r+g+b)/3<34) return null;
   const groups={
-    cool:[[22,47,109],[62,100,160],[168,201,224]],
-    reference:[[232,235,228],[247,244,210]],
-    warm:[[250,215,62],[226,119,27],[177,17,9]]
+    cold:[
+      [22,47,109],
+      [62,100,160],
+      [168,201,224]
+    ],
+    normal:[
+      [232,235,228],
+      [247,244,210]
+    ],
+    warm:[
+      [250,215,62],
+      [245,175,45]
+    ],
+    hot:[
+      [226,119,27],
+      [177,17,9],
+      [115,8,8]
+    ]
   };
-  let winner='reference',best=Infinity;
+  let winner='normal',best=Infinity;
   Object.entries(groups).forEach(([group,anchors])=>anchors.forEach(([ar,ag,ab])=>{
     const distance=(r-ar)**2+(g-ag)**2+(b-ab)**2;
     if(distance<best){best=distance;winner=group;}
@@ -334,7 +1105,7 @@ async function analyzeYear(year){
   context.drawImage(image,0,0,canvas.width,canvas.height);
   const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
   const vectors=bands.map(band=>{
-    const counts={cool:0,reference:0,warm:0,valid:0,unclassified:0};
+    const counts={cold:0,normal:0,warm:0,hot:0,valid:0,unclassified:0};
     const yStart=Math.floor(canvas.height*band.start);const yEnd=Math.ceil(canvas.height*band.end);
     for(let y=yStart;y<yEnd;y+=2){
       for(let x=0;x<canvas.width;x+=2){
@@ -346,7 +1117,21 @@ async function analyzeYear(year){
       }
     }
     const divisor=Math.max(1,counts.valid);
-    return {cool:counts.cool/divisor,reference:counts.reference/divisor,warm:counts.warm/divisor,valid:counts.valid,unclassified:counts.unclassified};
+    const cold=counts.cold/divisor;
+    const normal=counts.normal/divisor;
+    const warm=counts.warm/divisor;
+    const hot=counts.hot/divisor;
+    return {
+      cold,
+      normal,
+      warm,
+      hot,
+      cool: cold,
+      reference: normal,
+      combinedWarm: warm + hot,
+      valid: counts.valid,
+      unclassified: counts.unclassified
+    };
   });
   analysisCache.set(year,vectors);
   return vectors;
@@ -526,26 +1311,31 @@ function selectBand(index,{focus=false, showHighlight=(state.mode==='frame'), an
 }
 
 function renderBandVector(vector){
-  const categories=['cool','reference','warm'];
+  const categories=['cold','normal','warm','hot'];
   $('#category-bars').innerHTML=categories.map(category=>{
-    const percent=vector[category]*100;
-    return `<div class="bar-row"><span>${categoryLabels[category]}</span><div class="bar-track" aria-hidden="true"><div class="bar-fill ${category}" style="width:${percent.toFixed(1)}%"></div></div><output>${percent.toFixed(0)}%</output></div>`;
+    const percent=((vector[category] !== undefined ? vector[category] : (category === 'cold' ? vector.cool : category === 'normal' ? vector.reference : vector.warm)) || 0)*100;
+    return `<div class="bar-row"><span>${categoryLabels[category] || category}</span><div class="bar-track" aria-hidden="true"><div class="bar-fill ${category}" style="width:${percent.toFixed(1)}%"></div></div><output>${percent.toFixed(0)}%</output></div>`;
   }).join('');
 }
 
 function updateLedger(vector){
   const point=currentPoint(),band=bands[state.bandIndex];
-  $('#ledger-summary').textContent=`${point.year} · ${band.name}: ${(vector.cool*100).toFixed(0)}% cooler, ${(vector.reference*100).toFixed(0)}% baseline, ${(vector.warm*100).toFixed(0)}% warmer.`;
+  const c = ((vector.cold ?? vector.cool) * 100).toFixed(0);
+  const n = ((vector.normal ?? vector.reference) * 100).toFixed(0);
+  const w = ((vector.warm ?? 0) * 100).toFixed(0);
+  const h = ((vector.hot ?? 0) * 100).toFixed(0);
+  $('#ledger-summary').textContent=`${point.year} · ${band.name}: ${c}% cold, ${n}% normal, ${w}% warm, ${h}% hot.`;
 }
 
 async function playBandPattern(vector,label,token=state.token){
   if(token!==state.token) return;
   await playBoundaryClick();await sleep(120);
-  const total=2100;
-  for(const category of ['cool','reference','warm']){
+  const total=2200 * state.durationScale;
+  for(const category of ['cold','normal','warm','hot']){
     if(token!==state.token) return;
-    const duration=Math.max(0,vector[category]*total);
-    if(duration<70) continue;
+    const share = vector[category] ?? (category === 'cold' ? vector.cool : category === 'normal' ? vector.reference : vector.warm);
+    const duration=Math.max(0,share*total);
+    if(duration<65) continue;
     await playCategory(category,duration/1000);await sleep(duration+40);
   }
 }
@@ -656,6 +1446,10 @@ function setSection(sectionName){
     sec.hidden = sec.dataset.section !== sectionName;
   });
 
+  if (sectionName === 'compare') {
+    setTimeout(resizeAnalyserCanvas, 40);
+  }
+
   // Update Drawer Header Pill
   const meta = SECTION_METADATA[sectionName] || { num: '1', label: 'Atlas & Scan' };
   const numEl = $('#drawer-active-num');
@@ -714,8 +1508,9 @@ async function updateComparison(){
     if(Number($('#compare-year-a').value)!==yearA || Number($('#compare-year-b').value)!==yearB || Number($('#compare-band').value)!==bandIndex) return;
     const a=vectorsA[bandIndex],b=vectorsB[bandIndex];
     const cards=$$('#compare-output>div:not(.difference-mark)');
-    cards[0].innerHTML=`<span>Frame A</span><strong>${yearA}</strong><p>${(a.cool*100).toFixed(0)}% cooler · ${(a.reference*100).toFixed(0)}% baseline · ${(a.warm*100).toFixed(0)}% warmer</p>`;
-    cards[1].innerHTML=`<span>Frame B</span><strong>${yearB}</strong><p>${(b.cool*100).toFixed(0)}% cooler · ${(b.reference*100).toFixed(0)}% baseline · ${(b.warm*100).toFixed(0)}% warmer</p>`;
+    const formatCard = v => `${((v.cold ?? v.cool)*100).toFixed(0)}% cold · ${((v.normal ?? v.reference)*100).toFixed(0)}% normal · ${((v.warm ?? 0)*100).toFixed(0)}% warm · ${((v.hot ?? 0)*100).toFixed(0)}% hot`;
+    if (cards[0]) cards[0].innerHTML=`<span>Frame A</span><strong>${yearA}</strong><p>${formatCard(a)}</p>`;
+    if (cards[1]) cards[1].innerHTML=`<span>Frame B</span><strong>${yearB}</strong><p>${formatCard(b)}</p>`;
   }catch(error){setStatus(error.message)}
 }
 
@@ -730,9 +1525,13 @@ async function playComparison(){
   }
   try{
     const [a,b]=await Promise.all([analyzeYear(yearA),analyzeYear(yearB)]);
-    await playBandPattern(a[bandIndex],`Frame A, ${yearA}`,token);await sleep(500);
+    setStatus(`Playing Frame A (${yearA})...`);
+    await playBandPattern(a[bandIndex],`Frame A, ${yearA}`,token);
+    await sleep(500);
     if(token!==state.token)return;
+    setStatus(`Playing Frame B (${yearB})...`);
     await playBandPattern(b[bandIndex],`Frame B, ${yearB}`,token);
+    setStatus(`Comparison playback complete: ${yearA} vs ${yearB}.`);
   }catch(error){setStatus(error.message)}
   if(token===state.token)document.body.classList.remove('busy');
 }
@@ -1673,8 +2472,335 @@ function bindEvents(){
   });
 }
 
+/* -------------------------------------------------------------
+   DUAL ANALYSER (LOG FFT SPECTRUM + WAVEFORM OVERLAY)
+   ------------------------------------------------------------- */
+let analyserCanvas = null;
+let analyserCtx = null;
+let freqData = null;
+let timeData = null;
+let peakHold = null;
+let analyserAnimId = null;
+
+const MIN_FREQ = 80;
+const MAX_FREQ = 12000;
+const LOG_MIN = Math.log10(MIN_FREQ);
+const LOG_MAX = Math.log10(MAX_FREQ);
+
+function freqToX(freq, width) {
+  const clamped = Math.max(MIN_FREQ, Math.min(MAX_FREQ, freq));
+  return ((Math.log10(clamped) - LOG_MIN) / (LOG_MAX - LOG_MIN)) * width;
+}
+
+function resizeAnalyserCanvas() {
+  const container = $('#compareAnalyserContainer');
+  if (!container || !analyserCanvas) return;
+  const rect = container.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  analyserCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+  analyserCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+  if (analyserCtx) {
+    analyserCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+}
+
+function drawDualAnalyser() {
+  analyserAnimId = requestAnimationFrame(drawDualAnalyser);
+  const container = $('#compareAnalyserContainer');
+  if (!container || !analyserCanvas || !analyserCtx) return;
+
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  if (width <= 0 || height <= 0) return;
+
+  // Check if active theme expired
+  const nowMs = performance.now();
+  if (state.activeThemeKey && nowMs > state.activeThemeUntil) {
+    state.activeThemeKey = null;
+    updateVisualizerHeader(null);
+  }
+
+  let strokeColor = '#64748b';
+  let fillTop = 'rgba(100, 116, 139, 0.25)';
+  let fillBottom = 'rgba(100, 116, 139, 0.02)';
+  let waveColor = 'rgba(148, 163, 184, 0.55)';
+
+  if (state.activeThemeKey && THERMAL_META[state.activeThemeKey]) {
+    const m = THERMAL_META[state.activeThemeKey];
+    strokeColor = m.color;
+    fillTop = m.fillTop;
+    fillBottom = m.fillBottom;
+    waveColor = m.color;
+  }
+
+  // Clear canvas
+  analyserCtx.fillStyle = '#05070a';
+  analyserCtx.fillRect(0, 0, width, height);
+
+  const bottomAxisPad = 22;
+  const plotHeight = height - bottomAxisPad;
+
+  // Thermal zones shading
+  const zones = [
+    { f1: 150, f2: 450, color: 'rgba(245, 158, 11, 0.05)' },
+    { f1: 450, f2: 900, color: 'rgba(203, 213, 225, 0.04)' },
+    { f1: 1500, f2: 4000, color: 'rgba(56, 189, 248, 0.045)' },
+    { f1: 4000, f2: 8500, color: 'rgba(249, 115, 22, 0.05)' },
+  ];
+  zones.forEach(z => {
+    const x1 = freqToX(z.f1, width);
+    const x2 = freqToX(z.f2, width);
+    analyserCtx.fillStyle = z.color;
+    analyserCtx.fillRect(x1, 0, x2 - x1, plotHeight);
+  });
+
+  // Horizontal gridlines
+  analyserCtx.strokeStyle = 'rgba(148, 163, 184, 0.09)';
+  analyserCtx.lineWidth = 1;
+  for (let i = 1; i <= 3; i++) {
+    const y = Math.round((plotHeight / 4) * i) + 0.5;
+    analyserCtx.beginPath();
+    analyserCtx.moveTo(0, y);
+    analyserCtx.lineTo(width, y);
+    analyserCtx.stroke();
+  }
+
+  // Vertical frequency gridlines & markers
+  const markers = [
+    { f: 100, label: '100Hz', major: false },
+    { f: 200, label: '200Hz', major: true },
+    { f: 600, label: '600Hz', major: true },
+    { f: 1000, label: '1kHz', major: false },
+    { f: 2000, label: '2kHz', major: true },
+    { f: 4000, label: '4kHz', major: false },
+    { f: 6000, label: '6kHz', major: true },
+    { f: 10000, label: '10kHz', major: false },
+  ];
+
+  analyserCtx.font = '10px "JetBrains Mono", monospace';
+  analyserCtx.textAlign = 'center';
+
+  markers.forEach(m => {
+    const x = Math.round(freqToX(m.f, width)) + 0.5;
+    analyserCtx.strokeStyle = m.major ? 'rgba(148, 163, 184, 0.18)' : 'rgba(148, 163, 184, 0.07)';
+    analyserCtx.beginPath();
+    analyserCtx.moveTo(x, 0);
+    analyserCtx.lineTo(x, plotHeight);
+    analyserCtx.stroke();
+
+    if (m.major || width > 520) {
+      analyserCtx.fillStyle = m.major ? '#94a3b8' : '#475569';
+      analyserCtx.fillText(m.label, x, height - 7);
+    }
+  });
+
+  // Baseline separator
+  analyserCtx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+  analyserCtx.beginPath();
+  analyserCtx.moveTo(0, plotHeight + 0.5);
+  analyserCtx.lineTo(width, plotHeight + 0.5);
+  analyserCtx.stroke();
+
+  // If audio is active and analyser is initialized
+  if (analyser && audioContext) {
+    const binCount = analyser.frequencyBinCount;
+    if (!freqData || freqData.length !== binCount) {
+      freqData = new Uint8Array(binCount);
+      timeData = new Uint8Array(analyser.fftSize);
+      peakHold = new Float32Array(120);
+    }
+
+    analyser.getByteFrequencyData(freqData);
+    analyser.getByteTimeDomainData(timeData);
+
+    const nyquist = audioContext.sampleRate / 2;
+    const numPoints = 120;
+
+    const grad = analyserCtx.createLinearGradient(0, 10, 0, plotHeight);
+    grad.addColorStop(0, fillTop);
+    grad.addColorStop(1, fillBottom);
+
+    analyserCtx.beginPath();
+    analyserCtx.moveTo(0, plotHeight);
+
+    const pts = [];
+    for (let i = 0; i < numPoints; i++) {
+      const normX = i / (numPoints - 1);
+      const freq = Math.pow(10, LOG_MIN + normX * (LOG_MAX - LOG_MIN));
+      const exactBin = (freq / nyquist) * binCount;
+      const b0 = Math.floor(exactBin);
+      const b1 = Math.min(binCount - 1, b0 + 1);
+      const frac = exactBin - b0;
+
+      const nextFreq = Math.pow(10, LOG_MIN + ((i + 1) / (numPoints - 1)) * (LOG_MAX - LOG_MIN));
+      const spanBins = Math.max(1, Math.floor(((nextFreq - freq) / nyquist) * binCount));
+      let val = freqData[b0] * (1 - frac) + freqData[b1] * frac;
+      if (spanBins > 1) {
+        let localMax = val;
+        for (let k = 0; k < spanBins && b0 + k < binCount; k++) {
+          if (freqData[b0 + k] > localMax) localMax = freqData[b0 + k];
+        }
+        val = localMax;
+      }
+
+      const mag = val / 255;
+      if (mag > peakHold[i]) {
+        peakHold[i] = mag;
+      } else {
+        peakHold[i] = Math.max(0, peakHold[i] - 0.012);
+      }
+
+      const x = normX * width;
+      const y = plotHeight - mag * (plotHeight - 16);
+      pts.push({ x, y, peakY: plotHeight - peakHold[i] * (plotHeight - 16) });
+      analyserCtx.lineTo(x, y);
+    }
+
+    analyserCtx.lineTo(width, plotHeight);
+    analyserCtx.closePath();
+    analyserCtx.fillStyle = grad;
+    analyserCtx.fill();
+
+    // Contour stroke
+    analyserCtx.beginPath();
+    pts.forEach((pt, idx) => {
+      if (idx === 0) analyserCtx.moveTo(pt.x, pt.y);
+      else analyserCtx.lineTo(pt.x, pt.y);
+    });
+    analyserCtx.strokeStyle = strokeColor;
+    analyserCtx.lineWidth = 2;
+    analyserCtx.stroke();
+
+    // Peak-hold ghost line
+    analyserCtx.beginPath();
+    pts.forEach((pt, idx) => {
+      if (idx === 0) analyserCtx.moveTo(pt.x, pt.peakY);
+      else analyserCtx.lineTo(pt.x, pt.peakY);
+    });
+    analyserCtx.strokeStyle = 'rgba(248, 250, 252, 0.22)';
+    analyserCtx.lineWidth = 1;
+    analyserCtx.stroke();
+
+    // Time-domain waveform overlay
+    const waveCenterY = plotHeight * 0.35;
+    const waveAmp = plotHeight * 0.26;
+    analyserCtx.beginPath();
+    const step = Math.max(1, Math.floor(timeData.length / width));
+    let maxDev = 0;
+    for (let i = 0; i < timeData.length; i += step) {
+      const v = (timeData[i] - 128) / 128;
+      if (Math.abs(v) > maxDev) maxDev = Math.abs(v);
+      const x = (i / timeData.length) * width;
+      const y = waveCenterY + v * waveAmp;
+      if (i === 0) analyserCtx.moveTo(x, y);
+      else analyserCtx.lineTo(x, y);
+    }
+    analyserCtx.strokeStyle = maxDev > 0.004 ? waveColor : 'rgba(148, 163, 184, 0.18)';
+    analyserCtx.lineWidth = maxDev > 0.004 ? 1.6 : 1;
+    analyserCtx.stroke();
+  } else {
+    const waveCenterY = plotHeight * 0.45;
+    analyserCtx.beginPath();
+    analyserCtx.moveTo(0, waveCenterY);
+    analyserCtx.lineTo(width, waveCenterY);
+    analyserCtx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    analyserCtx.lineWidth = 1;
+    analyserCtx.stroke();
+  }
+}
+
+function setupDualAnalyser() {
+  analyserCanvas = $('#compareAnalyserCanvas');
+  if (!analyserCanvas) return;
+  analyserCtx = analyserCanvas.getContext('2d');
+  resizeAnalyserCanvas();
+  window.addEventListener('resize', resizeAnalyserCanvas);
+  const container = $('#compareAnalyserContainer');
+  if (container && window.ResizeObserver) {
+    new ResizeObserver(() => resizeAnalyserCanvas()).observe(container);
+  }
+  if (!analyserAnimId) {
+    drawDualAnalyser();
+  }
+}
+
+/* -------------------------------------------------------------
+   DSP CONTROLS & THERMAL PREVIEWS
+   ------------------------------------------------------------- */
+function setupDspControls() {
+  const volSlider = $('#compare-volume-slider');
+  const volDb = $('#compare-volume-db');
+  const durSlider = $('#compare-duration-slider');
+  const durVal = $('#compare-duration-val');
+  const foleyBtn = $('#compare-foley-toggle');
+  const muteBtn = $('#compare-mute-toggle');
+  const muteIcon = $('#compare-mute-icon');
+  const muteText = $('#compare-mute-text');
+
+  if (volSlider) {
+    volSlider.value = String(state.masterVolume);
+    volSlider.addEventListener('input', e => {
+      state.masterVolume = parseFloat(e.target.value);
+      if (masterGain && !state.muted && audioContext) {
+        masterGain.gain.setValueAtTime(state.masterVolume, audioContext.currentTime);
+      }
+      if (volDb) {
+        if (state.masterVolume <= 0.001) volDb.textContent = '-∞ dB';
+        else volDb.textContent = `${(20 * Math.log10(state.masterVolume)).toFixed(1)} dB`;
+      }
+    });
+  }
+
+  if (durSlider) {
+    durSlider.value = String(state.durationScale);
+    durSlider.addEventListener('input', e => {
+      state.durationScale = parseFloat(e.target.value);
+      if (durVal) durVal.textContent = `${state.durationScale.toFixed(2)}x`;
+    });
+  }
+
+  if (foleyBtn) {
+    foleyBtn.addEventListener('click', () => {
+      state.foleyEnabled = !state.foleyEnabled;
+      foleyBtn.classList.toggle('active', state.foleyEnabled);
+      foleyBtn.setAttribute('aria-pressed', String(state.foleyEnabled));
+    });
+  }
+
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      state.muted = !state.muted;
+      if (masterGain && audioContext) {
+        masterGain.gain.setValueAtTime(state.muted ? 0 : state.masterVolume, audioContext.currentTime);
+      }
+      muteBtn.classList.toggle('active', state.muted);
+      muteBtn.setAttribute('aria-pressed', String(state.muted));
+      if (muteIcon) muteIcon.textContent = state.muted ? '🔇' : '🔊';
+      if (muteText) muteText.textContent = state.muted ? 'Unmute' : 'Mute';
+    });
+  }
+
+  // Thermal Preview Chips
+  $$('[data-preview-thermal]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const type = chip.dataset.previewThermal;
+      playThermalVoice(type);
+    });
+  });
+
+  // Sound Legend buttons in Frame mode
+  $$('.sound-legend button[data-legend]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.legend;
+      playCategory(category);
+    });
+  });
+}
+
 function initialize(){
   populateSelects();bindEvents();selectBand(0);updateYear(0);updateComparison();
+  setupDualAnalyser();setupDspControls();
   if(new URLSearchParams(location.search).get('view')==='globe')setEarthView('globe');
 }
 

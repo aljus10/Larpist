@@ -162,18 +162,26 @@
         </section>
 
         <section class="mode-panel" id="frame-panel" role="tabpanel" aria-labelledby="frame-tab" hidden>
-          <div class="sound-legend" aria-label="Sound legend">
-            <button type="button" data-legend="cool">
-              <span class="legend-swatch cool"></span>
-              <strong>Cooler</strong>
+          <div class="sound-legend" aria-label="Thermal psychoacoustic sound legend">
+            <button type="button" data-legend="cold" title="Play Cold acoustic voice (1.5–4 kHz)">
+              <span class="legend-swatch cold"></span>
+              <strong>Cold</strong>
+              <small>1.5–4 kHz</small>
             </button>
-            <button type="button" data-legend="reference">
-              <span class="legend-swatch reference"></span>
-              <strong>Baseline</strong>
+            <button type="button" data-legend="normal" title="Play Normal ambient voice (400–900 Hz)">
+              <span class="legend-swatch normal"></span>
+              <strong>Normal</strong>
+              <small>400–900 Hz</small>
             </button>
-            <button type="button" data-legend="warm">
+            <button type="button" data-legend="warm" title="Play Warm acoustic voice (150–450 Hz)">
               <span class="legend-swatch warm"></span>
-              <strong>Warmer</strong>
+              <strong>Warm</strong>
+              <small>150–450 Hz</small>
+            </button>
+            <button type="button" data-legend="hot" title="Play Hot scalding voice (2–8 kHz Sizzle)">
+              <span class="legend-swatch hot"></span>
+              <strong>Hot</strong>
+              <small>2–8 kHz</small>
             </button>
           </div>
 
@@ -231,9 +239,10 @@
               </figure>
             </div>
             <ul class="quiz-legend" aria-label="Shared map color legend">
-              <li><span class="legend-swatch cool"></span>Cooler</li>
-              <li><span class="legend-swatch reference"></span>Baseline</li>
-              <li><span class="legend-swatch warm"></span>Warmer</li>
+              <li><span class="legend-swatch cold"></span>Cold</li>
+              <li><span class="legend-swatch normal"></span>Normal</li>
+              <li><span class="legend-swatch warm"></span>Warm</li>
+              <li><span class="legend-swatch hot"></span>Hot</li>
             </ul>
             <div class="quiz-actions" role="group" aria-label="Listen to the selected latitude band">
               <button class="secondary-button" type="button" data-quiz-play="a">Play A</button>
@@ -277,6 +286,77 @@
         <label for="compare-band">Latitude Band<select id="compare-band"></select></label>
         <label for="compare-year-b">Frame B<select id="compare-year-b"></select></label>
         <button class="primary-button" id="compare-play" type="button">▶ Play A / B</button>
+      </div>
+
+      <!-- DSP Master Audio & Psychoacoustic Controls Deck -->
+      <div class="compare-dsp-deck" aria-label="Audio DSP Controls">
+        <div class="dsp-control-group">
+          <div class="dsp-label-row">
+            <span class="dsp-label-icon" aria-hidden="true">🔊</span>
+            <label for="compare-volume-slider">Master Volume</label>
+            <output id="compare-volume-db" for="compare-volume-slider" class="dsp-value-badge">-2.5 dB</output>
+          </div>
+          <input type="range" id="compare-volume-slider" min="0" max="1" step="0.01" value="0.75" aria-label="Master Volume">
+        </div>
+
+        <div class="dsp-control-group">
+          <div class="dsp-label-row">
+            <span class="dsp-label-icon" aria-hidden="true">⏱</span>
+            <label for="compare-duration-slider">Duration / Tail Scale</label>
+            <output id="compare-duration-val" for="compare-duration-slider" class="dsp-value-badge">1.00x</output>
+          </div>
+          <input type="range" id="compare-duration-slider" min="0.50" max="1.80" step="0.05" value="1.00" aria-label="Duration and Tail Scale">
+        </div>
+
+        <div class="dsp-toggle-group">
+          <button type="button" class="dsp-toggle-btn active" id="compare-foley-toggle" aria-pressed="true" title="Toggle realistic acoustic foley textures">
+            <span class="foley-dot" aria-hidden="true">●</span> Foley Textures
+          </button>
+          <button type="button" class="dsp-toggle-btn" id="compare-mute-toggle" aria-pressed="false" title="Mute/Unmute audio">
+            <span id="compare-mute-icon" aria-hidden="true">🔊</span> <span id="compare-mute-text">Mute</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dual Analyser Visualizer Deck (Log FFT Spectrum + Waveform Overlay) -->
+      <div class="compare-analyser-deck" aria-label="Dual Audio Analyser">
+        <div class="analyser-deck-header">
+          <div class="analyser-title-col">
+            <span class="analyser-badge">DUAL ANALYSER</span>
+            <span class="analyser-subtitle">Log FFT Spectrum (80 Hz – 12 kHz) + Oscilloscope Waveform</span>
+          </div>
+          <div class="analyser-status-badge">
+            <span class="status-indicator-dot" id="vizStateIndicator" aria-hidden="true"></span>
+            <strong id="vizActiveLabel">IDLE MONITOR</strong>
+          </div>
+        </div>
+
+        <div class="compare-analyser-container" id="compareAnalyserContainer">
+          <canvas id="compareAnalyserCanvas" aria-label="Real-time logarithmic FFT frequency spectrum and oscillating time-domain waveform"></canvas>
+        </div>
+
+        <div class="analyser-thermal-legend" aria-label="Thermal audio cues">
+          <button type="button" class="analyser-legend-chip chip-cold" data-preview-thermal="cold" title="Audition Cold cue (1.5–4 kHz)">
+            <span class="chip-swatch cold" aria-hidden="true"></span>
+            <strong>Cold</strong>
+            <small>1.5–4 kHz</small>
+          </button>
+          <button type="button" class="analyser-legend-chip chip-normal" data-preview-thermal="normal" title="Audition Normal cue (400–900 Hz)">
+            <span class="chip-swatch normal" aria-hidden="true"></span>
+            <strong>Normal</strong>
+            <small>400–900 Hz</small>
+          </button>
+          <button type="button" class="analyser-legend-chip chip-warm" data-preview-thermal="warm" title="Audition Warm cue (150–450 Hz)">
+            <span class="chip-swatch warm" aria-hidden="true"></span>
+            <strong>Warm</strong>
+            <small>150–450 Hz</small>
+          </button>
+          <button type="button" class="analyser-legend-chip chip-hot" data-preview-thermal="hot" title="Audition Hot cue (2–8 kHz)">
+            <span class="chip-swatch hot" aria-hidden="true"></span>
+            <strong>Hot</strong>
+            <small>2–8 kHz Sizzle</small>
+          </button>
+        </div>
       </div>
 
       <div class="compare-output" id="compare-output">
